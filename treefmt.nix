@@ -13,7 +13,7 @@
     ];
   };
 
-  # scripts/precommit はshebangのみで拡張子が無いため、既定のincludesに明示的に追加します。
+  # scripts/precommit, scripts/check-readme はshebangのみで拡張子が無いため、既定のincludesに明示的に追加します。
   programs.shellcheck = {
     enable = true;
     includes = [
@@ -21,6 +21,7 @@
       "*.bash"
       "*.bats"
       "scripts/precommit"
+      "scripts/check-readme"
     ];
   };
   programs.shfmt = {
@@ -30,6 +31,7 @@
       "*.bash"
       "*.bats"
       "scripts/precommit"
+      "scripts/check-readme"
     ];
   };
 }

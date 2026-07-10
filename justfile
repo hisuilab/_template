@@ -16,10 +16,14 @@ precommit:
 check-docs:
     if [ -d docs ]; then rumdl check --config rumdl.toml docs/; fi
 
+# requires: git
+check-readme:
+    ./scripts/check-readme
+
 # requires: bats
 test:
     bats --recursive tests/unit
 
 lint: check-format
 
-verify: test lint check-docs
+verify: test lint check-docs check-readme

@@ -43,3 +43,10 @@ repos:
         language: system
         stages: [pre-commit]
         pass_filenames: false
+
+      - id: check-readme
+        name: Require README.md (概要/責任) in every owned directory
+        entry: ./scripts/check-readme
+        language: system
+        stages: [pre-commit]
+        pass_filenames: false

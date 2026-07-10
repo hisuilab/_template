@@ -1,0 +1,5 @@
+# README.md必須チェック(scripts/check-readme)の対象外ディレクトリ(.gitignore形式)
+# ディレクトリ全体を除外する場合は末尾に / を付けます。
+
+# scripts/ 配下のスクリプトに対応するbatsテストフィクスチャで、scripts/ と1:1対応するため個別READMEは不要
+tests/unit/scripts/
