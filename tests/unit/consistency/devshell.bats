@@ -13,9 +13,9 @@ devshell_packages() {
     sed '/^$/d'
 }
 
-# justfile / scripts/precommit の `# requires: a, b` コメントから要求ツール名を1行1件で抽出する。
+# justfile / scripts/precommit / scripts/check-readme の `# requires: a, b` コメントから要求ツール名を1行1件で抽出する。
 required_tools() {
-  grep -hoE '# requires: .*' "$repo_root/justfile" "$repo_root/scripts/precommit" |
+  grep -hoE '# requires: .*' "$repo_root/justfile" "$repo_root/scripts/precommit" "$repo_root/scripts/check-readme" |
     sed -E 's/# requires: //' |
     tr ',' '\n' |
     sed -E 's/^ +//; s/ +$//' |
