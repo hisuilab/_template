@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@629b284231c2a82554b724e357e47fc6020833c8 # v3.21.2
+      # test + lint(format) + check-docs + check-readme をまとめて実行します。
+      # justfileのverify recipeが唯一の正本で、ここでは個別に列挙しません。
+      - name: Run verify
+        run: nix develop --command just verify
+      # tooling/generator実装後に追加予定: 生成したProfile(small/small-ddd/small-python)に対する
+      # スモークテスト(生成 → ./scripts/verify)。tooling/がまだ雛形のみのため現時点では未着手です。

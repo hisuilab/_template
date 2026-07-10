@@ -1,0 +1,17 @@
+# Default owner
+* @hisuilab
+
+# CI / 開発環境の自動化
+/.github/ @hisuilab
+/.pre-commit-config.yaml @hisuilab
+/flake.nix @hisuilab
+/flake.lock @hisuilab
+/justfile @hisuilab
+
+# AIエージェント統治（変更時は特に慎重なレビューが必要）
+/AGENTS.md @hisuilab
+/CLAUDE.md @hisuilab
+
+# テンプレート本体
+/template/ @hisuilab
+/tooling/ @hisuilab

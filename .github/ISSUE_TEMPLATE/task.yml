@@ -1,0 +1,67 @@
+name: タスク
+description: 開発タスク・調査・リファクタリング等を起票します（AI コマンドによる自動起票にも対応）
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        タスクの目的・完了条件・影響範囲を明確にすることで、AI エージェントが迷わず実装を開始できます。
+
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 作業目的
+      description: このタスクで何を達成するかを 1〜3 文で記述してください。
+      placeholder: 例）M3 のマイルストーンに向け、Part スキーマのバリデーションロジックを整備する。
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      description: タスクが完了したと判断できる条件をチェックリスト形式で記述してください。
+      placeholder: |
+        - [ ] バリデーション関数が実装されている
+        - [ ] 単体テストが追加・通過している
+        - [ ] `just verify` が成功する
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: 影響範囲
+      description: 変更対象のファイル・モジュール・ドキュメントを記述してください。不明な場合は「調査中」と記入してください。
+      placeholder: |
+        - `src/schemas/part.ts`
+        - `tests/schemas/part.test.ts`
+        - `docs/architecture/` （必要に応じて更新）
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 背景・関連情報
+      description: 関連 Issue・PR・設計資料・マイルストーンへの参照があれば記述してください。AI コマンドが自動補完する場合はここに情報を追記します。
+      placeholder: |
+        - 関連 Issue: #XX
+        - 参照設計書: `docs/architecture/schemas.md`
+        - マイルストーン: M3
+    validations:
+      required: false
+
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: 対象マイルストーン
+      description: 対応するマイルストーンを選択してください。
+      options:
+        - M1
+        - M2
+        - M3
+        - M4
+        - 未定
+    validations:
+      required: false

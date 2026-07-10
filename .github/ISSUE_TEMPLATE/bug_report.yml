@@ -1,0 +1,70 @@
+name: バグ報告
+description: _template の不具合・予期しない動作を報告します
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグ報告ありがとうございます。再現・修正に必要な情報をできる限り記入してください。
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 何が起きましたか？
+      description: 発生した不具合・予期しない動作を具体的に記述してください。
+      placeholder: 例）`just verify` を実行したところ、エラーメッセージなしに失敗した。
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待していた動作
+      description: 本来どのように動作すべきかを記述してください。
+      placeholder: 例）verify が成功し、終了コード 0 が返るはずだった。
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順を番号付きで記述してください。
+      placeholder: |
+        1. `nix develop` でシェルに入る
+        2. `just verify` を実行する
+        3. エラーが発生する
+    validations:
+      required: true
+
+  - type: dropdown
+    id: nix-develop
+    attributes:
+      label: "`nix develop` を使用していますか？"
+      description: 開発環境のセットアップ方法を確認します。
+      options:
+        - "はい（nix develop を使用）"
+        - "いいえ（ツールを直接インストール）"
+        - "不明"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境情報
+      description: OS・ツールバージョン等を記述してください。
+      placeholder: |
+        OS: macOS 15.x / Ubuntu 24.x
+        Nix: 2.x.x
+        Git: 2.x.x
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 補足情報
+      description: ログ・スクリーンショット・関連 Issue など追加情報があれば記述してください。
+    validations:
+      required: false
