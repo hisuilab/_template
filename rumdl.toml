@@ -3,9 +3,10 @@
 # MD028: GitHub Alertsの引用ブロックを許可します。
 disable = ["MD013", "MD028"]
 
-# .claude/はドキュメントではなくAIエージェント設定(skill/command/agent定義)のため対象外にします。
+# ドキュメントではないファイルを対象外にします。
 # PULL_REQUEST_TEMPLATE.mdはPR本文に挿入される前提でレベル1見出しを持たない慣習のため、MD041対象外にします。
-exclude = [".claude/**", ".github/PULL_REQUEST_TEMPLATE.md"]
+# LICENSEは法的テキストのためMarkdownルールを適用しません。
+exclude = [".claude/**", ".github/PULL_REQUEST_TEMPLATE.md", "LICENSE"]
 
 # テーブルのスタイルを指定します。
 [MD060]

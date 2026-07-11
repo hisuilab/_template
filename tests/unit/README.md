@@ -6,7 +6,7 @@
 
 ## 2. 責任
 
-- 保持するもの: bats形式のユニットテスト。単一スクリプトに対応するテストは`scripts/`配下にミラーし(`scripts/precommit.bats`、`scripts/check-readme.bats`)、複数ファイル間の整合性を検証するテストは`consistency/`配下に置く(`consistency/devshell.bats`)
+- 保持するもの: bats形式のユニットテスト。単一スクリプトに対応するテストは`scripts/`配下にミラーし(`scripts/precommit.bats`、`scripts/check-readme.bats`、`scripts/check-status.bats`)、複数ファイル間の整合性を検証するテストは`consistency/`配下に置く(`consistency/devshell.bats`)
 
 ## 3. 責任外
 

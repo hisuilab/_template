@@ -6,8 +6,8 @@
 
 ## 2. 責任
 
-- 保持するもの: `precommit`(gitで追跡されているファイルに対して`prek run`を実行するエントリーポイント)、`check-readme`(ディレクトリごとのREADME.md必須チェック)
-- 対応テスト: `tests/unit/scripts/precommit.bats`、`tests/unit/scripts/check-readme.bats`
+- 保持するもの: `precommit`(gitで追跡されているファイルに対して`prek run`を実行するエントリーポイント)、`check-readme`(ディレクトリごとのREADME.md必須チェック)、`check-status`(`docs/draft`・`docs/milestones`・`docs/decisions`配下のYAML frontmatter `status`値の検証)
+- 対応テスト: `tests/unit/scripts/precommit.bats`、`tests/unit/scripts/check-readme.bats`、`tests/unit/scripts/check-status.bats`
 
 ## 3. 責任外
 

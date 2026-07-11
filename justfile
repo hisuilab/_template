@@ -20,10 +20,14 @@ check-docs:
 check-readme:
     ./scripts/check-readme
 
+# requires: git
+check-status:
+    ./scripts/check-status
+
 # requires: bats
 test:
     bats --recursive tests/unit
 
 lint: check-format
 
-verify: test lint check-docs check-readme
+verify: test lint check-docs check-readme check-status
