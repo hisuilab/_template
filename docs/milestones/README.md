@@ -29,6 +29,6 @@
 | M3 | [m3-generator-impl.md](m3-generator-impl.md) | tooling/generator/ パイプライン実装 | フェーズ2 | done |
 | M4 | [m4-e2e-integration.md](m4-e2e-integration.md) | エンドツーエンド統合と prototype → main PR | フェーズ2 | done |
 | M5 | [m5-lang-part.md](m5-lang-part.md) | lang/ Part 追加と --lang フラグ実装 | フェーズ2 | done |
-| M6 | [Issue #2](https://github.com/hisuilab/_template/issues/2) | TypeScript lint 整備（Biome 導入） | フェーズ3 | not_started |
+| M6 | [Issue #2](https://github.com/hisuilab/_template/issues/2) | TypeScript lint 整備（Biome 導入） | フェーズ3 | done |
 | M7 | [Issue #3](https://github.com/hisuilab/_template/issues/3) | nix run flake app 対応 | フェーズ3 | not_started |
 | M8 | — | features/logging Part 追加 | フェーズ3 | not_started |
