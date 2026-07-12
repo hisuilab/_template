@@ -7,7 +7,7 @@ format:
 # requires: treefmt, biome
 lint:
     treefmt --fail-on-change
-    biome lint .
+    biome lint --no-errors-on-unmatched .
 
 # requires: rumdl
 check-docs:
