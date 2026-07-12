@@ -1,0 +1,11 @@
+"""{{project_name}} CLI entrypoint."""
+
+from __future__ import annotations
+
+
+def main() -> None:
+    print("{{project_name}}")
+
+
+if __name__ == "__main__":
+    main()

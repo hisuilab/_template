@@ -3,3 +3,7 @@
 
 # scripts/ 配下のスクリプトに対応するbatsテストフィクスチャで、scripts/ と1:1対応するため個別READMEは不要
 tests/unit/scripts/
+
+# template/parts/**/payload/ はジェネレータが読み込む生成元テンプレートファイル群のため
+# _template 自身の README.md 構造チェック対象外とします
+template/parts/**/payload/

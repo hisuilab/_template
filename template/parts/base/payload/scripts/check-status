@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# requires: git
+set -euo pipefail
+
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo"
+
+# ライフサイクルを持つ文書ディレクトリごとに、許可するstatus値を定義します。
+# 正本は tmp/docs/_template/(draft/milestone/decision/design-proposal)です。
+declare -A allowed_status=(
+  ["docs/draft"]="draft migrated"
+  ["docs/milestones"]="not_started in_progress done"
+  ["docs/decisions"]="proposed approved implemented"
+)
+
+extract_status() {
+  local file="$1"
+  awk '
+    NR == 1 && $0 == "---" { in_fm = 1; next }
+    in_fm && $0 == "---" { exit }
+    in_fm && /^status:/ { print $2; exit }
+  ' "$file"
+}
+
+missing=0
+
+for dir in "${!allowed_status[@]}"; do
+  [ -d "$dir" ] || continue
+
+  mapfile -t files < <(git ls-files "$dir" | grep -E '\.md$' | grep -vE '(^|/)README\.md$')
+
+  for file in "${files[@]}"; do
+    if [ "$(head -1 "$file")" != "---" ]; then
+      echo "missing frontmatter: $file"
+      missing=1
+      continue
+    fi
+
+    status="$(extract_status "$file")"
+
+    if [ -z "$status" ]; then
+      echo "missing status field: $file"
+      missing=1
+      continue
+    fi
+
+    valid=0
+    for candidate in ${allowed_status[$dir]}; do
+      if [ "$status" = "$candidate" ]; then
+        valid=1
+        break
+      fi
+    done
+
+    if [ "$valid" -ne 1 ]; then
+      echo "invalid status \"$status\" in $file (expected one of: ${allowed_status[$dir]})"
+      missing=1
+    fi
+  done
+done
+
+if [ "$missing" -eq 1 ]; then
+  cat <<'EOF'
+
+status frontmatter must be present and match one of the allowed values for its directory:
+  docs/draft/*.md:      status: draft | migrated
+  docs/milestones/*.md: status: not_started | in_progress | done
+  docs/decisions/*.md:  status: proposed | approved | implemented
+
+See tmp/docs/_template/ for the canonical templates.
+EOF
+  exit 1
+fi
