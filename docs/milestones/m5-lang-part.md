@@ -1,5 +1,5 @@
 ---
-status: not_started
+status: in_progress
 created: 2026-07-12
 updated: 2026-07-12
 ---
@@ -31,18 +31,18 @@ M4 の手動確認で「生成プロジェクトに Python 環境が入ってい
 
 ## 2. 完了条件
 
-- [ ] `models.py` に `LangSpec(lang: str, role: str | None)` データクラスが追加されている
-- [ ] `GenerateRequest` に `lang: tuple[LangSpec, ...]` フィールドが追加されている
-- [ ] `cli.py` が `--lang <value>` を必須引数として受け付ける
-- [ ] `--lang` 未指定時にエラー終了し、利用可能な lang 一覧を表示する
-- [ ] `--lang python,typescript` 等の複数指定（M5 時点）はエラー終了し、M6+ 対応予定の旨を表示する
-- [ ] `template/parts/lang/python/` が追加されている（part.toml + payload/）
-- [ ] `template/parts/lang/typescript/` が追加されている（part.toml + payload/）
+- [x] `models.py` に `LangSpec(lang: str, role: str | None)` データクラスが追加されている
+- [x] `GenerateRequest` に `lang: tuple[LangSpec, ...]` フィールドが追加されている
+- [x] `cli.py` が `--lang <value>` を必須引数として受け付ける
+- [x] `--lang` 未指定時にエラー終了し、利用可能な lang 一覧を表示する
+- [x] `--lang python,typescript` 等の複数指定（M5 時点）はエラー終了し、M6+ 対応予定の旨を表示する
+- [x] `template/parts/lang/python/` が追加されている（part.toml + payload/）
+- [x] `template/parts/lang/typescript/` が追加されている（part.toml + payload/）
 - [ ] `--lang python` で生成したプロジェクトで `nix develop --command python3 --version` が動く（手動確認）
 - [ ] `--lang python` で生成したプロジェクトで `nix develop --command just verify` がグリーンになる（手動確認）
 - [ ] `--lang typescript` で生成したプロジェクトで `nix develop --command node --version` が動く（手動確認）
-- [ ] e2e テストが `--lang python` を含むコマンドで全 pass する
-- [ ] `just verify`（このリポジトリ）が pass する
+- [x] e2e テストが `--lang python` を含むコマンドで全 pass する
+- [x] `just verify`（このリポジトリ）が pass する
 - [ ] `prototype → main` PR が作成されている
 
 ## 3. 設計
