@@ -22,10 +22,20 @@ nix develop   # devShellを有効化(direnv利用時は `direnv allow` でも可
 just verify   # test + lint(format) + check-docs
 ```
 
-新規プロジェクトを生成するには、nix devShell内で次のコマンドを実行します。
+新規プロジェクトを生成するには、次のコマンドを実行します。`_template` ディレクトリにいなくても呼び出せます。
 
 ```sh
-python3 -m tooling.generator generate \
+nix run github:hisuilab/_template -- generate \
+  --name <project-name> \
+  --profile small-cli \
+  --lang python \
+  --output ~/Projects/<project-name>
+```
+
+またはローカルの `_template` リポジトリから実行する場合:
+
+```sh
+nix run .# -- generate \
   --name <project-name> \
   --profile small-cli \
   --lang python \
