@@ -1,6 +1,7 @@
 ---
-status: not_started
+status: done
 created: 2026-07-12
+updated: 2026-07-12
 ---
 
 # M2 template/parts/ payload 実装
@@ -28,15 +29,15 @@ M1 では `part.toml` / `profile.toml` の宣言ファイルと schema を実装
 
 ## 2. 完了条件
 
-- [ ] `src/` ディレクトリが削除されている（U-02 解決）
-- [ ] `base/payload/` に基盤ファイル一式が配置されている（`.gitignore` / `.pre-commit-config.yaml` / `LICENSE` / `README.md` / `flake.nix` / `flake.lock` / `justfile` / `treefmt.nix` / `scripts/check-readme` / `scripts/check-status` / `scripts/README.md` / `tests/unit/README.md`）
-- [ ] `scale/small/payload/docs/draft/README.md` が配置されている
-- [ ] `purpose/cli/payload/` に `src/main.py` / `src/README.md` が配置されている
-- [ ] `purpose/web-api/payload/` に `src/app.py` / `src/routes/README.md` / `src/README.md` が配置されている
-- [ ] `purpose/library/payload/` に `src/{{project_name}}/__init__.py` / `src/{{project_name}}/README.md` / `src/README.md` / `CHANGELOG.md` が配置されている
-- [ ] `features/ai-agent/payload/` に `AGENTS.md` / `CLAUDE.md` が配置されている
-- [ ] `tests/unit/test_payload.py` が追加され、payload 整合テストが pass する
-- [ ] `just verify` が pass する
+- [x] `src/` ディレクトリが削除されている（U-02 解決）
+- [x] `base/payload/` に基盤ファイル一式が配置されている（`.gitignore` / `.pre-commit-config.yaml` / `LICENSE` / `README.md` / `flake.nix` / `flake.lock` / `justfile` / `treefmt.nix` / `scripts/check-readme` / `scripts/check-status` / `scripts/README.md` / `tests/unit/README.md`）
+- [x] `scale/small/payload/docs/draft/README.md` が配置されている
+- [x] `purpose/cli/payload/` に `src/main.py` / `src/README.md` が配置されている
+- [x] `purpose/web-api/payload/` に `src/app.py` / `src/routes/README.md` / `src/README.md` が配置されている
+- [x] `purpose/library/payload/` に `src/{{project_name}}/__init__.py` / `src/{{project_name}}/README.md` / `src/README.md` / `CHANGELOG.md` が配置されている
+- [x] `features/ai-agent/payload/` に `AGENTS.md` / `CLAUDE.md` が配置されている
+- [x] `tests/unit/test_payload.py` が追加され、payload 整合テストが pass する
+- [x] `just verify` が pass する
 
 ## 3. payload 設計
 

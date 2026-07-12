@@ -25,6 +25,6 @@
 | # | 文書 | タイトル | フェーズ | 状態 |
 | --- | --- | --- | --- | --- |
 | M1 | [m1-tree-structure.md](m1-tree-structure.md) | template/ レイヤー設計とプロファイル骨格 | フェーズ2 | done |
-| M2 | [m2-payload-impl.md](m2-payload-impl.md) | template/parts/ payload 実装 | フェーズ2 | not_started |
+| M2 | [m2-payload-impl.md](m2-payload-impl.md) | template/parts/ payload 実装 | フェーズ2 | done |
 | M3 | [m3-generator-impl.md](m3-generator-impl.md) | tooling/generator/ パイプライン実装 | フェーズ2 | not_started |
 | M4 | [m4-e2e-integration.md](m4-e2e-integration.md) | エンドツーエンド統合と prototype → main PR | フェーズ2 | not_started |
