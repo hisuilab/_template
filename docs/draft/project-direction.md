@@ -126,14 +126,14 @@ python3 -m tooling.generator generate \
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    User["ユーザー<br/>--name foo<br/>--profile small"]
-    CLI["CLI<br/>cli.py"]
+    User["ユーザー<br/>--name foo<br/>--profile small-cli<br/>--lang python"]
+    CLI["CLI<br/>cli.py<br/>LangSpec 生成<br/>lang Parts 注入"]
     Loader["Loader<br/>profile.toml<br/>part.toml 読み込み"]
     Resolver["Resolver<br/>Part 依存解決<br/>順序決定"]
     Planner["Planner<br/>変数束縛<br/>生成計画作成"]
     Renderer["Renderer<br/>変数置換<br/>staging 書き込み"]
     Applier["Applier<br/>staging to<br/>出力先コピー"]
-    Output["~/Projects/foo/<br/>just verify green"]
+    Output["~/Projects/foo/<br/>nix develop green<br/>just verify green"]
 
     User --> CLI
     CLI --> Loader
@@ -151,22 +151,44 @@ _template/
 ├── tooling/
 │   ├── __init__.py
 │   └── generator/          # 生成パイプライン（Python パッケージ）
-│       ├── cli.py           # CLI エントリポイント
+│       ├── cli.py           # CLI エントリポイント（--lang パース・LangSpec 生成）
 │       ├── loader.py        # LOAD 段階
 │       ├── resolver.py      # RESOLVE 段階
 │       ├── planner.py       # PLAN 段階
 │       ├── renderer.py      # RENDER 段階
 │       ├── applier.py       # APPLY 段階
-│       ├── models.py        # データ型（Request/Plan/Result）
+│       ├── models.py        # データ型（LangSpec / GenerateRequest / Plan / Result）
 │       └── errors.py        # 各段階エラー型
 └── template/
     ├── schema/              # ProfileSchema / PartSchema（Python パッケージ）
     ├── profiles/            # Profile 宣言（*.toml）
     └── parts/               # コンポーネント群
-        └── <layer>/<name>/
-            ├── part.toml    # Part メタデータ・依存
-            └── payload/     # 生成対象ファイル群（{{project_name}} 等のプレースホルダー）
+        ├── base/            # 全プロファイル共通基盤
+        ├── scale/           # スケール別 Part（small 等）
+        ├── purpose/         # 用途別 Part（cli / web-api / library）
+        ├── features/        # オプション機能 Part（ai-agent 等）
+        └── lang/            # 言語環境 Part（python / typescript）【目標設計】
+            └── <name>/
+                ├── part.toml    # requires = ["base"]・file_rules で flake.nix を replace
+                └── payload/     # flake.nix（base + lang packages）・treefmt.nix・justfile
 ```
+
+### 7.3. `--lang` 解決ルール（目標設計）
+
+`--lang` フラグは CLI が解析して `LangSpec` のリストに変換し、Loader が profile の parts リストへ末尾注入します。既存の Resolver・Planner は変更なしに動作します。
+
+| `--lang` 形式 | 例 | LangSpec | 注入 Part | 生成ディレクトリ |
+| --- | --- | --- | --- | --- |
+| 単一言語 | `--lang python` | `role=None, lang=python` | `lang/python` | `src/`（purpose Part が提供） |
+| 単一言語 | `--lang typescript` | `role=None, lang=typescript` | `lang/typescript` | `src/`（purpose Part が提供） |
+| 複数言語（役割なし） | `--lang python,typescript` | 各 `role=None` | `lang/python` + `lang/typescript` | `python/` `typescript/`【M6+】 |
+| 役割指定 | `--lang backend=python,frontend=typescript` | `role=backend/frontend` | `lang/python` + `lang/typescript` | `backend/` `frontend/`【M6+】 |
+
+**予約済み役割名:** `backend` / `frontend` / `worker`
+
+**M5 実装範囲:** 単一言語のみ（`role=None` かつ lang が 1 つ）。複数・役割指定は M6+ でappend戦略が揃ってから実装します。M5 では複数指定時にエラー終了します。
+
+**`flake.nix` の replace 戦略:** `lang/<name>` Part は `file_rules` で `path = "flake.nix", strategy = "replace"` を宣言し、base packages + lang packages をまとめた完全な `flake.nix` を提供します。base の `flake.nix` は `--lang` なし時のフォールバックとして残します。
 
 ## 8. モジュール責務と依存方向（目標設計）
 
@@ -174,17 +196,19 @@ _template/
 
 | モジュール | 責務 | 責務外 |
 | --- | --- | --- |
-| `cli.py` | 引数解析・エラー出力・終了コード制御 | ビジネスロジック |
-| `loader.py` | profile.toml / part.toml のデシリアライズ | バリデーション以外のロジック |
+| `cli.py` | 引数解析（`--lang` を含む）・`LangSpec` 生成・lang Parts 注入・エラー出力・終了コード制御 | ビジネスロジック |
+| `loader.py` | profile.toml / part.toml のデシリアライズ・lang Parts の読み込み | バリデーション以外のロジック |
 | `resolver.py` | Part 間の依存解決・適用順序の決定 | ファイル生成 |
 | `planner.py` | 変数束縛・生成ファイル計画の作成・ファイル競合検出 | ファイル I/O |
 | `renderer.py` | `{{変数}}` 置換・staging ディレクトリへの書き込み | 出力先への直接書き込み |
 | `applier.py` | staging → 出力先への原子的コピー | レンダリングロジック |
-| `models.py` | データ型定義（GenerateRequest / GenerationPlan / GenerationResult） | ビヘイビア |
+| `models.py` | データ型定義（`LangSpec` / `GenerateRequest` / `GenerationPlan` / `GenerationResult`） | ビヘイビア |
 | `errors.py` | 各段階エラー型（LoadError / ResolveError / PlanError / RenderError / ApplyError） | ビヘイビア |
 | `template/schema/` | ProfileSchema / PartSchema の定義・検証 | 生成ロジック |
-| `template/profiles/` | Profile 宣言（使用 Part リスト・変数定義） | Part の内容 |
-| `template/parts/` | Part ごとのファイル群（`payload/`） | Profile 間の組み合わせルール |
+| `template/profiles/` | Profile 宣言（使用 Part リスト・変数定義） | Part の内容・lang 指定 |
+| `template/parts/base/` | 全プロファイル共通基盤ファイル（flake.nix フォールバック・justfile・rumdl.toml 等） | 言語環境 |
+| `template/parts/lang/` | 言語環境 Part（devShell・treefmt・justfile の言語固有設定）【目標設計】 | アプリケーションコード・ディレクトリ構造 |
+| `template/parts/purpose/` | 用途別コードスケルトン（`src/` 構成） | 言語環境 |
 
 ### 8.2. 依存方向
 
@@ -206,7 +230,11 @@ template.parts, template.profiles は実行時のファイル読み込み（Pyth
 
 | 失敗 | 段階 | 動作 |
 | --- | --- | --- |
+| `--lang` 未指定 | CLI | エラー終了・`--lang` 必須の旨と利用可能な lang 一覧を表示 |
+| `--lang` に複数指定（M5 時点） | CLI | エラー終了・複数 lang は M6+ 対応予定の旨を表示 |
+| `--lang` に未知の言語名 | CLI | エラー終了・利用可能な lang 一覧を表示 |
 | profile.toml が見つからない | LOAD | エラー終了・利用可能 Profile 一覧表示 |
+| lang Part の part.toml が見つからない | LOAD | エラー終了・lang Part ID を報告 |
 | part.toml が見つからない | LOAD | エラー終了・Part ID を報告 |
 | Part 依存の循環・未解決 | RESOLVE | エラー終了・問題 Part ID を報告 |
 | ファイル名衝突 | PLAN | エラー終了・競合ファイル名と関連 Part を報告 |
