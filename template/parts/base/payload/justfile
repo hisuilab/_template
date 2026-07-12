@@ -25,3 +25,16 @@ check-encoding:
     ./scripts/check-encoding
 
 verify: lint check-docs check-readme check-status check-encoding
+
+# run once after generation: initialize git repository and install pre-commit hooks
+init:
+    git init
+    git add -A
+    prek install --hook-type pre-commit --hook-type commit-msg
+
+# show versions of all development tools
+versions:
+    @echo "just:    $(just --version)"
+    @echo "treefmt: $(treefmt --version 2>&1 | head -1)"
+    @echo "rumdl:   $(rumdl --version 2>&1 | head -1)"
+    @echo "git:     $(git --version)"

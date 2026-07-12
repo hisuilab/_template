@@ -28,10 +28,20 @@ just verify   # test + lint(format) + check-docs
 python3 -m tooling.generator generate \
   --name <project-name> \
   --profile small-cli \
+  --lang python \
   --output ~/Projects/<project-name>
 ```
 
-利用可能なProfileは`small-cli`、`small-web-api`、`small-library`です。
+生成後はプロジェクトディレクトリに移動してセットアップします。
+
+```sh
+cd ~/Projects/<project-name>
+nix develop --command just init   # git 初期化とフックのインストール（初回のみ）
+nix develop                       # 開発シェルに入る
+just verify                       # 動作確認
+```
+
+利用可能なProfileは`small-cli`、`small-web-api`、`small-library`、利用可能な`--lang`は`python`、`typescript`です。
 
 ## 3. 構成
 

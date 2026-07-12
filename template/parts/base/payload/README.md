@@ -7,6 +7,10 @@
 ## 2. セットアップ
 
 ```sh
+# 初回のみ: git 初期化と pre-commit フックのインストール
+nix develop --command just init
+
+# 開発シェルに入る
 nix develop
 ```
 
@@ -18,4 +22,7 @@ just verify
 
 # フォーマットのみ
 just format
+
+# ツールバージョン確認
+just versions
 ```
