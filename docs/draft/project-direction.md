@@ -148,7 +148,8 @@ _template/
 ├── tooling/
 │   ├── __init__.py
 │   └── generator/          # 生成パイプライン（Python パッケージ）
-│       ├── cli.py           # CLI エントリポイント（--lang パース・LangSpec 生成）
+│       ├── cli.py           # CLI エントリポイント（generate・init-workspace サブコマンド）
+│       │                    # 【目標設計 M10】init-workspace サブコマンドを追加
 │       ├── loader.py        # LOAD 段階
 │       ├── resolver.py      # RESOLVE 段階
 │       ├── planner.py       # PLAN 段階
@@ -159,12 +160,18 @@ _template/
 └── template/
     ├── schema/              # ProfileSchema / PartSchema（Python パッケージ）
     ├── profiles/            # Profile 宣言（*.toml）
+    ├── workspaces/          # ワークスペーステンプレート（Parts システムを使わない固定テンプレート）
+    │   └── default/         # 【目標設計 M10】flake.nix・.envrc・justfile
     └── parts/               # コンポーネント群
         ├── base/            # 全プロファイル共通基盤
         ├── scale/           # スケール別 Part（small 等）
         ├── purpose/         # 用途別 Part（cli / web-api / library）
-        ├── features/        # オプション機能 Part（ai-agent 等）
-        └── lang/            # 言語環境 Part（python / typescript）【目標設計】
+        ├── features/        # オプション機能 Part
+        │   ├── ai-agent/    # AGENTS.md・CLAUDE.md・.claude/rules/dev-policy.md
+        │   │                # 【目標設計 M9】.claude/ scaffold を追加
+        │   ├── logging-python/     # src/logger.py（stdlib logging）
+        │   └── logging-typescript/ # src/logger.ts（console ベース）
+        └── lang/            # 言語環境 Part（python / typescript）
             └── <name>/
                 ├── part.toml    # requires = ["base"]・file_rules で flake.nix を replace
                 └── payload/     # flake.nix（base + lang packages）・treefmt.nix・justfile
@@ -187,13 +194,35 @@ _template/
 
 **`flake.nix` の replace 戦略:** `lang/<name>` Part は `file_rules` で `path = "flake.nix", strategy = "replace"` を宣言し、base packages + lang packages をまとめた完全な `flake.nix` を提供します。base の `flake.nix` は `--lang` なし時のフォールバックとして残します。
 
+### 7.4. `init-workspace` フロー（目標設計 M10）
+
+`nix run ... -- init-workspace --path ~/Projects` で呼び出す。Parts システムを使わず、`template/workspaces/default/` の固定テンプレートを applier で直接適用します。
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    User["ユーザー<br/>--path ~/Projects"]
+    CLI["CLI<br/>init-workspace"]
+    Renderer["Renderer<br/>変数置換<br/>staging 書き込み"]
+    Applier["Applier<br/>staging to<br/>出力先コピー"]
+    Output["~/Projects/<br/>flake.nix<br/>.envrc<br/>justfile"]
+
+    User --> CLI
+    CLI --> Renderer
+    Renderer --> Applier
+    Applier --> Output
+```
+
+> [!NOTE]
+> `generate` サブコマンドと異なり、Loader・Resolver・Planner を経由しません。ワークスペースは Parts の組み合わせではなく単一の固定テンプレートとして扱います。
+
 ## 8. モジュール責務と依存方向（目標設計）
 
 ### 8.1. モジュール責務
 
 | モジュール | 責務 | 責務外 |
 | --- | --- | --- |
-| `cli.py` | 引数解析（`--lang` を含む）・`LangSpec` 生成・lang Parts 注入・エラー出力・終了コード制御 | ビジネスロジック |
+| `cli.py` | 引数解析（`--lang` 含む）・`LangSpec` 生成・lang Parts 注入・エラー出力・終了コード制御。【目標設計 M10】`init-workspace` サブコマンドを追加 | ビジネスロジック |
 | `loader.py` | profile.toml / part.toml のデシリアライズ・lang Parts の読み込み | バリデーション以外のロジック |
 | `resolver.py` | Part 間の依存解決・適用順序の決定 | ファイル生成 |
 | `planner.py` | 変数束縛・生成ファイル計画の作成・ファイル競合検出 | ファイル I/O |
@@ -204,8 +233,10 @@ _template/
 | `template/schema/` | ProfileSchema / PartSchema の定義・検証 | 生成ロジック |
 | `template/profiles/` | Profile 宣言（使用 Part リスト・変数定義） | Part の内容・lang 指定 |
 | `template/parts/base/` | 全プロファイル共通基盤ファイル（flake.nix フォールバック・justfile・rumdl.toml 等） | 言語環境 |
-| `template/parts/lang/` | 言語環境 Part（devShell・treefmt・justfile の言語固有設定）【目標設計】 | アプリケーションコード・ディレクトリ構造 |
+| `template/parts/lang/` | 言語環境 Part（devShell・treefmt・justfile の言語固有設定） | アプリケーションコード・ディレクトリ構造 |
 | `template/parts/purpose/` | 用途別コードスケルトン（`src/` 構成） | 言語環境 |
+| `template/parts/features/` | オプション機能 Part（ai-agent・logging 等）。【目標設計 M9】ai-agent は `AGENTS.md`・`CLAUDE.md`・`.claude/rules/dev-policy.md` を提供 | lang 固有設定・ディレクトリ構造 |
+| `template/workspaces/` | 【目標設計 M10】`init-workspace` が使う固定テンプレート群（Parts システム不使用）。`default/` が標準ワークスペース | プロジェクト生成・Parts 合成 |
 
 ### 8.2. 依存方向
 
