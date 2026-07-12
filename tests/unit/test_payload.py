@@ -93,3 +93,25 @@ def test_no_undeclared_placeholders(part_id: str, part_dir: Path) -> None:
         + "\n".join(f"  {f}: {vs}" for f, vs in undeclared.items())
         + f"\nDeclared: {sorted(declared)}"
     )
+
+
+# ---------------------------------------------------------------------------
+# features/logging-* content checks
+# ---------------------------------------------------------------------------
+
+
+def test_logging_python_provides_get_logger() -> None:
+    logger_py = PARTS_ROOT / "features" / "logging-python" / "payload" / "src" / "logger.py"
+    assert logger_py.exists(), "src/logger.py not found in features/logging-python payload"
+    content = logger_py.read_text(encoding="utf-8")
+    assert "def get_logger" in content, "get_logger function missing from logger.py"
+    assert "logging" in content, "stdlib logging import missing from logger.py"
+
+
+def test_logging_typescript_provides_get_logger() -> None:
+    logger_ts = (
+        PARTS_ROOT / "features" / "logging-typescript" / "payload" / "src" / "logger.ts"
+    )
+    assert logger_ts.exists(), "src/logger.ts not found in features/logging-typescript payload"
+    content = logger_ts.read_text(encoding="utf-8")
+    assert "getLogger" in content, "getLogger function missing from logger.ts"

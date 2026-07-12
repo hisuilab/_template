@@ -1,0 +1,6 @@
+[part]
+id = "features/logging-typescript"
+layer = "features"
+summary = "TypeScript ロギング基盤（Node 組み込み console、getLogger ヘルパー）"
+requires = ["base"]
+conflicts = []

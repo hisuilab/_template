@@ -110,7 +110,7 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 | M5 | `lang/` Part 追加（`--lang` フラグ・python/typescript 対応）と `prototype → main` PR | フェーズ2 | Prototype |
 | M6 | TypeScript lint 整備（Biome 導入） | フェーズ3 | Production |
 | M7 | `nix run` flake app 対応（グローバル呼び出し） | フェーズ3 | Production |
-| M8 | `features/logging` Part 追加（Python / TypeScript） | フェーズ3 | Prototype |
+| M8 | `features/logging` Part 追加（Python / TypeScript） | フェーズ3 | Production |
 
 ## 7. システム構成（目標設計）
 
