@@ -2,14 +2,14 @@
 
 ## 1. 概要
 
-TypeScript 言語環境（nodejs / typescript）を提供する lang Part です。
+TypeScript 言語環境（nodejs / biome）を提供する lang Part です。
 
 ## 2. 責任
 
 - `part.toml` によるメタデータと依存宣言（requires: base, conflicts: lang/python）
-- `payload/flake.nix`: base packages + nodejs を含む devShell
-- `payload/treefmt.nix`: base フォーマット設定 + prettier（.ts / .tsx）
-- `payload/justfile`: base レシピ + `type-check`（npx tsc）
+- `payload/flake.nix`: base packages + nodejs + biome を含む devShell
+- `payload/treefmt.nix`: base フォーマット設定 + biome（.ts / .tsx）+ prettier（.json / .yaml）
+- `payload/justfile`: base レシピ + `type-check`（npx tsc）+ `lint`（treefmt + biome lint）
 
 ## 3. 責任外
 

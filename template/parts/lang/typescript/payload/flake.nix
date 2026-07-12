@@ -32,6 +32,7 @@
           default = pkgs.mkShell {
             packages = [
               pkgs.bats
+              pkgs.biome
               pkgs.git
               pkgs.gitleaks
               pkgs.just

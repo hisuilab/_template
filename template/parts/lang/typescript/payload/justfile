@@ -4,9 +4,10 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 format:
     treefmt
 
-# requires: treefmt
+# requires: treefmt, biome
 lint:
     treefmt --fail-on-change
+    biome lint --no-errors-on-unmatched .
 
 # requires: rumdl
 check-docs:
@@ -40,6 +41,7 @@ init:
 versions:
     @echo "node:    $(node --version)"
     @echo "npm:     $(npm --version)"
+    @echo "biome:   $(biome --version)"
     @echo "just:    $(just --version)"
     @echo "treefmt: $(treefmt --version 2>&1 | head -1)"
     @echo "rumdl:   $(rumdl --version 2>&1 | head -1)"
