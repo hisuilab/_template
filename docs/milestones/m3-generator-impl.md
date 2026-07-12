@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: done
 created: 2026-07-12
 updated: 2026-07-12
 ---
@@ -29,18 +29,18 @@ updated: 2026-07-12
 
 ## 2. 完了条件
 
-- [ ] `tooling/__init__.py` / `tooling/generator/__init__.py` / `tooling/generator/__main__.py` が作成されている
-- [ ] `tooling/generator/models.py` に `GenerateRequest` / `PlannedFile` / `GenerationPlan` / `GenerationResult` が定義されている
-- [ ] `tooling/generator/errors.py` に `LoadError` / `ResolveError` / `PlanError` / `RenderError` / `ApplyError` が定義されている
-- [ ] `tooling/generator/loader.py` が `profile.toml` と `part.toml` を `ProfileSchema` / `PartSchema` として返す
-- [ ] `tooling/generator/resolver.py` が Part の `requires` 依存をトポロジカルソートし、循環依存を `ResolveError` で報告する
-- [ ] `tooling/generator/planner.py` が変数束縛・ファイル名プレースホルダー置換・`dot-` → `.` 変換後の `GenerationPlan` を返し、ファイル名衝突を `PlanError` で報告する
-- [ ] `tooling/generator/renderer.py` が `{{変数}}` を置換しながら staging ディレクトリへ書き込み、未置換変数を `RenderError` で報告する
-- [ ] `tooling/generator/applier.py` が staging → 出力先を原子的にコピーし、出力先既存を `ApplyError` で報告する
-- [ ] `tooling/generator/cli.py` に `generate` サブコマンドが実装されている
-- [ ] `tests/unit/test_generator.py` が各モジュールのユニットテストを含み、`pytest` で pass する
-- [ ] `python3 -m tooling.generator generate --name foo --profile small-cli --output /tmp/test-m3-foo` が成功し、出力に `.gitignore` / `flake.nix` / `justfile` / `src/main.py` が含まれている
-- [ ] `just verify` pass
+- [x] `tooling/__init__.py` / `tooling/generator/__init__.py` / `tooling/generator/__main__.py` が作成されている
+- [x] `tooling/generator/models.py` に `GenerateRequest` / `PlannedFile` / `GenerationPlan` / `GenerationResult` が定義されている
+- [x] `tooling/generator/errors.py` に `LoadError` / `ResolveError` / `PlanError` / `RenderError` / `ApplyError` が定義されている
+- [x] `tooling/generator/loader.py` が `profile.toml` と `part.toml` を `ProfileSchema` / `PartSchema` として返す
+- [x] `tooling/generator/resolver.py` が Part の `requires` 依存をトポロジカルソートし、循環依存を `ResolveError` で報告する
+- [x] `tooling/generator/planner.py` が変数束縛・ファイル名プレースホルダー置換・`dot-` → `.` 変換後の `GenerationPlan` を返し、ファイル名衝突を `PlanError` で報告する
+- [x] `tooling/generator/renderer.py` が `{{変数}}` を置換しながら staging ディレクトリへ書き込み、未置換変数を `RenderError` で報告する
+- [x] `tooling/generator/applier.py` が staging → 出力先を原子的にコピーし、出力先既存を `ApplyError` で報告する
+- [x] `tooling/generator/cli.py` に `generate` サブコマンドが実装されている
+- [x] `tests/unit/test_generator.py` が各モジュールのユニットテストを含み、`pytest` で pass する
+- [x] `python3 -m tooling.generator generate --name foo --profile small-cli --output /tmp/test-m3-foo` が成功し、出力に `.gitignore` / `flake.nix` / `justfile` / `src/main.py` が含まれている
+- [x] `just verify` pass
 
 ## 3. 設計
 
