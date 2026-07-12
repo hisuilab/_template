@@ -50,22 +50,34 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 | CI | GitHub Actions（verify + check-readme） |
 | 文書 status 検証 | `scripts/check-status`（docs/draft・milestones・decisions の frontmatter 妥当性） |
 
-### 4.2. プロジェクト生成（目標設計）
+### 4.2. プロジェクト生成（実装済み・拡張中）
 
 - `tooling/generator/` （Python 3.11+）が `template/` のProfileを読み込み、新規プロジェクト一式を出力します
-- 呼び出し形式: `python3 -m tooling.generator generate --name <name> --profile <profile> --output <path>`
-- 生成されたプロジェクトは `just verify` で即座にグリーンになることを成功条件とします
+- 呼び出し形式:
 
-### 4.3. Profileシステム（設計フェーズ）
+| パターン | コマンド例 | 生成ディレクトリ構造 |
+| --- | --- | --- |
+| 単一言語 | `... --lang python` | `src/` |
+| 複数言語（カジュアル） | `... --lang python,typescript` | `python/` `typescript/` |
+| 役割指定（用途明確） | `... --lang backend=python,frontend=typescript` | `backend/` `frontend/` |
 
-スタイル × スケール × 用途の組み合わせでProfileを構成します。
+- `--lang` は必須。予約済み役割名: `backend` / `frontend` / `worker`
+- 役割指定の省略形・エイリアスは提供しない（用途明確な場合は役割を明示する）
+- 生成されたプロジェクトは `nix develop` で言語ランタイムが即座に使え、`just verify` がグリーンになることを成功条件とします
+
+### 4.3. Profileシステム（実装中）
+
+スタイル × スケール × 用途 × 言語の組み合わせでProfileを構成します。
 各Profileはコンポーネント（Part）の組み合わせとして管理し、拡張性を確保します。
 
-| 軸 | 候補値（暫定） |
-| --- | --- |
-| スタイル | prototype, layered, ddd |
-| スケール | tiny, small, medium, large |
-| 用途 | cli, web-api, library |
+| 軸 | 候補値（暫定） | 状態 |
+| --- | --- | --- |
+| スタイル | prototype, layered, ddd | 未着手（フェーズ3） |
+| スケール | tiny, small, medium, large | small のみ実装済み |
+| 用途 | cli, web-api, library | 3種実装済み |
+| 言語 | python, typescript | 未着手（フェーズ2完了条件） |
+
+言語Partは `template/parts/lang/<name>/` に配置し、`--lang` フラグで選択します。言語Partは当該言語のランタイム・フォーマッタ・テストランナーを生成プロジェクトのdevShellへ追加します。
 
 ## 5. Where — 適用範囲
 
@@ -86,18 +98,26 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 | --- | --- | --- | --- |
 | フェーズ0 | 基盤共通部分の確立（flake/just/lint/CI/pre-commit） | — | 完了（nix-stationで検証済み） |
 | フェーズ1 | nix-stationの改善バックポート・要件/アーキテクチャ設計・Python/Ruff環境整備 | — | 完了 |
-| フェーズ2 | `tooling/generator` 実装（最小Profile: small） | M1–M4 | 進行中 |
-| フェーズ3 | Profileシステムの設計（スタイル×スケール×用途） | M5+ | 未着手 |
+| フェーズ2 | `tooling/generator` 実装・言語Part追加・`prototype → main` PR | M1–M5 | 進行中 |
+| フェーズ3 | Profileシステムの設計（スタイル×スケール×用途の拡張） | M6+ | 未着手 |
 
-**`prototype` ブランチ完了条件（フェーズ2 = M4 完了時）:** `python3 -m tooling.generator generate --name foo --profile small-cli --output ~/Projects/foo` を実行し、生成プロジェクトで `just verify` がグリーンになること。この時点で `prototype → main` の PR を作成します。
+**`prototype` ブランチ完了条件（フェーズ2 = M5 完了時）:**
+
+```sh
+python3 -m tooling.generator generate \
+  --name foo --profile small-cli --lang python --output ~/Projects/foo
+```
+
+を実行し、生成プロジェクトで `nix develop` に入り言語ランタイムが使え、`just verify` がグリーンになること。この時点で `prototype → main` の PR を作成します。
 
 | マイルストーン | 内容 | フェーズ |
 | --- | --- | --- |
 | M1 | `template/` レイヤー設計・スキーマ・プロファイル宣言ファイル | フェーズ2 |
 | M2 | `template/parts/` payload 実装（代表3プロファイルの生成ファイル群） | フェーズ2 |
 | M3 | `tooling/generator/` パイプライン実装（loader/resolver/planner/renderer/applier） | フェーズ2 |
-| M4 | エンドツーエンド統合と `prototype → main` PR | フェーズ2 |
-| M5+ | Profile システム拡張（style × scale × purpose の追加 Part） | フェーズ3 |
+| M4 | エンドツーエンド統合（e2e テスト・rumdl.toml 追加） | フェーズ2 |
+| M5 | `lang/` Part 追加（`--lang` フラグ・python/typescript 対応）と `prototype → main` PR | フェーズ2 |
+| M6+ | Profile システム拡張（style × scale × purpose の追加 Part・append 戦略） | フェーズ3 |
 
 ## 7. システム構成（目標設計）
 
@@ -201,7 +221,9 @@ template.parts, template.profiles は実行時のファイル読み込み（Pyth
 | ID | 論点 | 影響範囲 | 優先度 |
 | --- | --- | --- | --- |
 | ~~U-01~~ | ~~`tooling/` の実装言語~~ | — | 解決済み（Python 3.11+。[2026-07-12-python-generator.md](../decisions/2026-07-12-python-generator.md) 参照） |
-| U-02 | `src/` ディレクトリの扱い（ジェネレータ構成上不要。廃止または `template/parts/` 内の payload として再配置を検討） | リポジトリ構造 | 高 |
-| U-03 | Profile（`template/`）の具体的なファイル構成（どのファイルを生成するか） | template/ 設計 | 中 |
+| ~~U-02~~ | ~~`src/` ディレクトリの扱い~~ | — | 解決済み（lang Part が `src/` または役割ディレクトリを提供。リポジトリ内の `src/` は削除済み） |
+| ~~U-03~~ | ~~Profile の具体的なファイル構成~~ | — | 解決済み（M1–M4 で代表3プロファイルを実装。lang Part は M5 で追加） |
 | U-04 | スケール・スタイル・用途の具体的な候補値の確定 | Profileシステム設計 | 低（フェーズ3） |
 | U-05 | 既存プロジェクト（nix-station等）への更新伝播方法 | 運用設計 | 低 |
+| U-06 | 複数 lang Part の `flake.nix` マージ戦略（`append` 戦略）。`--lang python,typescript` のフルスタック構成で必要。現状は単一言語の `replace` のみ対応 | generator/planner 設計 | 中（フェーズ3） |
+| U-07 | 予約済み役割名（`backend`/`frontend`/`worker`）以外の役割が必要になった場合の語彙管理 | CLI 設計 | 低（フェーズ3） |
