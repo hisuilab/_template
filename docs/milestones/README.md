@@ -28,3 +28,4 @@
 | M2 | [m2-payload-impl.md](m2-payload-impl.md) | template/parts/ payload 実装 | フェーズ2 | done |
 | M3 | [m3-generator-impl.md](m3-generator-impl.md) | tooling/generator/ パイプライン実装 | フェーズ2 | done |
 | M4 | [m4-e2e-integration.md](m4-e2e-integration.md) | エンドツーエンド統合と prototype → main PR | フェーズ2 | in_progress |
+| M5 | [m5-lang-part.md](m5-lang-part.md) | lang/ Part 追加と --lang フラグ実装 | フェーズ2 | not_started |
