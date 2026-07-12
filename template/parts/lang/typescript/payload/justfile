@@ -41,6 +41,7 @@ init:
 versions:
     @echo "node:    $(node --version)"
     @echo "npm:     $(npm --version)"
+    @echo "biome:   $(biome --version)"
     @echo "just:    $(just --version)"
     @echo "treefmt: $(treefmt --version 2>&1 | head -1)"
     @echo "rumdl:   $(rumdl --version 2>&1 | head -1)"

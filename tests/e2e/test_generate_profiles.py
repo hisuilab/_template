@@ -257,3 +257,8 @@ class TestLangCli:
         _generate("tsapp", "small-cli", output, lang="typescript")
         justfile = (output / "justfile").read_text()
         assert "biome" in justfile
+
+    def test_lang_typescript_biome_json_exists(self, tmp_path: Path) -> None:
+        output = tmp_path / "tsapp"
+        _generate("tsapp", "small-cli", output, lang="typescript")
+        assert (output / "biome.json").exists()
