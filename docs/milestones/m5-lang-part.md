@@ -40,7 +40,7 @@ M4 の手動確認で「生成プロジェクトに Python 環境が入ってい
 - [x] `template/parts/lang/typescript/` が追加されている（part.toml + payload/）
 - [x] `--lang python` で生成したプロジェクトで `nix develop --command python3 --version` が動く（手動確認）
 - [x] `--lang python` で生成したプロジェクトで `nix develop --command just verify` がグリーンになる（手動確認）
-- [ ] `--lang typescript` で生成したプロジェクトで `nix develop --command node --version` が動く（手動確認）
+- [x] `--lang typescript` で生成したプロジェクトで `nix develop --command node --version` が動く（手動確認）
 - [x] e2e テストが `--lang python` を含むコマンドで全 pass する
 - [x] `just verify`（このリポジトリ）が pass する
 - [x] 生成 justfile に `just init`（git 初期化 + prek フックインストール）が追加されている
