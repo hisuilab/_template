@@ -38,8 +38,8 @@ M4 の手動確認で「生成プロジェクトに Python 環境が入ってい
 - [x] `--lang python,typescript` 等の複数指定（M5 時点）はエラー終了し、M6+ 対応予定の旨を表示する
 - [x] `template/parts/lang/python/` が追加されている（part.toml + payload/）
 - [x] `template/parts/lang/typescript/` が追加されている（part.toml + payload/）
-- [ ] `--lang python` で生成したプロジェクトで `nix develop --command python3 --version` が動く（手動確認）
-- [ ] `--lang python` で生成したプロジェクトで `nix develop --command just verify` がグリーンになる（手動確認）
+- [x] `--lang python` で生成したプロジェクトで `nix develop --command python3 --version` が動く（手動確認）
+- [x] `--lang python` で生成したプロジェクトで `nix develop --command just verify` がグリーンになる（手動確認）
 - [ ] `--lang typescript` で生成したプロジェクトで `nix develop --command node --version` が動く（手動確認）
 - [x] e2e テストが `--lang python` を含むコマンドで全 pass する
 - [x] `just verify`（このリポジトリ）が pass する
@@ -255,3 +255,4 @@ def _generate(name: str, profile: str, output: Path, lang: str = "python") -> No
 - **U-06（append 戦略）**: M6+。複数 lang 指定・フルスタック構成はこの戦略が揃ってから実装します
 - **U-07（役割名語彙）**: M6+
 - **TypeScript 向け purpose Part**: M6+。`--lang typescript` と既存 purpose Part の組み合わせは devShell のみ対応（src/ は Python スケルトンのまま）
+- **ランタイム検証の自動化**: e2e テストは `flake.nix` の文字列チェックのみで、`nix develop --command python3 --version` 等の実行確認はテスト対象外（手動確認）。Nix ビルドを CI に含める戦略（`@pytest.mark.slow` マークや専用ワークフロー）は M6+ で検討します
