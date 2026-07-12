@@ -239,3 +239,21 @@ class TestLangCli:
         _generate("tsapp", "small-cli", output, lang="typescript")
         flake = (output / "flake.nix").read_text()
         assert "nodejs" in flake
+
+    def test_lang_typescript_flake_contains_biome(self, tmp_path: Path) -> None:
+        output = tmp_path / "tsapp"
+        _generate("tsapp", "small-cli", output, lang="typescript")
+        flake = (output / "flake.nix").read_text()
+        assert "biome" in flake
+
+    def test_lang_typescript_treefmt_uses_biome(self, tmp_path: Path) -> None:
+        output = tmp_path / "tsapp"
+        _generate("tsapp", "small-cli", output, lang="typescript")
+        treefmt = (output / "treefmt.nix").read_text()
+        assert "biome" in treefmt
+
+    def test_lang_typescript_justfile_has_lint(self, tmp_path: Path) -> None:
+        output = tmp_path / "tsapp"
+        _generate("tsapp", "small-cli", output, lang="typescript")
+        justfile = (output / "justfile").read_text()
+        assert "biome" in justfile
