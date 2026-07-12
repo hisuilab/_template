@@ -12,8 +12,19 @@
 
 - 要件・アーキテクチャの上位方針（`docs/draft/project-direction.md` が持ちます）
 
-## 4. マイルストーン一覧
+## 4. 凡例
 
-| # | 文書 | タイトル | 状態 |
-| --- | --- | --- | --- |
-| M1 | [m1-tree-structure.md](m1-tree-structure.md) | template/ レイヤー設計とプロファイル骨格 | not_started |
+| status | 意味 |
+| --- | --- |
+| `not_started` | 未着手 |
+| `in_progress` | 進行中 |
+| `done` | 完了 |
+
+## 5. マイルストーン一覧
+
+| # | 文書 | タイトル | フェーズ | 状態 |
+| --- | --- | --- | --- | --- |
+| M1 | [m1-tree-structure.md](m1-tree-structure.md) | template/ レイヤー設計とプロファイル骨格 | フェーズ2 | done |
+| M2 | [m2-payload-impl.md](m2-payload-impl.md) | template/parts/ payload 実装 | フェーズ2 | not_started |
+| M3 | [m3-generator-impl.md](m3-generator-impl.md) | tooling/generator/ パイプライン実装 | フェーズ2 | not_started |
+| M4 | [m4-e2e-integration.md](m4-e2e-integration.md) | エンドツーエンド統合と prototype → main PR | フェーズ2 | not_started |
