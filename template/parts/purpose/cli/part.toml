@@ -1,0 +1,9 @@
+[part]
+id = "purpose/cli"
+layer = "purpose"
+summary = "CLI ツール向けの src/ 骨格とエントリポイント"
+requires = ["base"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]

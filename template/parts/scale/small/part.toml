@@ -1,0 +1,6 @@
+[part]
+id = "scale/small"
+layer = "scale"
+summary = "小規模プロジェクト向けのドキュメント骨格（docs/draft/）"
+requires = ["base"]
+conflicts = []

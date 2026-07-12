@@ -1,0 +1,6 @@
+[part]
+id = "features/ai-agent"
+layer = "features"
+summary = "AI エージェント向け設定ファイル（AGENTS.md・CLAUDE.md）"
+requires = ["base"]
+conflicts = []
