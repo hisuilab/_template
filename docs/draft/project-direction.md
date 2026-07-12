@@ -98,26 +98,19 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 | --- | --- | --- | --- |
 | フェーズ0 | 基盤共通部分の確立（flake/just/lint/CI/pre-commit） | — | 完了（nix-stationで検証済み） |
 | フェーズ1 | nix-stationの改善バックポート・要件/アーキテクチャ設計・Python/Ruff環境整備 | — | 完了 |
-| フェーズ2 | `tooling/generator` 実装・言語Part追加・`prototype → main` PR | M1–M5 | 進行中 |
-| フェーズ3 | Profileシステムの設計（スタイル×スケール×用途の拡張） | M6+ | 未着手 |
+| フェーズ2 | `tooling/generator` 実装・言語Part追加・`prototype → main` PR | M1–M5 | 完了 |
+| フェーズ3 | 言語環境の充実・グローバル呼び出し・features Part 追加 | M6–M8 | 進行中 |
 
-**`prototype` ブランチ完了条件（フェーズ2 = M5 完了時）:**
-
-```sh
-python3 -m tooling.generator generate \
-  --name foo --profile small-cli --lang python --output ~/Projects/foo
-```
-
-を実行し、生成プロジェクトで `nix develop` に入り言語ランタイムが使え、`just verify` がグリーンになること。この時点で `prototype → main` の PR を作成します。
-
-| マイルストーン | 内容 | フェーズ |
-| --- | --- | --- |
-| M1 | `template/` レイヤー設計・スキーマ・プロファイル宣言ファイル | フェーズ2 |
-| M2 | `template/parts/` payload 実装（代表3プロファイルの生成ファイル群） | フェーズ2 |
-| M3 | `tooling/generator/` パイプライン実装（loader/resolver/planner/renderer/applier） | フェーズ2 |
-| M4 | エンドツーエンド統合（e2e テスト・rumdl.toml 追加） | フェーズ2 |
-| M5 | `lang/` Part 追加（`--lang` フラグ・python/typescript 対応）と `prototype → main` PR | フェーズ2 |
-| M6+ | Profile システム拡張（style × scale × purpose の追加 Part・append 戦略） | フェーズ3 |
+| マイルストーン | 内容 | フェーズ | モード |
+| --- | --- | --- | --- |
+| M1 | `template/` レイヤー設計・スキーマ・プロファイル宣言ファイル | フェーズ2 | Prototype |
+| M2 | `template/parts/` payload 実装（代表3プロファイルの生成ファイル群） | フェーズ2 | Prototype |
+| M3 | `tooling/generator/` パイプライン実装（loader/resolver/planner/renderer/applier） | フェーズ2 | Prototype |
+| M4 | エンドツーエンド統合（e2e テスト・rumdl.toml 追加） | フェーズ2 | Prototype |
+| M5 | `lang/` Part 追加（`--lang` フラグ・python/typescript 対応）と `prototype → main` PR | フェーズ2 | Prototype |
+| M6 | TypeScript lint 整備（Biome 導入） | フェーズ3 | Production |
+| M7 | `nix run` flake app 対応（グローバル呼び出し） | フェーズ3 | Production |
+| M8 | `features/logging` Part 追加（Python / TypeScript） | フェーズ3 | Prototype |
 
 ## 7. システム構成（目標設計）
 
