@@ -24,10 +24,14 @@ check-readme:
 check-status:
     ./scripts/check-status
 
+# requires: git
+check-encoding:
+    ./scripts/check-encoding
+
 # requires: bats
 test:
     bats --recursive tests/unit
 
 lint: check-format
 
-verify: test lint check-docs check-readme check-status
+verify: test lint check-docs check-readme check-status check-encoding
