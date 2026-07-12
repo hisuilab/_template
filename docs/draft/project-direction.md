@@ -82,12 +82,22 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 
 ## 6. When — フェーズと優先順位
 
-| フェーズ | 内容 | 状態 |
+| フェーズ | 内容 | マイルストーン | 状態 |
+| --- | --- | --- | --- |
+| フェーズ0 | 基盤共通部分の確立（flake/just/lint/CI/pre-commit） | — | 完了（nix-stationで検証済み） |
+| フェーズ1 | nix-stationの改善バックポート・要件/アーキテクチャ設計・Python/Ruff環境整備 | — | 完了 |
+| フェーズ2 | `tooling/generator` 実装（最小Profile: small） | M1–M4 | 進行中 |
+| フェーズ3 | Profileシステムの設計（スタイル×スケール×用途） | M5+ | 未着手 |
+
+**`prototype` ブランチ完了条件（フェーズ2 = M4 完了時）:** `python3 -m tooling.generator generate --name foo --profile small-cli --output ~/Projects/foo` を実行し、生成プロジェクトで `just verify` がグリーンになること。この時点で `prototype → main` の PR を作成します。
+
+| マイルストーン | 内容 | フェーズ |
 | --- | --- | --- |
-| フェーズ0 | 基盤共通部分の確立（flake/just/lint/CI/pre-commit） | 完了（nix-stationで検証済み） |
-| フェーズ1 | nix-stationの改善バックポート・要件/アーキテクチャ設計・Python/Ruff環境整備 | 完了 |
-| フェーズ2 | `tooling/generator` 実装（最小Profile: small） | 未着手 |
-| フェーズ3 | Profileシステムの設計（スタイル×スケール×用途） | 未着手 |
+| M1 | `template/` レイヤー設計・スキーマ・プロファイル宣言ファイル | フェーズ2 |
+| M2 | `template/parts/` payload 実装（代表3プロファイルの生成ファイル群） | フェーズ2 |
+| M3 | `tooling/generator/` パイプライン実装（loader/resolver/planner/renderer/applier） | フェーズ2 |
+| M4 | エンドツーエンド統合と `prototype → main` PR | フェーズ2 |
+| M5+ | Profile システム拡張（style × scale × purpose の追加 Part） | フェーズ3 |
 
 ## 7. システム構成（目標設計）
 
