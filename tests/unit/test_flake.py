@@ -20,3 +20,8 @@ def test_flake_exposes_apps_output() -> None:
 def test_flake_app_wraps_generator() -> None:
     content = (REPO_ROOT / "flake.nix").read_text()
     assert "tooling.generator" in content
+
+
+def test_flake_app_sets_template_root() -> None:
+    content = (REPO_ROOT / "flake.nix").read_text()
+    assert 'TEMPLATE_ROOT="${self}/template"' in content
