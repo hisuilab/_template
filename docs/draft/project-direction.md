@@ -99,7 +99,9 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 | フェーズ0 | 基盤共通部分の確立（flake/just/lint/CI/pre-commit） | — | 完了（nix-stationで検証済み） |
 | フェーズ1 | nix-stationの改善バックポート・要件/アーキテクチャ設計・Python/Ruff環境整備 | — | 完了 |
 | フェーズ2 | `tooling/generator` 実装・言語Part追加・`prototype → main` PR | M1–M5 | 完了 |
-| フェーズ3 | 言語環境の充実・グローバル呼び出し・features Part 追加 | M6–M8 | 進行中 |
+| フェーズ3 | 言語環境の充実・グローバル呼び出し・features Part 追加 | M6–M8 | 完了 |
+| フェーズ4 | AI/DX 開発環境 Part 拡張・`~/Projects` 親環境の整備 | M9–M10 | 未着手 |
+| フェーズ5 | 複数 lang 対応（append 戦略）・Profile システム拡張 | M11+ | 未着手（フェーズ4完了後に設計） |
 
 | マイルストーン | 内容 | フェーズ | モード |
 | --- | --- | --- | --- |
@@ -111,6 +113,8 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 | M6 | TypeScript lint 整備（Biome 導入） | フェーズ3 | Production |
 | M7 | `nix run` flake app 対応（グローバル呼び出し） | フェーズ3 | Production |
 | M8 | `features/logging` Part 追加（Python / TypeScript） | フェーズ3 | Production |
+| M9 | `features/ai-agent` Part 拡張（AI ワークフロー設定ファイル群の汎用化） | フェーズ4 | Production |
+| M10 | `~/Projects` 親環境の整備（ワークスペース初期化コマンド追加） | フェーズ4 | Production |
 
 ## 7. システム構成（目標設計）
 
@@ -244,7 +248,9 @@ template.parts, template.profiles は実行時のファイル読み込み（Pyth
 | ~~U-01~~ | ~~`tooling/` の実装言語~~ | — | 解決済み（Python 3.11+。[2026-07-12-python-generator.md](../decisions/2026-07-12-python-generator.md) 参照） |
 | ~~U-02~~ | ~~`src/` ディレクトリの扱い~~ | — | 解決済み（lang Part が `src/` または役割ディレクトリを提供。リポジトリ内の `src/` は削除済み） |
 | ~~U-03~~ | ~~Profile の具体的なファイル構成~~ | — | 解決済み（M1–M4 で代表3プロファイルを実装。lang Part は M5 で追加） |
-| U-04 | スケール・スタイル・用途の具体的な候補値の確定 | Profileシステム設計 | 低（フェーズ3） |
+| U-04 | スケール・スタイル・用途の具体的な候補値の確定 | Profileシステム設計 | 低（フェーズ5） |
 | U-05 | 既存プロジェクト（nix-station等）への更新伝播方法 | 運用設計 | 低 |
-| U-06 | 複数 lang Part の `flake.nix` マージ戦略（`append` 戦略）。`--lang python,typescript` のフルスタック構成で必要。現状は単一言語の `replace` のみ対応 | generator/planner 設計 | 中（フェーズ3） |
-| U-07 | 予約済み役割名（`backend`/`frontend`/`worker`）以外の役割が必要になった場合の語彙管理 | CLI 設計 | 低（フェーズ3） |
+| U-06 | 複数 lang Part の `flake.nix` マージ戦略（`append` 戦略）。`--lang python,typescript` のフルスタック構成で必要。現状は単一言語の `replace` のみ対応 | generator/planner 設計 | 中（フェーズ5で対応予定） |
+| U-07 | 予約済み役割名（`backend`/`frontend`/`worker`）以外の役割が必要になった場合の語彙管理 | CLI 設計 | 低（フェーズ5） |
+| U-08 | `features/ai-agent` Part の汎用化スコープ。`AGENTS.md`・`CLAUDE.md` のみ提供する現行に対し、`.claude/commands/`・`.claude/rules/` 等の AI ワークフロー設定ファイル群をどこまで生成対象に含めるか。`.claude/` が汎用設計に安定するまで確定できない | M9 設計 | 高（フェーズ4） |
+| U-09 | `~/Projects` 親環境の提供方式。ジェネレータの新サブコマンド（`init-workspace`）として実装するか、独立したスクリプトとして提供するか。direnv + nix のネストは問題なし（確認済み） | M10 設計 | 中（フェーズ4） |
