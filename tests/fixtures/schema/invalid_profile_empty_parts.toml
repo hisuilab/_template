@@ -1,0 +1,4 @@
+[profile]
+name = "empty"
+summary = "parts が空配列の不正な profile.toml の例"
+parts = []

@@ -1,0 +1,17 @@
+[part]
+id = "features/ai-agent"
+layer = "features"
+summary = "AI エージェント向け設定ファイルを追加します"
+requires = ["base"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]
+
+[[files]]
+path = "AGENTS.md"
+strategy = "error"
+
+[[files]]
+path = ".gitignore"
+strategy = "append"

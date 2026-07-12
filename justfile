@@ -29,8 +29,15 @@ check-encoding:
     ./scripts/check-encoding
 
 # requires: bats
-test:
+test-bats:
     bats --recursive tests/unit
+
+# requires: pytest
+test-py:
+    pytest
+
+# requires: bats, pytest
+test: test-bats test-py
 
 lint: check-format
 

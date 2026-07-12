@@ -1,0 +1,4 @@
+[part]
+id = "features/example"
+layer = "unknown-layer"
+summary = "layer 値が値域外の不正な part.toml の例"
