@@ -31,4 +31,4 @@
 | M5 | [m5-lang-part.md](m5-lang-part.md) | lang/ Part 追加と --lang フラグ実装 | フェーズ2 | done |
 | M6 | [Issue #2](https://github.com/hisuilab/_template/issues/2) | TypeScript lint 整備（Biome 導入） | フェーズ3 | done |
 | M7 | [Issue #3](https://github.com/hisuilab/_template/issues/3) | nix run flake app 対応 | フェーズ3 | done |
-| M8 | [Issue #7](https://github.com/hisuilab/_template/issues/7) | features/logging Part 追加（Python / TypeScript） | フェーズ3 | in_progress |
+| M8 | [Issue #7](https://github.com/hisuilab/_template/issues/7) | features/logging Part 追加（Python / TypeScript） | フェーズ3 | done |
