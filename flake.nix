@@ -1,5 +1,5 @@
 {
-  description = "";
+  description = "Project template generator";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
@@ -8,7 +8,12 @@
   };
 
   outputs =
-    { nixpkgs, treefmt-nix, ... }:
+    {
+      self,
+      nixpkgs,
+      treefmt-nix,
+      ...
+    }:
     let
       systems = [
         "aarch64-darwin"
@@ -21,6 +26,29 @@
       treefmtEval = forAllSystems (system: treefmt-nix.lib.evalModule (pkgsFor system) ./treefmt.nix);
     in
     {
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = pkgsFor system;
+        in
+        {
+          default = pkgs.writeShellApplication {
+            name = "_template";
+            runtimeInputs = [ pkgs.python3 ];
+            text = ''
+              PYTHONPATH="${self}" python3 -m tooling.generator "$@"
+            '';
+          };
+        }
+      );
+
+      apps = forAllSystems (system: {
+        default = {
+          type = "app";
+          program = "${self.packages.${system}.default}/bin/_template";
+        };
+      });
+
       formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
 
       devShells = forAllSystems (
