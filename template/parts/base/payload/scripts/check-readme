@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# requires: git
+set -euo pipefail
+
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo"
+
+ignore_file=".readmeignore"
+
+is_ignored() {
+  local dir="$1"
+  [ -f "$ignore_file" ] || return 1
+  git -c core.excludesFile="$ignore_file" check-ignore --no-index -q -- "$dir"
+}
+
+mapfile -t dirs < <(
+  git ls-files |
+    grep -vE '(^|/)README\.md$' |
+    xargs -n1 dirname |
+    sort -u
+)
+
+missing=0
+for dir in "${dirs[@]}"; do
+  if [ "$dir" = "." ]; then
+    readme="README.md"
+  else
+    if is_ignored "$dir"; then
+      continue
+    fi
+    readme="$dir/README.md"
+  fi
+
+  if [ ! -f "$readme" ]; then
+    echo "missing README.md: $readme"
+    missing=1
+    continue
+  fi
+
+  # リポジトリ直下は公開向けの独自体裁(バッジ・独自ToC等)を許容し、見出し構成チェックの対象外とする
+  if [ "$dir" = "." ]; then
+    continue
+  fi
+
+  if ! grep -qE '^# ' "$readme"; then
+    echo "missing title heading (# ...): $readme"
+    missing=1
+  fi
+  if ! grep -qE '^## 1\. 概要' "$readme"; then
+    echo "missing '## 1. 概要' section: $readme"
+    missing=1
+  fi
+  if ! grep -qE '^## 2\. 責任' "$readme"; then
+    echo "missing '## 2. 責任' section: $readme"
+    missing=1
+  fi
+  if ! grep -qE '^## 3\. 責任外' "$readme"; then
+    echo "missing '## 3. 責任外' section: $readme"
+    missing=1
+  fi
+  if grep -qE '^#+ .*目次' "$readme"; then
+    echo "must not contain a table of contents (目次): $readme"
+    missing=1
+  fi
+done
+
+if [ "$missing" -eq 1 ]; then
+  cat <<'EOF'
+
+README.md must include (and must not add a table of contents):
+  # <title>
+  ## 1. 概要
+  ## 2. 責任
+  ## 3. 責任外
+
+Add a trailing-slash pattern to .readmeignore to exempt a directory entirely (gitignore syntax).
+EOF
+  exit 1
+fi

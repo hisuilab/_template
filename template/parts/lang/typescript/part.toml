@@ -1,0 +1,21 @@
+[part]
+id = "lang/typescript"
+layer = "lang"
+summary = "TypeScript 言語環境（nodejs / typescript）"
+requires = ["base"]
+conflicts = ["lang/python"]
+
+[placeholders]
+required = ["project_name"]
+
+[[files]]
+path = "flake.nix"
+strategy = "replace"
+
+[[files]]
+path = "treefmt.nix"
+strategy = "replace"
+
+[[files]]
+path = "justfile"
+strategy = "replace"

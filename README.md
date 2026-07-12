@@ -13,7 +13,7 @@
 
 ## 1. 概要
 
-新規プロジェクトの雛形を生成するためのテンプレートリポジトリです。Nix flakeによる再現可能な開発環境と、treefmt(整形)・prek(pre-commit)によるフォーマット/lint/シークレット検査のゲート、justタスクランナー、batsによるテストを備えています。`tooling/`のジェネレータが`template/`のProfileを元に新規プロジェクト一式を生成する構想ですが、現時点では開発環境の基盤のみ実装済みです。
+新規プロジェクトの雛形を生成するためのテンプレートリポジトリです。Nix flakeによる再現可能な開発環境と、treefmt(整形)・pre-commitによるフォーマット/lint/シークレット検査のゲート、justタスクランナー、batsによるテストを備えています。`tooling/`のジェネレータが`template/`のProfileを元に新規プロジェクト一式を生成します。
 
 ## 2. クイックスタート
 
@@ -22,13 +22,33 @@ nix develop   # devShellを有効化(direnv利用時は `direnv allow` でも可
 just verify   # test + lint(format) + check-docs
 ```
 
+新規プロジェクトを生成するには、nix devShell内で次のコマンドを実行します。
+
+```sh
+python3 -m tooling.generator generate \
+  --name <project-name> \
+  --profile small-cli \
+  --lang python \
+  --output ~/Projects/<project-name>
+```
+
+生成後はプロジェクトディレクトリに移動してセットアップします。
+
+```sh
+cd ~/Projects/<project-name>
+nix develop --command just init   # git 初期化とフックのインストール（初回のみ）
+nix develop                       # 開発シェルに入る
+just verify                       # 動作確認
+```
+
+利用可能なProfileは`small-cli`、`small-web-api`、`small-library`、利用可能な`--lang`は`python`、`typescript`です。
+
 ## 3. 構成
 
 | ディレクトリ | 内容 |
 | --- | --- |
 | [scripts/](scripts/README.md) | 開発環境の補助スクリプト |
 | [tests/](tests/README.md) | ユニット/結合/E2Eテスト |
-| [tooling/](tooling/README.md) | プロジェクト生成ジェネレータ(未着手) |
-| [template/](template/README.md) | ジェネレータが読み込むProfile(未着手) |
+| [tooling/](tooling/README.md) | プロジェクト生成ジェネレータ |
+| [template/](template/README.md) | ジェネレータが読み込むProfile定義 |
 | [docs/](docs/README.md) | 生成先プロジェクトに配布する文書規約(未着手) |
-| [src/](src/README.md) | 用途未確定 |

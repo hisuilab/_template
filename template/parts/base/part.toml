@@ -1,0 +1,7 @@
+[part]
+id = "base"
+layer = "base"
+summary = "全 Profile 共通の開発基盤（Nix flake・just・pre-commit・CI・README 骨格）"
+
+[placeholders]
+required = ["project_name"]

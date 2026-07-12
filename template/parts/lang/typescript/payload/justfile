@@ -1,0 +1,46 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+# requires: treefmt
+format:
+    treefmt
+
+# requires: treefmt
+lint:
+    treefmt --fail-on-change
+
+# requires: rumdl
+check-docs:
+    if [ -d docs ]; then rumdl check --config rumdl.toml docs/; fi
+
+# requires: git
+check-readme:
+    ./scripts/check-readme
+
+# requires: git
+check-status:
+    ./scripts/check-status
+
+# requires: git
+check-encoding:
+    ./scripts/check-encoding
+
+# requires: node
+type-check:
+    npx tsc --noEmit
+
+verify: lint check-docs check-readme check-status check-encoding
+
+# run once after generation: initialize git repository and install pre-commit hooks
+init:
+    git init
+    git add -A
+    prek install --hook-type pre-commit --hook-type commit-msg
+
+# show versions of all development tools
+versions:
+    @echo "node:    $(node --version)"
+    @echo "npm:     $(npm --version)"
+    @echo "just:    $(just --version)"
+    @echo "treefmt: $(treefmt --version 2>&1 | head -1)"
+    @echo "rumdl:   $(rumdl --version 2>&1 | head -1)"
+    @echo "git:     $(git --version)"

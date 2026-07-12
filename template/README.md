@@ -2,11 +2,13 @@
 
 ## 1. 概要
 
-`tooling/`のジェネレータが読み込むProfile(生成元となるテンプレート一式)を置くディレクトリです。CI(`.github/workflows/ci.yml`)は`small` `small-ddd` `small-python`の3 Profileを生成してスモークテストする想定です。現時点ではディレクトリ雛形のみで、内容は未着手です。
+`tooling/` のジェネレータが読み込む Profile（生成元となるテンプレート一式）を置くディレクトリです。代表3プロファイル（`small-cli` / `small-web-api` / `small-library`）の Part payload が実装済みです。
 
 ## 2. 責任
 
-- 保持するもの: Profileごとのテンプレートファイル一式(今後追加)
+- `schema/`: ProfileSchema / PartSchema の定義・検証（Python パッケージ）
+- `profiles/`: プロファイル宣言（`*.toml`）
+- `parts/`: Part ごとの `part.toml` と `payload/` テンプレートファイル群
 
 ## 3. 責任外
 

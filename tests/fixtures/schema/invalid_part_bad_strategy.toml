@@ -1,0 +1,8 @@
+[part]
+id = "features/example"
+layer = "features"
+summary = "strategy 値が値域外の不正な part.toml の例"
+
+[[files]]
+path = ".gitignore"
+strategy = "overwrite"

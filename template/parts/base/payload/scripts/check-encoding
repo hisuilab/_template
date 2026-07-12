@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# requires: git
+set -euo pipefail
+
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo"
+
+fffd=$'\xef\xbf\xbd'
+found=0
+
+mapfile -t files < <(git ls-files)
+
+for file in "${files[@]}"; do
+  [ -f "$file" ] || continue
+  if grep -Iq "$fffd" "$file" 2>/dev/null; then
+    grep -In "$fffd" "$file" | while IFS=: read -r lnum rest; do
+      echo "$file:$lnum: contains U+FFFD (replacement character)"
+    done
+    found=1
+  fi
+done
+
+if [ "$found" -eq 1 ]; then
+  cat <<'EOF'
+
+U+FFFD (0xEF 0xBF 0xBD) detected in tracked files.
+This indicates garbled text written by encoding-unaware tools.
+Fix by rewriting the affected file sections with the correct characters.
+EOF
+  exit 1
+fi

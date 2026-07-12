@@ -9,6 +9,7 @@ devshell_packages() {
   awk '/packages = \[/{flag=1; next} /\];/{flag=0} flag' "$repo_root/flake.nix" |
     sed -E 's/^ *pkgs\.//; s/ *;? *$//' |
     sed -E 's#treefmtEval\.\$\{system\}\.config\.build\.wrapper#treefmt#' |
+    sed -E 's/^python3Packages\.//' |
     sed -E 's/^ +//; s/ +$//' |
     sed '/^$/d'
 }

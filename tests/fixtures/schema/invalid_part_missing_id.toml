@@ -1,0 +1,3 @@
+[part]
+layer = "features"
+summary = "id フィールドが欠落した不正な part.toml の例"

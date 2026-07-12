@@ -36,7 +36,10 @@
               pkgs.gitleaks
               pkgs.just
               pkgs.prek
+              pkgs.python3
+              pkgs.python3Packages.pytest
               pkgs.ripgrep
+              pkgs.ruff
               pkgs.rumdl
               pkgs.shellcheck
               pkgs.shfmt
