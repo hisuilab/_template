@@ -124,6 +124,18 @@ class TestPlanner:
         dest_paths = [f.dest_path for f in result.files]
         assert "src/mylib/__init__.py" in dest_paths
 
+    def test_plan_missing_placeholder_raises_plan_error(self, tmp_path: Path) -> None:
+        self._make_part_dir(tmp_path, "purpose/library", {"src/{{project_name}}/__init__.py": ""})
+        part = PartSchema(
+            id="purpose/library",
+            layer="purpose",
+            summary="lib",
+            placeholders_required=("undeclared_var",),
+        )
+        req = GenerateRequest(name="mylib", profile_id="test", output_path=tmp_path / "out")
+        with pytest.raises(PlanError, match="undeclared_var"):
+            make_plan(req, [part], template_root=tmp_path)
+
     def test_plan_collision_error_strategy_raises_plan_error(self, tmp_path: Path) -> None:
         for pid in ("part_a", "part_b"):
             self._make_part_dir(tmp_path, pid, {"README.md": f"# {pid}\n"})

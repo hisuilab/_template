@@ -96,6 +96,8 @@ PLAN 段階でファイル名・ディレクトリ名を確定します。変換
 
 同一 `dest_path` を複数の Part が提供した場合の動作です。
 
+`part.toml` の `[[files]]` の `path` フィールドは、**変換後の dest_path 空間**（`dot-` 除去・プレースホルダー置換済み）で記述します。例: `dot-gitignore` の strategy を指定したい場合は `path = ".gitignore"` と書きます。
+
 | strategy | 動作 |
 | --- | --- |
 | `error`（既定） | `PlanError` で停止し、競合ファイル名と関連 Part を報告 |

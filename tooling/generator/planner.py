@@ -29,6 +29,7 @@ def _transform_path(rel: str, variables: dict[str, str]) -> str:
 
 
 def _file_strategy(part: PartSchema, dest_path: str) -> str:
+    # rule.path is in the dest_path space (after dot- stripping and placeholder substitution)
     for rule in part.files:
         if rule.path == dest_path:
             return rule.strategy
@@ -41,6 +42,16 @@ def plan(
     template_root: Path,
 ) -> GenerationPlan:
     variables: dict[str, str] = {"project_name": request.name}
+
+    for part in parts:
+        for ph in part.placeholders_required:
+            if ph not in variables:
+                ph_repr = "{{" + ph + "}}"
+                raise PlanError(
+                    f"part '{part.id}' requires placeholder '{ph_repr}' "
+                    f"but it was not provided (available: {sorted(variables.keys())})"
+                )
+
     planned: dict[str, PlannedFile] = {}
 
     for part in parts:
