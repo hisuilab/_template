@@ -15,7 +15,13 @@ import pytest
 from tooling.generator.applier import apply
 from tooling.generator.errors import ApplyError, LoadError, PlanError, RenderError, ResolveError
 from tooling.generator.loader import load_parts_for_profile, load_profile
-from tooling.generator.models import GenerateRequest, GenerationPlan, GenerationResult, PlannedFile
+from tooling.generator.models import (
+    GenerateRequest,
+    GenerationPlan,
+    GenerationResult,
+    LangSpec,
+    PlannedFile,
+)
 from tooling.generator.planner import plan as make_plan
 from tooling.generator.renderer import render
 from tooling.generator.resolver import resolve
@@ -256,7 +262,12 @@ class TestGeneratorIntegration:
         profile = load_profile("small-cli", TEMPLATE_ROOT)
         parts = load_parts_for_profile(profile, TEMPLATE_ROOT)
         parts = resolve(parts)
-        req = GenerateRequest(name="foo", profile_id="small-cli", output_path=output)
+        req = GenerateRequest(
+            name="foo",
+            profile_id="small-cli",
+            output_path=output,
+            lang=(LangSpec(lang="python", role=None),),
+        )
         gen_plan = make_plan(req, parts, template_root=TEMPLATE_ROOT)
         staging = tmp_path / "staging"
         staging.mkdir()
@@ -273,7 +284,12 @@ class TestGeneratorIntegration:
         profile = load_profile("small-cli", TEMPLATE_ROOT)
         parts = load_parts_for_profile(profile, TEMPLATE_ROOT)
         parts = resolve(parts)
-        req = GenerateRequest(name="myapp", profile_id="small-cli", output_path=output)
+        req = GenerateRequest(
+            name="myapp",
+            profile_id="small-cli",
+            output_path=output,
+            lang=(LangSpec(lang="python", role=None),),
+        )
         gen_plan = make_plan(req, parts, template_root=TEMPLATE_ROOT)
         staging = tmp_path / "staging"
         staging.mkdir()
@@ -298,6 +314,8 @@ class TestGeneratorIntegration:
                 "small-cli",
                 "--output",
                 str(output),
+                "--lang",
+                "python",
             ],
             capture_output=True,
             text=True,

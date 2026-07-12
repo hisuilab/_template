@@ -19,7 +19,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _generate(name: str, profile: str, output: Path) -> None:
+def _generate(name: str, profile: str, output: Path, lang: str = "python") -> None:
     r = subprocess.run(
         [
             sys.executable,
@@ -32,6 +32,8 @@ def _generate(name: str, profile: str, output: Path) -> None:
             profile,
             "--output",
             str(output),
+            "--lang",
+            lang,
         ],
         capture_output=True,
         text=True,
@@ -174,3 +176,66 @@ class TestGenerateSmallLibrary:
         _generate("mylib", "small-library", output)
         _git_init(output)
         _assert_scripts_pass(output)
+
+
+# ---------------------------------------------------------------------------
+# --lang flag validation
+# ---------------------------------------------------------------------------
+
+
+class TestLangCli:
+    def test_lang_required_error(self, tmp_path: Path) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "x",
+                "--profile",
+                "small-cli",
+                "--output",
+                str(tmp_path / "out"),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+        combined = r.stdout + r.stderr
+        assert "lang" in combined.lower()
+
+    def test_lang_multiple_error(self, tmp_path: Path) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "x",
+                "--profile",
+                "small-cli",
+                "--output",
+                str(tmp_path / "out"),
+                "--lang",
+                "python,typescript",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+
+    def test_lang_python_flake_contains_python(self, tmp_path: Path) -> None:
+        output = tmp_path / "pyapp"
+        _generate("pyapp", "small-cli", output, lang="python")
+        flake = (output / "flake.nix").read_text()
+        assert "python" in flake
+
+    def test_lang_typescript_flake_contains_nodejs(self, tmp_path: Path) -> None:
+        output = tmp_path / "tsapp"
+        _generate("tsapp", "small-cli", output, lang="typescript")
+        flake = (output / "flake.nix").read_text()
+        assert "nodejs" in flake
