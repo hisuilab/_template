@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import stat
 from pathlib import Path
 
 from tooling.generator.errors import RenderError
@@ -12,12 +13,14 @@ _PLACEHOLDER_RE = re.compile(r"\{\{(\w+)\}\}")
 
 
 def _render_file(src: Path, dest_path: str, variables: dict[str, str], staging: Path) -> None:
+    out = staging / dest_path
+    out.parent.mkdir(parents=True, exist_ok=True)
+
     try:
         content = src.read_text(encoding="utf-8")
     except UnicodeDecodeError:
-        out = staging / dest_path
-        out.parent.mkdir(parents=True, exist_ok=True)
         out.write_bytes(src.read_bytes())
+        out.chmod(stat.S_IMODE(src.stat().st_mode))
         return
 
     unresolved: list[str] = []
@@ -34,9 +37,8 @@ def _render_file(src: Path, dest_path: str, variables: dict[str, str], staging: 
     if unresolved:
         raise RenderError(f"unresolved placeholder(s) {unresolved!r} in '{dest_path}'")
 
-    out = staging / dest_path
-    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(rendered, encoding="utf-8")
+    out.chmod(stat.S_IMODE(src.stat().st_mode))
 
 
 def render(plan: GenerationPlan, staging_dir: Path) -> None:
