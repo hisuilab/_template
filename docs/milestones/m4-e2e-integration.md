@@ -29,12 +29,12 @@ e2e テストは check-readme / check-status / check-encoding（Nix 不要の ba
 
 ## 2. 完了条件
 
-- [ ] `tests/e2e/test_generate_profiles.py` が追加され、3プロファイルの生成と check-readme / check-status / check-encoding の pass を pytest で確認する
-- [ ] `template/parts/base/payload/rumdl.toml` が追加されている（e2e テストで発覚した不足ファイル）
-- [ ] `pyproject.toml` の `testpaths` に `"tests/e2e"` が追加されている
-- [ ] e2e テストで発覚した問題がすべて修正されている
-- [ ] ルート `README.md` に生成コマンドの使用方法が追記されている
-- [ ] `just verify` pass（46件 + e2e 新規テスト件数）
+- [x] `tests/e2e/test_generate_profiles.py` が追加され、3プロファイルの生成と check-readme / check-status / check-encoding の pass を pytest で確認する
+- [x] `template/parts/base/payload/rumdl.toml` が追加されている（e2e テストで発覚した不足ファイル）
+- [x] `pyproject.toml` の `testpaths` に `"tests/e2e"` が追加されている
+- [x] e2e テストで発覚した問題がすべて修正されている
+- [x] ルート `README.md` に生成コマンドの使用方法が追記されている
+- [x] `just verify` pass（60件: bats 33 + unit 21 + e2e 13 - 先に 46 件だったが e2e 追加後 60 件）
 - [ ] `nix develop --command just verify` が `~/Projects/foo`（small-cli 生成先）で pass する（手動確認）
 - [ ] `prototype → main` PR が作成されている
 
