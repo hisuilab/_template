@@ -1,0 +1,21 @@
+[part]
+id = "lang/python"
+layer = "lang"
+summary = "Python 言語環境（python3 / uv / ruff / pytest）"
+requires = ["base"]
+conflicts = ["lang/typescript"]
+
+[placeholders]
+required = ["project_name"]
+
+[[files]]
+path = "flake.nix"
+strategy = "replace"
+
+[[files]]
+path = "treefmt.nix"
+strategy = "replace"
+
+[[files]]
+path = "justfile"
+strategy = "replace"

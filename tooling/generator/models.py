@@ -7,10 +7,17 @@ from pathlib import Path
 
 
 @dataclass(frozen=True)
+class LangSpec:
+    lang: str
+    role: str | None
+
+
+@dataclass(frozen=True)
 class GenerateRequest:
     name: str
     profile_id: str
     output_path: Path
+    lang: tuple[LangSpec, ...] = ()
 
 
 @dataclass(frozen=True)

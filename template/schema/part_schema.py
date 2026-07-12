@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from template.schema._toml import optional_str_list, require_str, require_table
 from template.schema.errors import SchemaError
 
-LAYERS = ("base", "scale", "purpose", "style", "languages", "features")
+LAYERS = ("base", "scale", "purpose", "style", "lang", "languages", "features")
 STRATEGIES = ("error", "replace", "append")
 DEFAULT_STRATEGY = "error"
 

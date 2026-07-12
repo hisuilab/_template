@@ -1,0 +1,31 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+# requires: treefmt
+format:
+    treefmt
+
+# requires: treefmt
+lint:
+    treefmt --fail-on-change
+
+# requires: rumdl
+check-docs:
+    if [ -d docs ]; then rumdl check --config rumdl.toml docs/; fi
+
+# requires: git
+check-readme:
+    ./scripts/check-readme
+
+# requires: git
+check-status:
+    ./scripts/check-status
+
+# requires: git
+check-encoding:
+    ./scripts/check-encoding
+
+# requires: node
+type-check:
+    npx tsc --noEmit
+
+verify: lint check-docs check-readme check-status check-encoding
