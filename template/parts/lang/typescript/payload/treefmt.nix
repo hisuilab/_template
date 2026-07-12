@@ -4,12 +4,19 @@
 
   programs.nixfmt.enable = true;
   programs.taplo.enable = true;
+
+  programs.biome = {
+    enable = true;
+    includes = [
+      "*.ts"
+      "*.tsx"
+    ];
+  };
+
   programs.prettier = {
     enable = true;
     includes = [
       "*.json"
-      "*.ts"
-      "*.tsx"
       "*.yaml"
       "*.yml"
     ];

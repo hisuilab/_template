@@ -4,9 +4,10 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 format:
     treefmt
 
-# requires: treefmt
+# requires: treefmt, biome
 lint:
     treefmt --fail-on-change
+    biome lint .
 
 # requires: rumdl
 check-docs:
