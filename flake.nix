@@ -36,7 +36,7 @@
             name = "_template";
             runtimeInputs = [ pkgs.python3 ];
             text = ''
-              PYTHONPATH="${self}" python3 -m tooling.generator "$@"
+              PYTHONPATH="${self}" TEMPLATE_ROOT="${self}/template" python3 -m tooling.generator "$@"
             '';
           };
         }
