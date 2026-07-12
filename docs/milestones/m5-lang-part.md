@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: done
 created: 2026-07-12
 updated: 2026-07-12
 ---
@@ -46,7 +46,7 @@ M4 の手動確認で「生成プロジェクトに Python 環境が入ってい
 - [x] 生成 justfile に `just init`（git 初期化 + prek フックインストール）が追加されている
 - [x] 生成 justfile に `just versions`（lang 別ツールバージョン一覧）が追加されている
 - [x] 生成プロジェクトの README.md にセットアップ手順（`just init`）が記載されている
-- [ ] `prototype → main` PR が作成されている
+- [x] `prototype → main` PR が作成されている
 
 ## 3. 設計
 
