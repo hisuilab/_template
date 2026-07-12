@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-新規プロジェクトを生成するジェネレータ本体を置くディレクトリです。`python3 -m tooling.generator generate --name <name> --profile <profile> --output <path>` の形で呼び出します。
+新規プロジェクトを生成するジェネレータ本体を置くディレクトリです。`nix run github:hisuilab/_template -- generate --name <name> --profile <profile> --lang <lang> --output <path>` の形でどこからでも呼び出せます。ローカルでは `nix run .# -- generate ...` でも実行可能です。
 
 ## 2. 責任
 

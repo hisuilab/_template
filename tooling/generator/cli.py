@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -16,7 +17,9 @@ from tooling.generator.planner import plan
 from tooling.generator.renderer import render
 from tooling.generator.resolver import resolve
 
-_TEMPLATE_ROOT = Path(__file__).resolve().parents[2] / "template"
+_TEMPLATE_ROOT = Path(
+    os.environ.get("TEMPLATE_ROOT", str(Path(__file__).resolve().parents[2] / "template"))
+)
 
 
 def _available_langs(template_root: Path) -> list[str]:
