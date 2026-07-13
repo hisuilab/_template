@@ -39,6 +39,13 @@ def init_workspace(
 
     ws_dir = workspace_root / workspace_name
 
+    if not ws_dir.is_dir():
+        available = sorted(p.name for p in workspace_root.iterdir() if p.is_dir())
+        avail_str = ", ".join(available) if available else "(none)"
+        raise WorkspaceError(
+            f"workspace '{workspace_name}' not found in '{workspace_root}'. Available: {avail_str}"
+        )
+
     if (path / "flake.nix").exists():
         raise WorkspaceError(f"flake.nix already exists at '{path}': will not overwrite")
 

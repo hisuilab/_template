@@ -44,6 +44,19 @@ def test_all_template_files_written(tmp_path: Path) -> None:
     assert (output / "justfile").exists()
 
 
+def test_unknown_workspace_name_raises(tmp_path: Path) -> None:
+    ws_root = _make_workspace_root(tmp_path)
+    output = tmp_path / "out"
+
+    with pytest.raises(Exception, match="no-such-workspace"):
+        init_workspace(
+            path=output,
+            workspace_name="no-such-workspace",
+            workspace_root=ws_root,
+            run_flake_update=False,
+        )
+
+
 def test_existing_flake_nix_raises(tmp_path: Path) -> None:
     ws_root = _make_workspace_root(tmp_path)
     output = tmp_path / "out"
