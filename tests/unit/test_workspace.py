@@ -57,6 +57,25 @@ def test_unknown_workspace_name_raises(tmp_path: Path) -> None:
         )
 
 
+def test_workspace_name_with_path_traversal_raises(tmp_path: Path) -> None:
+    ws_root = _make_workspace_root(tmp_path)
+    # create a directory outside workspace_root that has the traversal target name
+    evil_dir = tmp_path / "evil"
+    evil_dir.mkdir()
+    (evil_dir / "flake.nix").write_text("evil\n")
+    output = tmp_path / "out"
+
+    with pytest.raises(Exception):
+        init_workspace(
+            path=output,
+            workspace_name="../evil",
+            workspace_root=ws_root,
+            run_flake_update=False,
+        )
+    # output must not have been created with evil content
+    assert not output.exists() or not (output / "flake.nix").exists()
+
+
 def test_existing_flake_nix_raises(tmp_path: Path) -> None:
     ws_root = _make_workspace_root(tmp_path)
     output = tmp_path / "out"

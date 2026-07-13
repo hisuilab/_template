@@ -39,6 +39,11 @@ def init_workspace(
 
     ws_dir = workspace_root / workspace_name
 
+    if not ws_dir.resolve().is_relative_to(workspace_root.resolve()):
+        raise WorkspaceError(
+            f"invalid workspace name '{workspace_name}': must not contain path separators"
+        )
+
     if not ws_dir.is_dir():
         available = sorted(p.name for p in workspace_root.iterdir() if p.is_dir())
         avail_str = ", ".join(available) if available else "(none)"
