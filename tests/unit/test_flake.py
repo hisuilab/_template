@@ -30,3 +30,8 @@ def test_flake_app_sets_template_root() -> None:
 def test_cli_exposes_init_workspace_subcommand() -> None:
     cli = (REPO_ROOT / "tooling" / "generator" / "cli.py").read_text()
     assert "init-workspace" in cli
+
+
+def test_cli_exposes_create_subcommand() -> None:
+    cli = (REPO_ROOT / "tooling" / "generator" / "cli.py").read_text()
+    assert "create" in cli
