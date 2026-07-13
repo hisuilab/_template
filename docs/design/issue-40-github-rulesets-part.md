@@ -4,7 +4,7 @@ proposed_at: 2026-07-13
 approved_at: 2026-07-13
 approved_by: PM
 approval_ref: "https://github.com/hisuilab/_template/issues/40"
-implemented_at: null
+implemented_at: 2026-07-13
 related: "#40"
 ---
 

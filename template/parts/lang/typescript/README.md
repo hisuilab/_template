@@ -9,7 +9,7 @@ TypeScript 言語環境（nodejs / biome）を提供する lang Part です。
 - `part.toml` によるメタデータと依存宣言（requires: base, conflicts: lang/python）
 - `payload/flake.nix`: base packages + nodejs + biome を含む devShell
 - `payload/treefmt.nix`: base フォーマット設定 + biome（.ts / .tsx）+ prettier（.json / .yaml）
-- `payload/justfile`: base レシピ + `type-check`（npx tsc）+ `lint`（treefmt + biome lint）
+- `payload/justfile`: base レシピ + `type-check`（npx tsc）+ `lint`（treefmt + biome lint）、`github-*` レシピ（`strategy=replace` のため base justfile の全内容を複製）
 
 ## 3. 責任外
 
