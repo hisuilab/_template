@@ -323,6 +323,25 @@ class TestGeneratorIntegration:
         assert "myapp" in flake_content
         assert "{{project_name}}" not in flake_content
 
+    def test_init_workspace_rejects_workspace_with_path_separator(self, tmp_path: Path) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "init-workspace",
+                "--path",
+                str(tmp_path / "out"),
+                "--workspace",
+                "../evil",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode != 0
+        assert "invalid" in result.stderr.lower() or "workspace" in result.stderr.lower()
+
     def test_generate_rejects_name_with_path_separator(self, tmp_path: Path) -> None:
         result = subprocess.run(
             [
