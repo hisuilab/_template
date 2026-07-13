@@ -11,6 +11,7 @@ declare -A allowed_status=(
   ["docs/draft"]="draft migrated"
   ["docs/milestones"]="not_started in_progress done"
   ["docs/decisions"]="proposed approved implemented"
+  ["docs/design"]="proposed approved implemented"
 )
 
 extract_status() {
@@ -66,6 +67,7 @@ status frontmatter must be present and match one of the allowed values for its d
   docs/draft/*.md:      status: draft | migrated
   docs/milestones/*.md: status: not_started | in_progress | done
   docs/decisions/*.md:  status: proposed | approved | implemented
+  docs/design/*.md:     status: proposed | approved | implemented
 
 See tmp/docs/_template/ for the canonical templates.
 EOF
