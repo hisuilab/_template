@@ -9,6 +9,7 @@
 - `schema/`: ProfileSchema / PartSchema の定義・検証（Python パッケージ）
 - `profiles/`: プロファイル宣言（`*.toml`）
 - `parts/`: Part ごとの `part.toml` と `payload/` テンプレートファイル群
+- `workspaces/`: `init-workspace` が使用するワークスペーステンプレート群（Parts システムとは独立した固定テンプレート）
 
 ## 3. 責任外
 

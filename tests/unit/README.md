@@ -7,7 +7,7 @@
 ## 2. 責任
 
 - bats テスト: scripts/ に 1:1 対応する `scripts/*.bats`、整合性テスト `consistency/devshell.bats`
-- pytest テスト: `test_schema.py`（template/schema 検証）、`test_payload.py`（payload 整合検証）、`test_generator.py`（tooling/generator パイプライン検証）
+- pytest テスト: `test_schema.py`（template/schema 検証）、`test_payload.py`（payload 整合検証）、`test_generator.py`（tooling/generator パイプライン検証）、`test_workspace.py`（tooling/generator/workspace.py 検証）、`test_flake.py`（flake.nix 出力検証）
 
 ## 3. 責任外
 
