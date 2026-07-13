@@ -7,3 +7,7 @@ tests/unit/scripts/
 # template/parts/**/payload/ はジェネレータが読み込む生成元テンプレートファイル群のため
 # _template 自身の README.md 構造チェック対象外とします
 template/parts/**/payload/
+
+# .github/ は GitHub が規約として認識する特殊ディレクトリ(CODEOWNERS / workflows 等)のため
+# README.md を置くと GitHub がリポジトリの表示 README として優先描画してしまうため除外します
+.github/
