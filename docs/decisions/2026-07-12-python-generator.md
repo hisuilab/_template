@@ -3,6 +3,7 @@ status: approved
 proposed_at: 2026-07-12
 approved_at: 2026-07-12
 approved_by: PM
+approval_ref: "prototype-mode-m3"
 implemented_at: null
 related: null
 ---

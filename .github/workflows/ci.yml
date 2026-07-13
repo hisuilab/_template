@@ -27,5 +27,5 @@ jobs:
       # justfileのverify recipeが唯一の正本で、ここでは個別に列挙しません。
       - name: Run verify
         run: nix develop --command just verify
-      # tooling/generator実装後に追加予定: 生成したProfile(small/small-ddd/small-python)に対する
-      # スモークテスト(生成 → ./scripts/verify)。tooling/がまだ雛形のみのため現時点では未着手です。
+      # e2eテストはtests/e2e/に実装済みでjust verify経由でここで実行される。
+      # 生成プロジェクト上でのnix develop && just verifyはNix環境依存のためCI対象外。

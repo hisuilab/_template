@@ -40,10 +40,15 @@ jobs:
           nix develop --command just verify
           nix flake check --print-build-logs
           git push --force-with-lease origin "$BRANCH"
-          gh pr create \
-            --title "chore: update flake.lock" \
-            --body "月次 Nix flake inputs 更新。" \
-            --base main \
-            --head "$BRANCH"
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')
+          if [ "$existing" -eq 0 ]; then
+            gh pr create \
+              --title "chore: update flake.lock" \
+              --body "月次 Nix flake inputs 更新。" \
+              --base main \
+              --head "$BRANCH"
+          else
+            echo "PR already exists for $BRANCH — skipping gh pr create"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

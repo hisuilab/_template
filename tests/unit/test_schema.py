@@ -56,7 +56,7 @@ def test_valid_part_full_parses() -> None:
         placeholders_required=("project_name",),
         files=(
             FileRule(path="AGENTS.md", strategy="error"),
-            FileRule(path=".gitignore", strategy="append"),
+            FileRule(path=".gitignore", strategy="replace"),
         ),
     )
 
