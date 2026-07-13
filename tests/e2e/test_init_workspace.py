@@ -18,6 +18,7 @@ def _init_workspace(path: Path) -> subprocess.CompletedProcess:
             "init-workspace",
             "--path",
             str(path),
+            "--no-flake-update",
         ],
         capture_output=True,
         text=True,

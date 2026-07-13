@@ -149,6 +149,7 @@ def _cmd_init_workspace(args: argparse.Namespace) -> int:
             path=path,
             workspace_name=args.workspace,
             workspace_root=workspace_root,
+            run_flake_update=not args.no_flake_update,
         )
         print(f"Initialized workspace at {path}")
         return 0
@@ -171,6 +172,12 @@ def main() -> None:
     iws.add_argument("--path", required=True, help="Target directory to initialize")
     iws.add_argument(
         "--workspace", default="default", help="Workspace template name (default: default)"
+    )
+    iws.add_argument(
+        "--no-flake-update",
+        action="store_true",
+        default=False,
+        help="Skip 'nix flake update' after initialization (useful in tests or offline environments)",
     )
 
     sub.add_parser("create", help="Interactively create a new project (wizard)")
