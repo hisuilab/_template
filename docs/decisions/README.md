@@ -21,3 +21,4 @@
 | 2026-07-13 | [workspace-init-subcommand](2026-07-13-workspace-init-subcommand.md) | workspace init サブコマンドの設計 |
 | 2026-07-13 | [workspace-justfile-repo-reference](2026-07-13-workspace-justfile-repo-reference.md) | justfile でのリポジトリ参照方式 |
 | 2026-07-13 | [justfile-parameter-vs-placeholder-escape](2026-07-13-justfile-parameter-vs-placeholder-escape.md) | just レシピパラメータと generator プレースホルダーの衝突回避 |
+| 2026-07-13 | [ai-agent-unconditional-inclusion](2026-07-13-ai-agent-unconditional-inclusion.md) | features/ai-agent を全プロファイルに無条件同梱する |
