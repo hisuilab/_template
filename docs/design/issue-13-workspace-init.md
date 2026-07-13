@@ -93,7 +93,25 @@ Parts システム（loader / resolver / planner）は使用しない。
 
 **`.envrc`**: `use flake`
 
-**`justfile`**: `new` レシピで `nix run github:hisuilab/_template -- generate` を呼ぶ
+**`justfile`**:
+
+```justfile
+# new name [lang=python] [output=]
+# output のデフォルト: {{name}}/{{name}}-main（worktree 運用を想定）
+# 例: just new my-app
+#     just new my-app lang=typescript
+#     just new my-app output=my-app/prototype
+new name lang="python" output="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dest="{{output}}"
+    if [ -z "$dest" ]; then dest="{{name}}/{{name}}-main"; fi
+    nix run github:hisuilab/_template -- generate \
+        --name "{{name}}" \
+        --profile small-cli \
+        --lang "{{lang}}" \
+        --output "$dest"
+```
 
 **`flake.lock`**: `workspace.py` が `nix flake update` を実行して生成する（テンプレートには含めない）
 
@@ -128,6 +146,4 @@ cli.py
 
 ## 7. 未解決事項
 
-| 論点 | 決定者 | ブロック |
-| --- | --- | --- |
-| `justfile` の `new` レシピで `--lang` をどう扱うか（必須 or オプション） | PM | M10 実装前に確認 |
+なし（すべての論点が解消済み）。
