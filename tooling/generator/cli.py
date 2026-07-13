@@ -10,7 +10,14 @@ from pathlib import Path
 
 from template.schema.profile_schema import ProfileSchema
 from tooling.generator.applier import apply
-from tooling.generator.errors import ApplyError, LoadError, PlanError, RenderError, ResolveError
+from tooling.generator.errors import (
+    ApplyError,
+    LoadError,
+    PlanError,
+    RenderError,
+    ResolveError,
+    WorkspaceError,
+)
 from tooling.generator.loader import load_parts_for_profile, load_profile
 from tooling.generator.models import GenerateRequest, LangSpec
 from tooling.generator.planner import plan
@@ -88,6 +95,25 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_init_workspace(args: argparse.Namespace) -> int:
+    from tooling.generator.workspace import init_workspace
+
+    path = Path(args.path).expanduser().resolve()
+    workspace_root = _TEMPLATE_ROOT / "workspaces"
+
+    try:
+        init_workspace(
+            path=path,
+            workspace_name=args.workspace,
+            workspace_root=workspace_root,
+        )
+        print(f"Initialized workspace at {path}")
+        return 0
+    except WorkspaceError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="python3 -m tooling.generator")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -98,6 +124,14 @@ def main() -> None:
     gen.add_argument("--output", required=True, help="Output directory path")
     gen.add_argument("--lang", default=None, help="Language runtime (e.g. python, typescript)")
 
+    iws = sub.add_parser("init-workspace", help="Initialize a ~/Projects workspace")
+    iws.add_argument("--path", required=True, help="Target directory to initialize")
+    iws.add_argument(
+        "--workspace", default="default", help="Workspace template name (default: default)"
+    )
+
     args = parser.parse_args()
     if args.command == "generate":
         sys.exit(_cmd_generate(args))
+    elif args.command == "init-workspace":
+        sys.exit(_cmd_init_workspace(args))

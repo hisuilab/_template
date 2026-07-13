@@ -21,3 +21,7 @@ class RenderError(Exception):
 
 class ApplyError(Exception):
     pass
+
+
+class WorkspaceError(Exception):
+    pass
