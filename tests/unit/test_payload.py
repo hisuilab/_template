@@ -144,7 +144,9 @@ def test_github_rulesets_provides_solo_json() -> None:
         / "rulesets"
         / "solo.json"
     )
-    assert solo.exists(), "dot-github/rulesets/solo.json not found in features/github-rulesets payload"
+    assert solo.exists(), (
+        "dot-github/rulesets/solo.json not found in features/github-rulesets payload"
+    )
 
 
 def test_github_rulesets_provides_team_json() -> None:
@@ -157,15 +159,27 @@ def test_github_rulesets_provides_team_json() -> None:
         / "rulesets"
         / "team.json"
     )
-    assert team.exists(), "dot-github/rulesets/team.json not found in features/github-rulesets payload"
-
-
-def test_github_rulesets_provides_setup_script() -> None:
-    script = (
-        PARTS_ROOT / "features" / "github-rulesets" / "payload" / "scripts" / "setup-github"
+    assert team.exists(), (
+        "dot-github/rulesets/team.json not found in features/github-rulesets payload"
     )
-    assert script.exists(), "scripts/setup-github not found in features/github-rulesets payload"
-    assert script.stat().st_mode & 0o111, "scripts/setup-github is not executable"
+
+
+def test_github_rulesets_provides_github_setup_rules() -> None:
+    script = (
+        PARTS_ROOT / "features" / "github-rulesets" / "payload" / "scripts" / "github-setup-rules"
+    )
+    assert script.exists(), (
+        "scripts/github-setup-rules not found in features/github-rulesets payload"
+    )
+    assert script.stat().st_mode & 0o111, "scripts/github-setup-rules is not executable"
+
+
+def test_github_rulesets_provides_rules_preset() -> None:
+    preset = PARTS_ROOT / "features" / "github-rulesets" / "payload" / "dot-github" / "rules-preset"
+    assert preset.exists(), "dot-github/rules-preset not found in features/github-rulesets payload"
+    assert preset.read_text(encoding="utf-8").strip() == "solo", (
+        "dot-github/rules-preset initial value must be 'solo'"
+    )
 
 
 def test_github_rulesets_json_are_valid() -> None:
@@ -178,4 +192,6 @@ def test_github_rulesets_json_are_valid() -> None:
         data = json.loads(json_file.read_text(encoding="utf-8"))
         assert data.get("name"), f"{json_file.name}: missing 'name' field"
         assert data.get("rules"), f"{json_file.name}: missing 'rules' field"
-        assert data.get("enforcement") == "active", f"{json_file.name}: enforcement must be 'active'"
+        assert data.get("enforcement") == "active", (
+            f"{json_file.name}: enforcement must be 'active'"
+        )

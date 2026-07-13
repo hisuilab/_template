@@ -279,7 +279,7 @@ class TestAiAgentPart:
 
 
 # ---------------------------------------------------------------------------
-# features/github-rulesets: .github/rulesets/ + scripts/setup-github
+# features/github-rulesets: .github/rulesets/ + scripts/github-setup-rules
 # ---------------------------------------------------------------------------
 
 
@@ -342,9 +342,74 @@ class TestGithubRulesetsPart:
             ".github/rulesets/team.json not found in generated output"
         )
 
-    def test_setup_github_script_generated(self, tmp_path: Path) -> None:
+    def test_github_setup_rules_script_generated(self, tmp_path: Path) -> None:
         output = tmp_path / "ghapp"
         self._generate_with_rulesets("ghapp", output)
-        script = output / "scripts" / "setup-github"
-        assert script.exists(), "scripts/setup-github not found in generated output"
-        assert script.stat().st_mode & 0o111, "scripts/setup-github is not executable"
+        script = output / "scripts" / "github-setup-rules"
+        assert script.exists(), "scripts/github-setup-rules not found in generated output"
+        assert script.stat().st_mode & 0o111, "scripts/github-setup-rules is not executable"
+
+    def test_rules_preset_generated(self, tmp_path: Path) -> None:
+        output = tmp_path / "ghapp"
+        self._generate_with_rulesets("ghapp", output)
+        assert (output / ".github" / "rules-preset").exists(), (
+            ".github/rules-preset not found in generated output"
+        )
+
+    def test_justfile_has_github_recipes(self, tmp_path: Path) -> None:
+        output = tmp_path / "ghapp"
+        self._generate_with_rulesets("ghapp", output)
+        justfile = (output / "justfile").read_text()
+        for recipe in [
+            "github-init",
+            "github-setup",
+            "github-setup-rules",
+            "github-status",
+            "github-rules-status",
+        ]:
+            assert recipe in justfile, f"justfile missing recipe: {recipe}"
+
+
+# ---------------------------------------------------------------------------
+# features/github-rulesets: profile inclusion (small-cli / small-web-api / small-library)
+# ---------------------------------------------------------------------------
+
+
+class TestGithubRulesetsInProfiles:
+    """Verify that github-rulesets files are present via profile inclusion (no manual injection)."""
+
+    def test_small_cli_generates_github_rulesets(self, tmp_path: Path) -> None:
+        output = tmp_path / "myapp"
+        _generate("myapp", "small-cli", output)
+        assert (output / ".github" / "rulesets" / "solo.json").exists(), (
+            "solo.json not found in small-cli generated output — "
+            "add features/github-rulesets to small-cli profile parts"
+        )
+
+    def test_small_cli_generates_rules_preset(self, tmp_path: Path) -> None:
+        output = tmp_path / "myapp"
+        _generate("myapp", "small-cli", output)
+        assert (output / ".github" / "rules-preset").exists(), (
+            ".github/rules-preset not found in small-cli generated output"
+        )
+
+    def test_small_cli_generates_github_setup_rules_script(self, tmp_path: Path) -> None:
+        output = tmp_path / "myapp"
+        _generate("myapp", "small-cli", output)
+        script = output / "scripts" / "github-setup-rules"
+        assert script.exists(), "scripts/github-setup-rules not found in small-cli generated output"
+        assert script.stat().st_mode & 0o111, "scripts/github-setup-rules is not executable"
+
+    def test_small_web_api_generates_github_rulesets(self, tmp_path: Path) -> None:
+        output = tmp_path / "myapi"
+        _generate("myapi", "small-web-api", output)
+        assert (output / ".github" / "rulesets" / "solo.json").exists(), (
+            "solo.json not found in small-web-api generated output"
+        )
+
+    def test_small_library_generates_github_rulesets(self, tmp_path: Path) -> None:
+        output = tmp_path / "mylib"
+        _generate("mylib", "small-library", output)
+        assert (output / ".github" / "rulesets" / "solo.json").exists(), (
+            "solo.json not found in small-library generated output"
+        )
