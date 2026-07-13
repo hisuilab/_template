@@ -1,2 +1,5 @@
+# NOTE: This reference is intentionally hardcoded to hisuilab/_template.
+# If you fork this template, update the URL below to point to your repository.
+# See docs/decisions/2026-07-13-workspace-justfile-repo-reference.md for context.
 new:
     nix run github:hisuilab/_template -- create
