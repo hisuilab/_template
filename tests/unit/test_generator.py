@@ -410,3 +410,53 @@ class TestGeneratorIntegration:
         )
         assert result.returncode == 0, result.stderr
         assert (output / ".gitignore").exists()
+
+    def test_generate_without_lang_succeeds_for_profile_with_no_lang_parts(
+        self, tmp_path: Path
+    ) -> None:
+        output = tmp_path / "baz"
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "baz",
+                "--profile",
+                "small-cli",
+                "--output",
+                str(output),
+                # No --lang argument
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode == 0, result.stderr
+        assert (output / "justfile").exists()
+        assert (output / "flake.nix").exists()
+        assert "baz" in (output / "flake.nix").read_text()
+
+    def test_generate_unknown_lang_is_rejected(self, tmp_path: Path) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "x",
+                "--profile",
+                "small-cli",
+                "--output",
+                str(tmp_path / "out"),
+                "--lang",
+                "cobol",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode != 0
+        assert "cobol" in result.stderr or "unknown" in result.stderr
