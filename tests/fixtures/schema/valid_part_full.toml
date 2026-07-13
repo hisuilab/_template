@@ -14,4 +14,4 @@ strategy = "error"
 
 [[files]]
 path = ".gitignore"
-strategy = "append"
+strategy = "replace"
