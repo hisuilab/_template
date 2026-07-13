@@ -11,7 +11,6 @@ import questionary
 @dataclass
 class WizardAnswers:
     name: str
-    output: str
     lang: str
     profile: str
 
@@ -23,11 +22,26 @@ def _ask_or_exit(prompt) -> str:
     return answer
 
 
-def run_wizard(available_langs: list[str], available_profiles: list[str]) -> WizardAnswers:
-    name = _ask_or_exit(questionary.text("Project name:"))
-    default_output = f"./{name}/{name}-main"
-    raw_output = _ask_or_exit(questionary.text(f"Output path [{default_output}]:"))
-    output = raw_output if raw_output else default_output
-    lang = _ask_or_exit(questionary.select("Language:", choices=available_langs))
-    profile = _ask_or_exit(questionary.select("Profile:", choices=available_profiles))
-    return WizardAnswers(name=name, output=output, lang=lang, profile=profile)
+def run_wizard(
+    available_langs: list[str],
+    available_profiles: list[str],
+    prefill: dict[str, str] | None = None,
+) -> WizardAnswers:
+    p = prefill or {}
+
+    if "name" in p:
+        name = p["name"]
+    else:
+        name = _ask_or_exit(questionary.text("Project name:"))
+
+    if "lang" in p:
+        lang = p["lang"]
+    else:
+        lang = _ask_or_exit(questionary.select("Language:", choices=available_langs))
+
+    if "profile" in p:
+        profile = p["profile"]
+    else:
+        profile = _ask_or_exit(questionary.select("Profile:", choices=available_profiles))
+
+    return WizardAnswers(name=name, lang=lang, profile=profile)

@@ -50,53 +50,54 @@ def _validate_name(name: str) -> str | None:
     return None
 
 
-def _cmd_generate(args: argparse.Namespace) -> int:
-    name_error = _validate_name(args.name)
-    if name_error:
-        print(name_error, file=sys.stderr)
-        return 1
+def _resolve_output_path(name: str, output_parent: str | None) -> Path:
+    """Compute the final generation destination.
 
-    output = Path(args.output).expanduser().resolve()
+    --output absent  → {cwd}/{name}/{name}-main
+    --output PARENT  → PARENT/{name}
+    """
+    if output_parent is not None:
+        return Path(output_parent).expanduser().resolve() / name
+    return Path.cwd() / name / f"{name}-main"
+
+
+def _validate_lang(lang_value: str, available: list[str]) -> tuple[LangSpec | None, str | None]:
+    """Return (LangSpec, None) on success or (None, error_message) on failure."""
+    if "," in lang_value:
+        return None, "error: multiple --lang values not supported in M5 (planned for M6+)"
+    if "=" in lang_value:
+        return None, "error: role=lang syntax not supported in M5 (planned for M6+)"
+    if lang_value not in available:
+        avail_str = ", ".join(available) if available else "(none)"
+        return None, f"error: unknown lang '{lang_value}'. Available: {avail_str}"
+    return LangSpec(lang=lang_value, role=None), None
+
+
+def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int:
+    """Run the generation pipeline with a pre-resolved output path."""
     available = _available_langs(_TEMPLATE_ROOT)
 
     lang_spec: LangSpec | None = None
-    if args.lang is not None:
-        lang_value: str = args.lang
-        if "," in lang_value:
-            print(
-                "error: multiple --lang values not supported in M5 (planned for M6+)",
-                file=sys.stderr,
-            )
+    if lang is not None:
+        lang_spec, err = _validate_lang(lang, available)
+        if err:
+            print(err, file=sys.stderr)
             return 1
-        if "=" in lang_value:
-            print(
-                "error: role=lang syntax not supported in M5 (planned for M6+)",
-                file=sys.stderr,
-            )
-            return 1
-        if lang_value not in available:
-            avail_str = ", ".join(available) if available else "(none)"
-            print(
-                f"error: unknown lang '{lang_value}'. Available: {avail_str}",
-                file=sys.stderr,
-            )
-            return 1
-        lang_spec = LangSpec(lang=lang_value, role=None)
 
     request = GenerateRequest(
-        name=args.name,
-        profile_id=args.profile,
+        name=name,
+        profile_id=profile,
         output_path=output,
         lang=(lang_spec,) if lang_spec else (),
     )
     try:
-        profile = load_profile(args.profile, _TEMPLATE_ROOT)
+        loaded_profile = load_profile(profile, _TEMPLATE_ROOT)
         extra_parts = (f"lang/{lang_spec.lang}",) if lang_spec else ()
         extended_profile = ProfileSchema(
-            name=profile.name,
-            summary=profile.summary,
-            parts=profile.parts + extra_parts,
-            variables=profile.variables,
+            name=loaded_profile.name,
+            summary=loaded_profile.summary,
+            parts=loaded_profile.parts + extra_parts,
+            variables=loaded_profile.variables,
         )
         parts = load_parts_for_profile(extended_profile, _TEMPLATE_ROOT)
         parts = resolve(parts)
@@ -113,7 +114,17 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         return 1
 
 
-def _cmd_create(_args: argparse.Namespace) -> int:
+def _cmd_generate(args: argparse.Namespace) -> int:
+    name_error = _validate_name(args.name)
+    if name_error:
+        print(name_error, file=sys.stderr)
+        return 1
+
+    output = _resolve_output_path(args.name, args.output)
+    return _do_generate(args.name, args.profile, args.lang, output)
+
+
+def _cmd_create(args: argparse.Namespace) -> int:
     from tooling.generator.wizard import run_wizard
 
     available_langs = _available_langs(_TEMPLATE_ROOT)
@@ -124,17 +135,24 @@ def _cmd_create(_args: argparse.Namespace) -> int:
         else []
     )
 
-    answers = run_wizard(available_langs, available_profiles)
-    output = Path(answers.output).expanduser().resolve()
+    prefill: dict[str, str] = {}
+    if args.name is not None:
+        prefill["name"] = args.name
+    if args.lang is not None:
+        prefill["lang"] = args.lang
+    if args.profile is not None:
+        prefill["profile"] = args.profile
+
+    answers = run_wizard(available_langs, available_profiles, prefill=prefill or None)
+
+    name_error = _validate_name(answers.name)
+    if name_error:
+        print(name_error, file=sys.stderr)
+        return 1
+
+    output = _resolve_output_path(answers.name, args.output)
     print(f"→ Generating at {output}...")
-    return _cmd_generate(
-        argparse.Namespace(
-            name=answers.name,
-            profile=answers.profile,
-            lang=answers.lang,
-            output=str(output),
-        )
-    )
+    return _do_generate(answers.name, answers.profile, answers.lang, output)
 
 
 def _cmd_init_workspace(args: argparse.Namespace) -> int:
@@ -164,7 +182,11 @@ def main() -> None:
     gen = sub.add_parser("generate", help="Generate a new project from a profile")
     gen.add_argument("--name", required=True, help="Project name")
     gen.add_argument("--profile", required=True, help="Profile ID (e.g. small-cli)")
-    gen.add_argument("--output", required=True, help="Output directory path")
+    gen.add_argument(
+        "--output",
+        default=None,
+        help="Parent directory; generated at OUTPUT/name (default: current directory)",
+    )
     gen.add_argument("--lang", default=None, help="Language runtime (e.g. python, typescript)")
 
     iws = sub.add_parser("init-workspace", help="Initialize a ~/Projects workspace")
@@ -179,7 +201,15 @@ def main() -> None:
         help="Skip 'nix flake update' after initialization (useful in tests or offline environments)",
     )
 
-    sub.add_parser("create", help="Interactively create a new project (wizard)")
+    crt = sub.add_parser("create", help="Interactively create a new project (wizard)")
+    crt.add_argument("--name", default=None, help="Project name (skips name prompt)")
+    crt.add_argument("--lang", default=None, help="Language runtime (skips lang prompt)")
+    crt.add_argument("--profile", default=None, help="Profile ID (skips profile prompt)")
+    crt.add_argument(
+        "--output",
+        default=None,
+        help="Parent directory; generated at OUTPUT/name (default: current directory)",
+    )
 
     args = parser.parse_args()
     if args.command == "generate":
