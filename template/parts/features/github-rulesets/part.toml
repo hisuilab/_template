@@ -1,6 +1,6 @@
 [part]
 id = "features/github-rulesets"
 layer = "features"
-summary = "GitHub Rulesets テンプレートと適用スクリプト（.github/rulesets/ + scripts/setup-github）"
+summary = "GitHub Rulesets テンプレートと適用スクリプト（.github/rulesets/ + scripts/github-setup-rules）"
 requires = ["base"]
 conflicts = []
