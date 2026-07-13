@@ -54,7 +54,7 @@ versions:
 # requires: gh
 # [初回のみ・冪等でない] GitHub リポジトリを作成し全設定を適用する
 # 2回目以降は github-setup を使ってください
-github-init visibility="private":
+github-init $visibility="private":
     #!/usr/bin/env bash
     set -euo pipefail
     gh auth status > /dev/null 2>&1 \
@@ -81,7 +81,7 @@ github-setup:
 
 # requires: gh, jq
 # Rules プリセットを適用または更新し .github/rules-preset を記録する（default: solo）
-github-setup-rules preset="solo":
+github-setup-rules $preset="solo":
     #!/usr/bin/env bash
     bash scripts/github-setup-rules "$preset"
 
