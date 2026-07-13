@@ -182,6 +182,38 @@ def test_github_rulesets_provides_rules_preset() -> None:
     )
 
 
+def test_justfile_github_recipes_export_parameters() -> None:
+    justfiles = [
+        PARTS_ROOT / "base" / "payload" / "justfile",
+        PARTS_ROOT / "lang" / "python" / "payload" / "justfile",
+        PARTS_ROOT / "lang" / "typescript" / "payload" / "justfile",
+    ]
+    for jf in justfiles:
+        content = jf.read_text(encoding="utf-8")
+        assert "github-init $visibility=" in content, (
+            f"{jf}: github-init must declare $visibility= (dollar prefix for env var export)"
+        )
+        assert "github-setup-rules $preset=" in content, (
+            f"{jf}: github-setup-rules must declare $preset= (dollar prefix for env var export)"
+        )
+
+
+def test_justfile_github_init_guards_main_branch() -> None:
+    justfiles = [
+        PARTS_ROOT / "base" / "payload" / "justfile",
+        PARTS_ROOT / "lang" / "python" / "payload" / "justfile",
+        PARTS_ROOT / "lang" / "typescript" / "payload" / "justfile",
+    ]
+    for jf in justfiles:
+        content = jf.read_text(encoding="utf-8")
+        assert 'git rev-parse --abbrev-ref HEAD' in content, (
+            f"{jf}: github-init must check current branch via git rev-parse --abbrev-ref HEAD"
+        )
+        assert '"main"' in content, (
+            f"{jf}: github-init must guard against non-main branch"
+        )
+
+
 def test_github_rulesets_json_are_valid() -> None:
     import json
 

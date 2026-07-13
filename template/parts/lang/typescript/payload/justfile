@@ -65,6 +65,12 @@ github-init $visibility="private":
       echo "error: origin already set. Use: git push -u origin main && just github-setup" >&2
       exit 1
     fi
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+    if [ "$current_branch" != "main" ]; then
+      echo "error: github-init must be run from the 'main' branch (current: ${current_branch})" >&2
+      echo "       Switch with: git checkout main  (or: git checkout -b main)" >&2
+      exit 1
+    fi
     gh repo create \
       "$(gh api user --jq .login)/{{project_name}}" \
       --"$visibility" --source=. --remote=origin --push
