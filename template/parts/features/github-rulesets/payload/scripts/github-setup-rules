@@ -24,21 +24,38 @@ fi
 repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 ruleset_name="$(jq -r .name "$ruleset_file")"
 
-existing_id="$(gh api "repos/${repo}/rulesets" \
-  --header "$api_version" \
+_warn_no_rulesets_access() {
+  echo "warning: GitHub Rulesets API is not accessible for this repository." >&2
+  echo "         GitHub Pro or a public repository is required." >&2
+  echo "         Apply manually later with: bash scripts/github-setup-rules ${preset}" >&2
+}
+
+# Fetch existing rulesets. Exits 0 with a warning when the account lacks access (HTTP 403).
+if ! rulesets_json="$(gh api "repos/${repo}/rulesets" --header "$api_version" 2>&1)"; then
+  _warn_no_rulesets_access
+  exit 0
+fi
+
+existing_id="$(echo "$rulesets_json" \
   | jq -r --arg name "$ruleset_name" \
       '.[] | select(.name == $name) | .id // empty' \
   | head -1)"
 
 if [ -n "$existing_id" ]; then
-  gh api -X PUT "repos/${repo}/rulesets/${existing_id}" \
+  if ! gh api -X PUT "repos/${repo}/rulesets/${existing_id}" \
     --header "$api_version" \
-    --input "$ruleset_file" > /dev/null
+    --input "$ruleset_file" > /dev/null 2>&1; then
+    _warn_no_rulesets_access
+    exit 0
+  fi
   echo "Updated rules '${preset}' (id: ${existing_id}) on ${repo}"
 else
-  gh api -X POST "repos/${repo}/rulesets" \
+  if ! gh api -X POST "repos/${repo}/rulesets" \
     --header "$api_version" \
-    --input "$ruleset_file" > /dev/null
+    --input "$ruleset_file" > /dev/null 2>&1; then
+    _warn_no_rulesets_access
+    exit 0
+  fi
   echo "Created rules '${preset}' on ${repo}"
 fi
 
