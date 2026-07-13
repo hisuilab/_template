@@ -206,12 +206,10 @@ def test_justfile_github_init_guards_main_branch() -> None:
     ]
     for jf in justfiles:
         content = jf.read_text(encoding="utf-8")
-        assert 'git rev-parse --abbrev-ref HEAD' in content, (
+        assert "git rev-parse --abbrev-ref HEAD" in content, (
             f"{jf}: github-init must check current branch via git rev-parse --abbrev-ref HEAD"
         )
-        assert '"main"' in content, (
-            f"{jf}: github-init must guard against non-main branch"
-        )
+        assert '"main"' in content, f"{jf}: github-init must guard against non-main branch"
 
 
 def test_github_rulesets_json_are_valid() -> None:
