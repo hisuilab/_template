@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 
 import questionary
@@ -15,11 +16,18 @@ class WizardAnswers:
     profile: str
 
 
+def _ask_or_exit(prompt) -> str:
+    answer = prompt.ask()
+    if answer is None:
+        sys.exit(0)
+    return answer
+
+
 def run_wizard(available_langs: list[str], available_profiles: list[str]) -> WizardAnswers:
-    name = questionary.text("Project name:").ask()
+    name = _ask_or_exit(questionary.text("Project name:"))
     default_output = f"./{name}/{name}-main"
-    raw_output = questionary.text(f"Output path [{default_output}]:").ask()
+    raw_output = _ask_or_exit(questionary.text(f"Output path [{default_output}]:"))
     output = raw_output if raw_output else default_output
-    lang = questionary.select("Language:", choices=available_langs).ask()
-    profile = questionary.select("Profile:", choices=available_profiles).ask()
+    lang = _ask_or_exit(questionary.select("Language:", choices=available_langs))
+    profile = _ask_or_exit(questionary.select("Profile:", choices=available_profiles))
     return WizardAnswers(name=name, output=output, lang=lang, profile=profile)
