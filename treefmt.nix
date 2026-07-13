@@ -26,6 +26,7 @@
       "scripts/check-readme"
       "scripts/check-status"
       "scripts/check-encoding"
+      "scripts/github-setup-rules"
     ];
   };
   programs.shfmt = {
@@ -38,6 +39,7 @@
       "scripts/check-readme"
       "scripts/check-status"
       "scripts/check-encoding"
+      "scripts/github-setup-rules"
     ];
   };
 }

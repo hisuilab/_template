@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# requires: gh, jq
+# Apply or update a GitHub Rules preset for this repository.
+# Usage: bash scripts/github-setup-rules [solo|team]  (default: solo)
+# Safe to re-run (idempotent). Updates .github/rules-preset after apply.
+set -euo pipefail
+
+if ! gh auth status &>/dev/null; then
+  echo "error: gh is not authenticated. Run: gh auth login" >&2
+  exit 1
+fi
+
+preset="${1:-solo}"
+repo_root="$(git rev-parse --show-toplevel)"
+ruleset_file="$repo_root/.github/rulesets/${preset}.json"
+preset_file="$repo_root/.github/rules-preset"
+api_version="X-GitHub-Api-Version: 2022-11-28"
+
+if [ ! -f "$ruleset_file" ]; then
+  echo "error: preset '${preset}' not found (available: solo, team)" >&2
+  exit 1
+fi
+
+repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+ruleset_name="$(jq -r .name "$ruleset_file")"
+
+_warn_no_rulesets_access() {
+  echo "warning: GitHub Rulesets API is not accessible for this repository." >&2
+  echo "         GitHub Pro or a public repository is required." >&2
+  echo "         Apply manually later with: bash scripts/github-setup-rules ${preset}" >&2
+}
+
+# Fetch existing rulesets. Exits 0 with a warning when the account lacks access (HTTP 403).
+if ! rulesets_json="$(gh api "repos/${repo}/rulesets" --header "$api_version" 2>&1)"; then
+  _warn_no_rulesets_access
+  exit 0
+fi
+
+existing_id="$(echo "$rulesets_json" |
+  jq -r --arg name "$ruleset_name" \
+    '.[] | select(.name == $name) | .id // empty' |
+  head -1)"
+
+if [ -n "$existing_id" ]; then
+  if ! gh api -X PUT "repos/${repo}/rulesets/${existing_id}" \
+    --header "$api_version" \
+    --input "$ruleset_file" >/dev/null 2>&1; then
+    _warn_no_rulesets_access
+    exit 0
+  fi
+  echo "Updated rules '${preset}' (id: ${existing_id}) on ${repo}"
+else
+  if ! gh api -X POST "repos/${repo}/rulesets" \
+    --header "$api_version" \
+    --input "$ruleset_file" >/dev/null 2>&1; then
+    _warn_no_rulesets_access
+    exit 0
+  fi
+  echo "Created rules '${preset}' on ${repo}"
+fi
+
+echo "${preset}" >"$preset_file"
+echo "Saved preset to .github/rules-preset"
