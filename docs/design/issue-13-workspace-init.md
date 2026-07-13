@@ -66,6 +66,7 @@ nix run .# -- init-workspace --path ~/Projects [--workspace default]
 1. `WORKSPACE_ROOT / workspace_name / *` を読み込む（`WORKSPACE_ROOT` は `TEMPLATE_ROOT` と同列に env var で注入可能）
 2. `dot-` プレフィックス除去（planner の同等ロジックを利用）
 3. renderer → applier で出力先に適用
+4. `nix flake update --flake <dest>` を実行して `flake.lock` を生成する
 
 Parts システム（loader / resolver / planner）は使用しない。
 
@@ -92,7 +93,27 @@ Parts システム（loader / resolver / planner）は使用しない。
 
 **`.envrc`**: `use flake`
 
-**`justfile`**: `new` レシピで `nix run github:hisuilab/_template -- generate` を呼ぶ
+**`justfile`**:
+
+```justfile
+# new name [lang=python] [output=]
+# output のデフォルト: {{name}}/{{name}}-main（worktree 運用を想定）
+# 例: just new my-app
+#     just new my-app lang=typescript
+#     just new my-app output=my-app/prototype
+new name lang="python" output="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dest="{{output}}"
+    if [ -z "$dest" ]; then dest="{{name}}/{{name}}-main"; fi
+    nix run github:hisuilab/_template -- generate \
+        --name "{{name}}" \
+        --profile small-cli \
+        --lang "{{lang}}" \
+        --output "$dest"
+```
+
+**`flake.lock`**: `workspace.py` が `nix flake update` を実行して生成する（テンプレートには含めない）
 
 ### 依存方向の変化
 
@@ -113,6 +134,7 @@ cli.py
 | 対象パスが既存 | 上書きリスク | `flake.nix` 存在チェックでエラー終了 |
 | `WORKSPACE_ROOT` 未設定 | `template/workspaces/` が見つからない | `TEMPLATE_ROOT` と同じ env var 注入パターンを適用 |
 | 書き込み失敗 | 部分出力 | applier の staging → 出力先コピーで失敗時クリーンアップ |
+| `nix flake update` 失敗 | `flake.lock` が生成されない | エラーを表示し「`nix flake update` を手動実行してください」と案内する。ファイル自体は生成済みのため再実行不要 |
 
 ## 6. 検証
 
@@ -124,7 +146,4 @@ cli.py
 
 ## 7. 未解決事項
 
-| 論点 | 決定者 | ブロック |
-| --- | --- | --- |
-| `flake.lock` をワークスペーステンプレートに含めるか（更新頻度が高い） | PM | M10 実装前に確認 |
-| `justfile` の `new` レシピで `--lang` をどう扱うか（必須 or オプション） | PM | M10 実装前に確認 |
+なし（すべての論点が解消済み）。
