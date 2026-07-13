@@ -17,6 +17,13 @@ def resolve(parts: list[PartSchema]) -> list[PartSchema]:
                     f"part '{part.id}' requires '{req}', which is not in the parts list"
                 )
 
+    for part in parts:
+        for conflict_id in part.conflicts:
+            if conflict_id in by_id:
+                raise ResolveError(
+                    f"part '{part.id}' conflicts with '{conflict_id}': both cannot be used together"
+                )
+
     result: list[PartSchema] = []
     visited: set[str] = set()
     in_stack: set[str] = set()

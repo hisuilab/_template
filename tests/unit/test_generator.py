@@ -94,6 +94,29 @@ class TestResolver:
         with pytest.raises(ResolveError, match="circular"):
             resolve([a, b])
 
+    def test_resolve_conflicting_parts_raises_resolve_error(self) -> None:
+        python = PartSchema(
+            id="lang/python", layer="lang", summary="python", conflicts=("lang/typescript",)
+        )
+        typescript = PartSchema(id="lang/typescript", layer="lang", summary="typescript")
+        with pytest.raises(ResolveError, match="conflict"):
+            resolve([python, typescript])
+
+    def test_resolve_conflict_detected_regardless_of_order(self) -> None:
+        python = PartSchema(
+            id="lang/python", layer="lang", summary="python", conflicts=("lang/typescript",)
+        )
+        typescript = PartSchema(id="lang/typescript", layer="lang", summary="typescript")
+        with pytest.raises(ResolveError, match="conflict"):
+            resolve([typescript, python])
+
+    def test_resolve_no_conflict_when_only_one_present(self) -> None:
+        python = PartSchema(
+            id="lang/python", layer="lang", summary="python", conflicts=("lang/typescript",)
+        )
+        result = resolve([python])
+        assert result == [python]
+
 
 # ---------------------------------------------------------------------------
 # Planner
