@@ -95,6 +95,30 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_create(_args: argparse.Namespace) -> int:
+    from tooling.generator.wizard import run_wizard
+
+    available_langs = _available_langs(_TEMPLATE_ROOT)
+    profiles_dir = _TEMPLATE_ROOT / "profiles"
+    available_profiles = (
+        sorted(p.stem for p in profiles_dir.iterdir() if p.suffix == ".toml")
+        if profiles_dir.exists()
+        else []
+    )
+
+    answers = run_wizard(available_langs, available_profiles)
+    output = Path(answers.output).expanduser().resolve()
+    print(f"→ Generating at {output}...")
+    return _cmd_generate(
+        argparse.Namespace(
+            name=answers.name,
+            profile=answers.profile,
+            lang=answers.lang,
+            output=str(output),
+        )
+    )
+
+
 def _cmd_init_workspace(args: argparse.Namespace) -> int:
     from tooling.generator.workspace import init_workspace
 
@@ -130,8 +154,12 @@ def main() -> None:
         "--workspace", default="default", help="Workspace template name (default: default)"
     )
 
+    sub.add_parser("create", help="Interactively create a new project (wizard)")
+
     args = parser.parse_args()
     if args.command == "generate":
         sys.exit(_cmd_generate(args))
     elif args.command == "init-workspace":
         sys.exit(_cmd_init_workspace(args))
+    elif args.command == "create":
+        sys.exit(_cmd_create(args))

@@ -34,7 +34,7 @@
         {
           default = pkgs.writeShellApplication {
             name = "_template";
-            runtimeInputs = [ pkgs.python3 ];
+            runtimeInputs = [ (pkgs.python3.withPackages (ps: [ ps.questionary ])) ];
             text = ''
               PYTHONPATH="${self}" TEMPLATE_ROOT="${self}/template" python3 -m tooling.generator "$@"
             '';
@@ -66,6 +66,7 @@
               pkgs.prek
               pkgs.python3
               pkgs.python3Packages.pytest
+              pkgs.python3Packages.questionary
               pkgs.ripgrep
               pkgs.ruff
               pkgs.rumdl
