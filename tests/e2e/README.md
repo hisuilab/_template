@@ -6,7 +6,8 @@
 
 ## 2. 責任
 
-- 保持するもの: 生成〜bash スクリプト検証までを通しで確認するエンドツーエンドテスト(`test_generate_profiles.py`)
+- 保持するもの: 生成〜bash スクリプト検証までを通しで確認するエンドツーエンドテスト（`test_generate_profiles.py`）
+- `init-workspace` サブコマンドの生成結果を確認するエンドツーエンドテスト（`test_init_workspace.py`）
 
 ## 3. 責任外
 

@@ -1,0 +1,16 @@
+# new name [lang=python] [output=]
+# output default: name/name-main  (worktree convention: project/project-main)
+# example:
+#   just new my-app
+#   just new my-app lang=typescript
+#   just new my-app output=my-app/prototype
+new name lang="python" output="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dest="{{output}}"
+    if [ -z "$dest" ]; then dest="{{name}}/{{name}}-main"; fi
+    nix run github:hisuilab/_template -- generate \
+        --name "{{name}}" \
+        --profile small-cli \
+        --lang "{{lang}}" \
+        --output "$dest"
