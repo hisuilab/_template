@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from unittest.mock import MagicMock, patch
 
 from tooling.generator.wizard import WizardAnswers, run_wizard
@@ -81,3 +82,32 @@ def test_run_wizard_passes_choices_to_select() -> None:
     _, second_kwargs = calls[1]
     assert set(first_kwargs.get("choices", [])) == set(_LANGS)
     assert set(second_kwargs.get("choices", [])) == set(_PROFILES)
+
+
+def test_run_wizard_exits_cleanly_when_name_is_none() -> None:
+    """Ctrl+C on the first prompt returns None; run_wizard should exit cleanly."""
+    text_mock = MagicMock()
+    text_mock.ask.return_value = None
+
+    with (
+        patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+        patch("tooling.generator.wizard.questionary.select"),
+    ):
+        with pytest.raises(SystemExit):
+            run_wizard(_LANGS, _PROFILES)
+
+
+def test_run_wizard_exits_cleanly_when_lang_is_none() -> None:
+    """Ctrl+C on the lang select returns None; run_wizard should exit cleanly."""
+    text_answers = iter(["my-app", "./my-app/my-app-main"])
+    text_mock = MagicMock()
+    text_mock.ask.side_effect = lambda: next(text_answers)
+    select_mock = MagicMock()
+    select_mock.ask.return_value = None
+
+    with (
+        patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+        patch("tooling.generator.wizard.questionary.select", return_value=select_mock),
+    ):
+        with pytest.raises(SystemExit):
+            run_wizard(_LANGS, _PROFILES)
