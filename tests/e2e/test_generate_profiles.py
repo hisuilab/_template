@@ -262,3 +262,17 @@ class TestLangCli:
         output = tmp_path / "tsapp"
         _generate("tsapp", "small-cli", output, lang="typescript")
         assert (output / "biome.json").exists()
+
+
+# ---------------------------------------------------------------------------
+# features/ai-agent: .claude/rules/dev-policy.md
+# ---------------------------------------------------------------------------
+
+
+class TestAiAgentPart:
+    def test_claude_dev_policy_generated(self, tmp_path: Path) -> None:
+        output = tmp_path / "aiapp"
+        _generate("aiapp", "small-cli", output)
+        assert (output / ".claude" / "rules" / "dev-policy.md").exists(), (
+            ".claude/rules/dev-policy.md not found in generated output for small-cli profile"
+        )

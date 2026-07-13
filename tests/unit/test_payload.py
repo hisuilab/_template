@@ -109,9 +109,21 @@ def test_logging_python_provides_get_logger() -> None:
 
 
 def test_logging_typescript_provides_get_logger() -> None:
-    logger_ts = (
-        PARTS_ROOT / "features" / "logging-typescript" / "payload" / "src" / "logger.ts"
-    )
+    logger_ts = PARTS_ROOT / "features" / "logging-typescript" / "payload" / "src" / "logger.ts"
     assert logger_ts.exists(), "src/logger.ts not found in features/logging-typescript payload"
     content = logger_ts.read_text(encoding="utf-8")
     assert "getLogger" in content, "getLogger function missing from logger.ts"
+
+
+# ---------------------------------------------------------------------------
+# features/ai-agent content checks
+# ---------------------------------------------------------------------------
+
+
+def test_ai_agent_provides_claude_dev_policy() -> None:
+    dev_policy = (
+        PARTS_ROOT / "features" / "ai-agent" / "payload" / "dot-claude" / "rules" / "dev-policy.md"
+    )
+    assert dev_policy.exists(), (
+        "dot-claude/rules/dev-policy.md not found in features/ai-agent payload"
+    )
