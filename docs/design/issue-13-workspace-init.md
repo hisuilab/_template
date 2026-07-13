@@ -3,6 +3,7 @@ status: implemented
 proposed_at: 2026-07-13
 approved_at: 2026-07-13
 approved_by: PM
+approval_ref: "https://github.com/hisuilab/_template/pull/18"
 implemented_at: 2026-07-13
 related: "#13"
 ---
