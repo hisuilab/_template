@@ -4,6 +4,10 @@ setup_file() {
   local repo_root
   repo_root="$(cd "$BATS_TEST_DIRNAME/../../.." && pwd)"
   echo "$repo_root" >"$BATS_SUITE_TMPDIR/repo_root"
+  if ! command -v nix &>/dev/null; then
+    echo "nix not available" >"$BATS_SUITE_TMPDIR/skip_reason"
+    return 0
+  fi
   local result_path
   result_path="$(nix build "$repo_root#" --no-link --print-out-paths 2>"$BATS_SUITE_TMPDIR/nix_build_err")" || {
     echo "nix build failed: $(cat "$BATS_SUITE_TMPDIR/nix_build_err")" >&2
@@ -13,6 +17,9 @@ setup_file() {
 }
 
 setup() {
+  if [ -f "$BATS_SUITE_TMPDIR/skip_reason" ]; then
+    skip "$(cat "$BATS_SUITE_TMPDIR/skip_reason")"
+  fi
   repo_root="$(cat "$BATS_SUITE_TMPDIR/repo_root")"
   result_path="$(cat "$BATS_SUITE_TMPDIR/result_path")"
 }
