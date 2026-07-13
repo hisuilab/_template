@@ -34,3 +34,4 @@
 | M8 | [Issue #7](https://github.com/hisuilab/_template/issues/7) | features/logging Part 追加（Python / TypeScript） | フェーズ3 | done |
 | M9 | [Issue #12](https://github.com/hisuilab/_template/issues/12) | features/ai-agent Part 拡張（.claude scaffold） | フェーズ4 | done |
 | M10 | [Issue #13](https://github.com/hisuilab/_template/issues/13) | init-workspace サブコマンド追加 | フェーズ4 | done |
+| M11 | [Issue #40](https://github.com/hisuilab/_template/issues/40) | features/github-rulesets Part 追加 | フェーズ4 | in_progress |
