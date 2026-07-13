@@ -276,3 +276,75 @@ class TestAiAgentPart:
         assert (output / ".claude" / "rules" / "dev-policy.md").exists(), (
             ".claude/rules/dev-policy.md not found in generated output for small-cli profile"
         )
+
+
+# ---------------------------------------------------------------------------
+# features/github-rulesets: .github/rulesets/ + scripts/setup-github
+# ---------------------------------------------------------------------------
+
+
+class TestGithubRulesetsPart:
+    def _generate_with_rulesets(self, name: str, output: Path) -> None:
+        """Generate using the Python API directly to inject features/github-rulesets."""
+        import sys
+
+        sys.path.insert(0, str(REPO_ROOT))
+        import tempfile
+
+        from template.schema.profile_schema import ProfileSchema
+        from tooling.generator.applier import apply
+        from tooling.generator.loader import load_parts_for_profile, load_profile
+        from tooling.generator.models import GenerateRequest, LangSpec
+        from tooling.generator.planner import plan
+        from tooling.generator.renderer import render
+        from tooling.generator.resolver import resolve
+
+        template_root = REPO_ROOT / "template"
+        base_profile = load_profile("small-cli", template_root)
+        extended = ProfileSchema(
+            name=base_profile.name,
+            summary=base_profile.summary,
+            parts=base_profile.parts + ("lang/python", "features/github-rulesets"),
+            variables=base_profile.variables,
+        )
+        parts = resolve(load_parts_for_profile(extended, template_root))
+        request = GenerateRequest(
+            name=name,
+            profile_id="small-cli",
+            output_path=output,
+            lang=(LangSpec(lang="python", role=None),),
+        )
+        gen_plan = plan(request, parts, template_root=template_root)
+        with tempfile.TemporaryDirectory() as tmp:
+            staging = Path(tmp) / "staging"
+            staging.mkdir()
+            render(gen_plan, staging)
+            apply(staging, output)
+
+    def test_rulesets_directory_generated(self, tmp_path: Path) -> None:
+        output = tmp_path / "ghapp"
+        self._generate_with_rulesets("ghapp", output)
+        assert (output / ".github" / "rulesets").is_dir(), (
+            ".github/rulesets/ not found in generated output"
+        )
+
+    def test_solo_json_generated(self, tmp_path: Path) -> None:
+        output = tmp_path / "ghapp"
+        self._generate_with_rulesets("ghapp", output)
+        assert (output / ".github" / "rulesets" / "solo.json").exists(), (
+            ".github/rulesets/solo.json not found in generated output"
+        )
+
+    def test_team_json_generated(self, tmp_path: Path) -> None:
+        output = tmp_path / "ghapp"
+        self._generate_with_rulesets("ghapp", output)
+        assert (output / ".github" / "rulesets" / "team.json").exists(), (
+            ".github/rulesets/team.json not found in generated output"
+        )
+
+    def test_setup_github_script_generated(self, tmp_path: Path) -> None:
+        output = tmp_path / "ghapp"
+        self._generate_with_rulesets("ghapp", output)
+        script = output / "scripts" / "setup-github"
+        assert script.exists(), "scripts/setup-github not found in generated output"
+        assert script.stat().st_mode & 0o111, "scripts/setup-github is not executable"

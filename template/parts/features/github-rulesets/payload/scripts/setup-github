@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# requires: gh, jq
+# Apply a GitHub Rulesets preset to the current repository.
+# Usage: bash scripts/setup-github [solo|team]  (default: solo)
+# Run once after creating the GitHub repository. Safe to re-run (idempotent).
+set -euo pipefail
+
+preset="${1:-solo}"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ruleset_file="$script_dir/../.github/rulesets/${preset}.json"
+api_version="X-GitHub-Api-Version: 2022-11-28"
+
+if [ ! -f "$ruleset_file" ]; then
+  echo "error: preset '${preset}' not found (available: solo, team)" >&2
+  exit 1
+fi
+
+repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+ruleset_name="$(jq -r .name "$ruleset_file")"
+
+existing_id="$(gh api "repos/${repo}/rulesets" \
+  --header "$api_version" \
+  | jq -r --arg name "$ruleset_name" '.[] | select(.name == $name) | .id // empty' \
+  | head -1)"
+
+if [ -n "$existing_id" ]; then
+  gh api -X PUT "repos/${repo}/rulesets/${existing_id}" \
+    --header "$api_version" \
+    --input "$ruleset_file" > /dev/null
+  echo "Updated ruleset '${preset}' (id: ${existing_id}) on ${repo}"
+else
+  gh api -X POST "repos/${repo}/rulesets" \
+    --header "$api_version" \
+    --input "$ruleset_file" > /dev/null
+  echo "Created ruleset '${preset}' on ${repo}"
+fi

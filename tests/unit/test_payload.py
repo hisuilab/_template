@@ -127,3 +127,55 @@ def test_ai_agent_provides_claude_dev_policy() -> None:
     assert dev_policy.exists(), (
         "dot-claude/rules/dev-policy.md not found in features/ai-agent payload"
     )
+
+
+# ---------------------------------------------------------------------------
+# features/github-rulesets content checks
+# ---------------------------------------------------------------------------
+
+
+def test_github_rulesets_provides_solo_json() -> None:
+    solo = (
+        PARTS_ROOT
+        / "features"
+        / "github-rulesets"
+        / "payload"
+        / "dot-github"
+        / "rulesets"
+        / "solo.json"
+    )
+    assert solo.exists(), "dot-github/rulesets/solo.json not found in features/github-rulesets payload"
+
+
+def test_github_rulesets_provides_team_json() -> None:
+    team = (
+        PARTS_ROOT
+        / "features"
+        / "github-rulesets"
+        / "payload"
+        / "dot-github"
+        / "rulesets"
+        / "team.json"
+    )
+    assert team.exists(), "dot-github/rulesets/team.json not found in features/github-rulesets payload"
+
+
+def test_github_rulesets_provides_setup_script() -> None:
+    script = (
+        PARTS_ROOT / "features" / "github-rulesets" / "payload" / "scripts" / "setup-github"
+    )
+    assert script.exists(), "scripts/setup-github not found in features/github-rulesets payload"
+    assert script.stat().st_mode & 0o111, "scripts/setup-github is not executable"
+
+
+def test_github_rulesets_json_are_valid() -> None:
+    import json
+
+    rulesets_dir = (
+        PARTS_ROOT / "features" / "github-rulesets" / "payload" / "dot-github" / "rulesets"
+    )
+    for json_file in sorted(rulesets_dir.glob("*.json")):
+        data = json.loads(json_file.read_text(encoding="utf-8"))
+        assert data.get("name"), f"{json_file.name}: missing 'name' field"
+        assert data.get("rules"), f"{json_file.name}: missing 'rules' field"
+        assert data.get("enforcement") == "active", f"{json_file.name}: enforcement must be 'active'"
