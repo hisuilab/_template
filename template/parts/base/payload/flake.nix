@@ -32,8 +32,10 @@
           default = pkgs.mkShell {
             packages = [
               pkgs.bats
+              pkgs.gh
               pkgs.git
               pkgs.gitleaks
+              pkgs.jq
               pkgs.just
               pkgs.prek
               pkgs.rumdl

@@ -1,6 +1,12 @@
 [profile]
 name = "small-web-api"
 summary = "小規模 Web API サービス向けプロファイル"
-parts = ["base", "scale/small", "purpose/web-api", "features/ai-agent"]
+parts = [
+  "base",
+  "scale/small",
+  "purpose/web-api",
+  "features/ai-agent",
+  "features/github-rulesets",
+]
 
 [variables]

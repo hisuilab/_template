@@ -1,6 +1,12 @@
 [profile]
 name = "small-cli"
 summary = "小規模 CLI ツール向けプロファイル"
-parts = ["base", "scale/small", "purpose/cli", "features/ai-agent"]
+parts = [
+  "base",
+  "scale/small",
+  "purpose/cli",
+  "features/ai-agent",
+  "features/github-rulesets",
+]
 
 [variables]

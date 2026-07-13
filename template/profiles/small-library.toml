@@ -1,6 +1,12 @@
 [profile]
 name = "small-library"
 summary = "小規模ライブラリ・SDK 向けプロファイル（公開パッケージ想定）"
-parts = ["base", "scale/small", "purpose/library", "features/ai-agent"]
+parts = [
+  "base",
+  "scale/small",
+  "purpose/library",
+  "features/ai-agent",
+  "features/github-rulesets",
+]
 
 [variables]
