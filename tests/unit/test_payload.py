@@ -174,6 +174,30 @@ def test_github_rulesets_provides_github_setup_rules() -> None:
     assert script.stat().st_mode & 0o111, "scripts/github-setup-rules is not executable"
 
 
+def test_justfile_github_recipes_export_parameters() -> None:
+    """github-init and github-setup-rules must declare exported params with $ prefix.
+
+    In just shebang recipes, parameters are only available as env vars when the
+    declaration uses a $ prefix (e.g., $visibility="private"). Without it,
+    `set -euo pipefail` (nounset) causes an unbound variable error at runtime.
+    """
+    justfiles = [
+        PARTS_ROOT / "base" / "payload" / "justfile",
+        PARTS_ROOT / "lang" / "python" / "payload" / "justfile",
+        PARTS_ROOT / "lang" / "typescript" / "payload" / "justfile",
+    ]
+    for jf in justfiles:
+        content = jf.read_text(encoding="utf-8")
+        assert "github-init $visibility=" in content, (
+            f"{jf}: github-init must declare '$visibility=' (not 'visibility=') "
+            "so just exports it as an env var in the shebang recipe"
+        )
+        assert "github-setup-rules $preset=" in content, (
+            f"{jf}: github-setup-rules must declare '$preset=' (not 'preset=') "
+            "so just exports it as an env var in the shebang recipe"
+        )
+
+
 def test_github_rulesets_provides_rules_preset() -> None:
     preset = PARTS_ROOT / "features" / "github-rulesets" / "payload" / "dot-github" / "rules-preset"
     assert preset.exists(), "dot-github/rules-preset not found in features/github-rulesets payload"
