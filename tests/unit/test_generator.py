@@ -6,6 +6,7 @@ creates the tooling/generator/ modules.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -356,7 +357,7 @@ class TestGeneratorIntegration:
                 "--lang",
                 "python",
                 "--output",
-                str(tmp_path / "out"),
+                str(tmp_path),
             ],
             capture_output=True,
             text=True,
@@ -379,7 +380,7 @@ class TestGeneratorIntegration:
                 "--lang",
                 "python",
                 "--output",
-                str(tmp_path / "out"),
+                str(tmp_path),
             ],
             capture_output=True,
             text=True,
@@ -388,7 +389,6 @@ class TestGeneratorIntegration:
         assert result.returncode != 0
 
     def test_generate_via_cli_module(self, tmp_path: Path) -> None:
-        output = tmp_path / "bar"
         result = subprocess.run(
             [
                 sys.executable,
@@ -400,7 +400,7 @@ class TestGeneratorIntegration:
                 "--profile",
                 "small-cli",
                 "--output",
-                str(output),
+                str(tmp_path),
                 "--lang",
                 "python",
             ],
@@ -409,12 +409,11 @@ class TestGeneratorIntegration:
             cwd=str(REPO_ROOT),
         )
         assert result.returncode == 0, result.stderr
-        assert (output / ".gitignore").exists()
+        assert (tmp_path / "bar" / ".gitignore").exists()
 
     def test_generate_without_lang_succeeds_for_profile_with_no_lang_parts(
         self, tmp_path: Path
     ) -> None:
-        output = tmp_path / "baz"
         result = subprocess.run(
             [
                 sys.executable,
@@ -426,13 +425,14 @@ class TestGeneratorIntegration:
                 "--profile",
                 "small-cli",
                 "--output",
-                str(output),
+                str(tmp_path),
                 # No --lang argument
             ],
             capture_output=True,
             text=True,
             cwd=str(REPO_ROOT),
         )
+        output = tmp_path / "baz"
         assert result.returncode == 0, result.stderr
         assert (output / "justfile").exists()
         assert (output / "flake.nix").exists()
@@ -450,7 +450,7 @@ class TestGeneratorIntegration:
                 "--profile",
                 "small-cli",
                 "--output",
-                str(tmp_path / "out"),
+                str(tmp_path),
                 "--lang",
                 "cobol",
             ],
@@ -460,3 +460,81 @@ class TestGeneratorIntegration:
         )
         assert result.returncode != 0
         assert "cobol" in result.stderr or "unknown" in result.stderr
+
+    def test_generate_cli_without_output_defaults_to_name_main(self, tmp_path: Path) -> None:
+        """--output absent → {cwd}/{name}/{name}-main/"""
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "myproj",
+                "--profile",
+                "small-cli",
+                "--lang",
+                "python",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+            env={
+                **os.environ,
+                "PYTHONPATH": str(REPO_ROOT) + ":" + os.environ.get("PYTHONPATH", ""),
+            },
+        )
+        assert result.returncode == 0, result.stderr
+        assert (tmp_path / "myproj" / "myproj-main" / ".gitignore").exists()
+
+    def test_generate_cli_with_output_uses_it_as_parent(self, tmp_path: Path) -> None:
+        """--output PARENT → PARENT/{name}/"""
+        parent = tmp_path / "parent"
+        parent.mkdir()
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "myproj",
+                "--profile",
+                "small-cli",
+                "--lang",
+                "python",
+                "--output",
+                str(parent),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode == 0, result.stderr
+        assert (parent / "myproj" / ".gitignore").exists()
+
+    def test_create_cli_with_all_args_skips_wizard(self, tmp_path: Path) -> None:
+        """create --name --lang --profile → non-interactive, generates at {cwd}/{name}/{name}-main/"""
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "create",
+                "--name",
+                "myapp",
+                "--lang",
+                "python",
+                "--profile",
+                "small-cli",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+            env={
+                **os.environ,
+                "PYTHONPATH": str(REPO_ROOT) + ":" + os.environ.get("PYTHONPATH", ""),
+            },
+        )
+        assert result.returncode == 0, result.stderr
+        assert (tmp_path / "myapp" / "myapp-main" / ".gitignore").exists()
