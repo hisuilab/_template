@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -36,7 +37,25 @@ def _available_langs(template_root: Path) -> list[str]:
     return sorted(p.name for p in lang_dir.iterdir() if p.is_dir())
 
 
+_NAME_RE = re.compile(r"^[a-zA-Z0-9_\-]+$")
+
+
+def _validate_name(name: str) -> str | None:
+    """Return an error message if name is invalid, else None."""
+    if not _NAME_RE.match(name):
+        return (
+            f"error: invalid project name '{name}'. "
+            "Only alphanumerics, hyphens, and underscores are allowed."
+        )
+    return None
+
+
 def _cmd_generate(args: argparse.Namespace) -> int:
+    name_error = _validate_name(args.name)
+    if name_error:
+        print(name_error, file=sys.stderr)
+        return 1
+
     output = Path(args.output).expanduser().resolve()
     available = _available_langs(_TEMPLATE_ROOT)
 
