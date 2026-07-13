@@ -59,44 +59,43 @@ def _cmd_generate(args: argparse.Namespace) -> int:
     output = Path(args.output).expanduser().resolve()
     available = _available_langs(_TEMPLATE_ROOT)
 
-    if args.lang is None:
-        avail_str = ", ".join(available) if available else "(none)"
-        print(f"error: --lang is required. Available: {avail_str}", file=sys.stderr)
-        return 1
-    lang_value: str = args.lang
-    if "," in lang_value:
-        print(
-            "error: multiple --lang values not supported in M5 (planned for M6+)",
-            file=sys.stderr,
-        )
-        return 1
-    if "=" in lang_value:
-        print(
-            "error: role=lang syntax not supported in M5 (planned for M6+)",
-            file=sys.stderr,
-        )
-        return 1
-    if lang_value not in available:
-        avail_str = ", ".join(available) if available else "(none)"
-        print(
-            f"error: unknown lang '{lang_value}'. Available: {avail_str}",
-            file=sys.stderr,
-        )
-        return 1
+    lang_spec: LangSpec | None = None
+    if args.lang is not None:
+        lang_value: str = args.lang
+        if "," in lang_value:
+            print(
+                "error: multiple --lang values not supported in M5 (planned for M6+)",
+                file=sys.stderr,
+            )
+            return 1
+        if "=" in lang_value:
+            print(
+                "error: role=lang syntax not supported in M5 (planned for M6+)",
+                file=sys.stderr,
+            )
+            return 1
+        if lang_value not in available:
+            avail_str = ", ".join(available) if available else "(none)"
+            print(
+                f"error: unknown lang '{lang_value}'. Available: {avail_str}",
+                file=sys.stderr,
+            )
+            return 1
+        lang_spec = LangSpec(lang=lang_value, role=None)
 
-    lang_spec = LangSpec(lang=lang_value, role=None)
     request = GenerateRequest(
         name=args.name,
         profile_id=args.profile,
         output_path=output,
-        lang=(lang_spec,),
+        lang=(lang_spec,) if lang_spec else (),
     )
     try:
         profile = load_profile(args.profile, _TEMPLATE_ROOT)
+        extra_parts = (f"lang/{lang_spec.lang}",) if lang_spec else ()
         extended_profile = ProfileSchema(
             name=profile.name,
             summary=profile.summary,
-            parts=profile.parts + (f"lang/{lang_spec.lang}",),
+            parts=profile.parts + extra_parts,
             variables=profile.variables,
         )
         parts = load_parts_for_profile(extended_profile, _TEMPLATE_ROOT)

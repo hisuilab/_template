@@ -184,7 +184,7 @@ class TestGenerateSmallLibrary:
 
 
 class TestLangCli:
-    def test_lang_required_error(self, tmp_path: Path) -> None:
+    def test_lang_omitted_succeeds_for_profile_without_lang_parts(self, tmp_path: Path) -> None:
         r = subprocess.run(
             [
                 sys.executable,
@@ -202,9 +202,8 @@ class TestLangCli:
             text=True,
             cwd=str(REPO_ROOT),
         )
-        assert r.returncode != 0
-        combined = r.stdout + r.stderr
-        assert "lang" in combined.lower()
+        assert r.returncode == 0, r.stderr
+        assert (tmp_path / "out" / "justfile").exists()
 
     def test_lang_multiple_error(self, tmp_path: Path) -> None:
         r = subprocess.run(
