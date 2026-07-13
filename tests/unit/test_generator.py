@@ -323,6 +323,51 @@ class TestGeneratorIntegration:
         assert "myapp" in flake_content
         assert "{{project_name}}" not in flake_content
 
+    def test_generate_rejects_name_with_path_separator(self, tmp_path: Path) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "../evil",
+                "--profile",
+                "small-cli",
+                "--lang",
+                "python",
+                "--output",
+                str(tmp_path / "out"),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode != 0
+        assert "invalid" in result.stderr.lower() or "name" in result.stderr.lower()
+
+    def test_generate_rejects_name_with_special_chars(self, tmp_path: Path) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "my app!",
+                "--profile",
+                "small-cli",
+                "--lang",
+                "python",
+                "--output",
+                str(tmp_path / "out"),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode != 0
+
     def test_generate_via_cli_module(self, tmp_path: Path) -> None:
         output = tmp_path / "bar"
         result = subprocess.run(
