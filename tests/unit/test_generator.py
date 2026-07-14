@@ -13,14 +13,24 @@ from pathlib import Path
 
 import pytest
 
-from tooling.generator.applier import apply
-from tooling.generator.errors import ApplyError, LoadError, PlanError, RenderError, ResolveError
-from tooling.generator.loader import load_parts_for_profile, load_profile
+from tooling.generator.applier import apply, inject
+from tooling.generator.errors import (
+    ApplyError,
+    LoadError,
+    ManifestError,
+    PlanError,
+    RenderError,
+    ResolveError,
+)
+from tooling.generator.loader import load_part, load_parts_for_profile, load_profile
+from tooling.generator.manifest import read_manifest, write_manifest
 from tooling.generator.models import (
     GenerateRequest,
     GenerationPlan,
     GenerationResult,
+    InjectResult,
     LangSpec,
+    ManifestData,
     PlannedFile,
 )
 from tooling.generator.planner import plan as make_plan
@@ -175,6 +185,24 @@ class TestPlanner:
         with pytest.raises(PlanError, match="README.md"):
             make_plan(req, [part_a, part_b], template_root=tmp_path)
 
+    def test_plan_add_strategy_keeps_first_part_file(self, tmp_path: Path) -> None:
+        from template.schema.part_schema import FileRule
+
+        self._make_part_dir(tmp_path, "part_a", {"shared.md": "# from a\n"})
+        self._make_part_dir(tmp_path, "part_b", {"shared.md": "# from b\n"})
+        part_a = PartSchema(id="part_a", layer="base", summary="a")
+        part_b = PartSchema(
+            id="part_b",
+            layer="base",
+            summary="b",
+            files=(FileRule(path="shared.md", strategy="add"),),
+        )
+        req = GenerateRequest(name="x", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(req, [part_a, part_b], template_root=tmp_path)
+        shared_files = [f for f in result.files if f.dest_path == "shared.md"]
+        assert len(shared_files) == 1
+        assert shared_files[0].src_path.parent.parent.name == "part_a"
+
     def test_plan_replace_strategy_last_part_wins(self, tmp_path: Path) -> None:
         from template.schema.part_schema import FileRule
 
@@ -273,6 +301,138 @@ class TestApplier:
 
         with pytest.raises(ApplyError, match="already exists"):
             apply(staging, output)
+
+    def test_inject_adds_new_files_to_existing_dir(self, tmp_path: Path) -> None:
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        (staging / "new.txt").write_text("new\n")
+        output = tmp_path / "output"
+        output.mkdir()
+        (output / "existing.txt").write_text("keep\n")
+
+        result = inject(staging, output)
+
+        assert (output / "new.txt").read_text() == "new\n"
+        assert "new.txt" in result.files_added
+
+    def test_inject_skips_files_that_already_exist(self, tmp_path: Path) -> None:
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        (staging / "existing.txt").write_text("from staging\n")
+        output = tmp_path / "output"
+        output.mkdir()
+        (output / "existing.txt").write_text("original\n")
+
+        result = inject(staging, output)
+
+        assert (output / "existing.txt").read_text() == "original\n"
+        assert "existing.txt" in result.files_skipped
+
+    def test_inject_returns_result_with_added_and_skipped(self, tmp_path: Path) -> None:
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        (staging / "new.txt").write_text("new\n")
+        (staging / "old.txt").write_text("overwrite attempt\n")
+        output = tmp_path / "output"
+        output.mkdir()
+        (output / "old.txt").write_text("original\n")
+
+        result = inject(staging, output)
+
+        assert isinstance(result, InjectResult)
+        assert "new.txt" in result.files_added
+        assert "old.txt" in result.files_skipped
+
+
+# ---------------------------------------------------------------------------
+# Loader — load_part
+# ---------------------------------------------------------------------------
+
+
+class TestLoaderPart:
+    def test_load_part_returns_part_schema(self) -> None:
+        part = load_part("base", TEMPLATE_ROOT)
+        assert part.id == "base"
+        assert part.layer == "base"
+
+    def test_load_part_unknown_raises_load_error(self) -> None:
+        with pytest.raises(LoadError, match="no-such-part"):
+            load_part("no-such-part", TEMPLATE_ROOT)
+
+
+# ---------------------------------------------------------------------------
+# Manifest
+# ---------------------------------------------------------------------------
+
+
+class TestManifest:
+    def test_write_and_read_manifest(self, tmp_path: Path) -> None:
+        parts = [
+            PartSchema(id="base", layer="base", summary="base"),
+            PartSchema(id="starter/cli", layer="starter", summary="cli"),
+        ]
+        write_manifest(tmp_path, parts, project_name="myapp")
+        manifest = read_manifest(tmp_path)
+        assert manifest.project_name == "myapp"
+        assert "base" in manifest.applied_part_ids
+        assert "starter/cli" in manifest.applied_part_ids
+
+    def test_read_manifest_missing_raises_manifest_error(self, tmp_path: Path) -> None:
+        with pytest.raises(ManifestError, match="manifest"):
+            read_manifest(tmp_path)
+
+    def test_manifest_data_applied_part_ids(self, tmp_path: Path) -> None:
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(tmp_path, parts, project_name="proj")
+        manifest = read_manifest(tmp_path)
+        assert isinstance(manifest, ManifestData)
+        assert manifest.applied_part_ids == ("base",)
+
+    def test_update_manifest_appends_part(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import update_manifest
+
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(tmp_path, parts, project_name="proj")
+        update_manifest(tmp_path, part_id="features/logging-python")
+        manifest = read_manifest(tmp_path)
+        assert "features/logging-python" in manifest.applied_part_ids
+
+    def test_read_manifest_corrupt_toml_raises_manifest_error(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        (tmp_path / MANIFEST_FILENAME).write_text("not valid toml ][")
+        with pytest.raises(ManifestError, match="corrupt"):
+            read_manifest(tmp_path)
+
+    def test_read_manifest_schema_version_mismatch_raises_manifest_error(
+        self, tmp_path: Path
+    ) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        (tmp_path / MANIFEST_FILENAME).write_text(
+            '[manifest]\nschema_version = "99"\nproject_name = "x"\ngenerated_at = "2026-01-01"\n'
+        )
+        with pytest.raises(ManifestError, match="schema_version"):
+            read_manifest(tmp_path)
+
+    def test_read_manifest_malformed_applied_entry_raises_manifest_error(
+        self, tmp_path: Path
+    ) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        (tmp_path / MANIFEST_FILENAME).write_text(
+            '[manifest]\nschema_version = "1"\nproject_name = "x"\ngenerated_at = "2026-01-01"\n\n[[applied]]\napplied_at = "2026-01-01"\n'
+        )
+        with pytest.raises(ManifestError, match="malformed"):
+            read_manifest(tmp_path)
+
+    def test_update_manifest_rejects_unsafe_part_id(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import update_manifest
+
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(tmp_path, parts, project_name="proj")
+        with pytest.raises(ManifestError):
+            update_manifest(tmp_path, part_id='evil"injection')
 
 
 # ---------------------------------------------------------------------------

@@ -251,6 +251,32 @@ class TestLangCli:
 # ---------------------------------------------------------------------------
 
 
+class TestGenerateManifest:
+    def test_generate_creates_manifest(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "starter-cli", tmp_path)
+        assert (output / ".template-manifest.toml").exists(), (
+            ".template-manifest.toml not found after generate"
+        )
+
+    def test_manifest_contains_project_name(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "starter-cli", tmp_path)
+        import tomllib
+
+        with (output / ".template-manifest.toml").open("rb") as f:
+            data = tomllib.load(f)
+        assert data["manifest"]["project_name"] == "myapp"
+
+    def test_manifest_contains_applied_parts(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "starter-cli", tmp_path)
+        import tomllib
+
+        with (output / ".template-manifest.toml").open("rb") as f:
+            data = tomllib.load(f)
+        applied_ids = [entry["part_id"] for entry in data.get("applied", [])]
+        assert "base" in applied_ids
+        assert "starter/cli" in applied_ids
+
+
 class TestAiAgentPart:
     def test_claude_dev_policy_generated(self, tmp_path: Path) -> None:
         output = _generate("aiapp", "starter-cli", tmp_path)

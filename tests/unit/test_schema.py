@@ -117,6 +117,15 @@ def test_purpose_layer_is_rejected() -> None:
         validate_part(data, source="<test>")
 
 
+def test_add_strategy_is_accepted() -> None:
+    data = {
+        "part": {"id": "scale/small", "layer": "scale", "summary": "docs"},
+        "files": [{"path": "docs/_templates/draft.md", "strategy": "add"}],
+    }
+    schema = validate_part(data, source="<test>")
+    assert schema.files[0].strategy == "add"
+
+
 def test_empty_parts_is_rejected() -> None:
     with pytest.raises(SchemaError, match="profile.parts"):
         validate_profile(

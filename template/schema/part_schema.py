@@ -8,7 +8,7 @@ from template.schema._toml import optional_str_list, require_str, require_table
 from template.schema.errors import SchemaError
 
 LAYERS = ("base", "scale", "starter", "style", "lang", "languages", "features")
-STRATEGIES = ("error", "replace")
+STRATEGIES = ("error", "replace", "add")
 DEFAULT_STRATEGY = "error"
 
 
