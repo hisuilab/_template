@@ -1,8 +1,8 @@
-# template/parts/purpose/library
+# template/parts/starter/library
 
 ## 1. 概要
 
-ライブラリ・SDK 向けの `src/` 骨格（パッケージ構成・`CHANGELOG.md`）を提供する purpose/library Part です。
+ライブラリ・SDK 向けの `src/` 骨格（パッケージ構成・`CHANGELOG.md`）を提供する starter/library Part です。
 
 ## 2. 責任
 
@@ -11,4 +11,4 @@
 
 ## 3. 責任外
 
-- CLI・Web API 向けの骨格（他 purpose Part が担当）
+- CLI・Web API 向けの骨格（他 starter Part が担当）

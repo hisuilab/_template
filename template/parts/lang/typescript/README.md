@@ -13,5 +13,5 @@ TypeScript 言語環境（nodejs / biome）を提供する lang Part です。
 
 ## 3. 責任外
 
-- TypeScript ソースコードの骨格（M6+ の purpose Part が担当）
+- TypeScript ソースコードの骨格（starter Part が担当）
 - 複数言語構成のマージ（M6+ の append 戦略が担当）
