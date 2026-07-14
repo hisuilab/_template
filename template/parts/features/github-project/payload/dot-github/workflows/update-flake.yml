@@ -1,0 +1,23 @@
+name: Update Flake
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v14
+      - uses: DeterminateSystems/magic-nix-cache-action@v8
+      - name: Update flake inputs
+        run: nix flake update
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore(flake): update flake inputs"
+          title: "chore(flake): update flake inputs"
+          branch: "chore/update-flake"
+          delete-branch: true

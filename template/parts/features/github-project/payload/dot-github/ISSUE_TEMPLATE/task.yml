@@ -1,0 +1,23 @@
+name: "タスク"
+description: "実装・調査・整備などの作業を起票する"
+labels: ["task"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: "目的"
+      description: "このタスクで何を達成するかを説明してください"
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: "完了条件"
+      description: "何ができたらこのタスクを完了とするかを記載してください"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: "備考"
+      description: "関連情報やリンクなど（任意）"

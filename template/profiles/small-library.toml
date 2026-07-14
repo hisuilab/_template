@@ -7,6 +7,7 @@ parts = [
   "purpose/library",
   "features/ai-agent",
   "features/github-rulesets",
+  "features/github-project",
 ]
 
 [variables]
