@@ -100,3 +100,14 @@ class TestInjectSubcommand:
         r = _inject("lang/typescript", output)
         assert r.returncode != 0
         assert "conflicts" in r.stderr.lower()
+
+    def test_inject_rejects_missing_requires(self, tmp_path: Path) -> None:
+        # Write a manifest that doesn't include "base" so requires check fails
+        target = tmp_path / "partial-project"
+        target.mkdir()
+        (target / ".template-manifest.toml").write_text(
+            '[manifest]\nschema_version = "1"\nproject_name = "partial"\ngenerated_at = "2026-01-01"\n'
+        )
+        r = _inject("features/logging-python", target)
+        assert r.returncode != 0
+        assert "required" in r.stderr.lower() or "requires" in r.stderr.lower()

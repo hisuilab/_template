@@ -397,6 +397,43 @@ class TestManifest:
         manifest = read_manifest(tmp_path)
         assert "features/logging-python" in manifest.applied_part_ids
 
+    def test_read_manifest_corrupt_toml_raises_manifest_error(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        (tmp_path / MANIFEST_FILENAME).write_text("not valid toml ][")
+        with pytest.raises(ManifestError, match="corrupt"):
+            read_manifest(tmp_path)
+
+    def test_read_manifest_schema_version_mismatch_raises_manifest_error(
+        self, tmp_path: Path
+    ) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        (tmp_path / MANIFEST_FILENAME).write_text(
+            '[manifest]\nschema_version = "99"\nproject_name = "x"\ngenerated_at = "2026-01-01"\n'
+        )
+        with pytest.raises(ManifestError, match="schema_version"):
+            read_manifest(tmp_path)
+
+    def test_read_manifest_malformed_applied_entry_raises_manifest_error(
+        self, tmp_path: Path
+    ) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        (tmp_path / MANIFEST_FILENAME).write_text(
+            '[manifest]\nschema_version = "1"\nproject_name = "x"\ngenerated_at = "2026-01-01"\n\n[[applied]]\napplied_at = "2026-01-01"\n'
+        )
+        with pytest.raises(ManifestError, match="malformed"):
+            read_manifest(tmp_path)
+
+    def test_update_manifest_rejects_unsafe_part_id(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import update_manifest
+
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(tmp_path, parts, project_name="proj")
+        with pytest.raises(ManifestError):
+            update_manifest(tmp_path, part_id='evil"injection')
+
 
 # ---------------------------------------------------------------------------
 # Integration — full pipeline with real template files
