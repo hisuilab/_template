@@ -514,14 +514,13 @@ class TestGeneratorIntegration:
         assert (parent / "myproj" / ".gitignore").exists()
 
     def test_create_cli_with_all_args_skips_wizard(self, tmp_path: Path) -> None:
-        """create --name --lang --profile → non-interactive, generates at {cwd}/{name}/{name}-main/"""
+        """create NAME --lang --profile → non-interactive, generates at {cwd}/{name}/{name}-main/"""
         result = subprocess.run(
             [
                 sys.executable,
                 "-m",
                 "tooling.generator",
                 "create",
-                "--name",
                 "myapp",
                 "--lang",
                 "python",
@@ -538,3 +537,82 @@ class TestGeneratorIntegration:
         )
         assert result.returncode == 0, result.stderr
         assert (tmp_path / "myapp" / "myapp-main" / ".gitignore").exists()
+
+    def test_create_cli_with_output_uses_parent_dir(self, tmp_path: Path) -> None:
+        """create NAME --output PARENT → generates at PARENT/name/ (worktree scenario)"""
+        parent = tmp_path / "worktrees"
+        parent.mkdir()
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "create",
+                "myapi",
+                "--lang",
+                "python",
+                "--profile",
+                "small-cli",
+                "--output",
+                str(parent),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+            env={
+                **os.environ,
+                "PYTHONPATH": str(REPO_ROOT) + ":" + os.environ.get("PYTHONPATH", ""),
+            },
+        )
+        assert result.returncode == 0, result.stderr
+        assert (parent / "myapi" / ".gitignore").exists()
+
+    def test_create_cli_invalid_lang_is_rejected(self, tmp_path: Path) -> None:
+        """create NAME --lang unknown → rejected with error listing available langs"""
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "create",
+                "myapp",
+                "--lang",
+                "cobol",
+                "--profile",
+                "small-cli",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+            env={
+                **os.environ,
+                "PYTHONPATH": str(REPO_ROOT) + ":" + os.environ.get("PYTHONPATH", ""),
+            },
+        )
+        assert result.returncode != 0
+        assert "cobol" in result.stderr or "unknown" in result.stderr
+
+    def test_create_cli_invalid_profile_is_rejected(self, tmp_path: Path) -> None:
+        """create NAME --profile unknown → rejected with error listing available profiles"""
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "create",
+                "myapp",
+                "--lang",
+                "python",
+                "--profile",
+                "no-such-profile",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+            env={
+                **os.environ,
+                "PYTHONPATH": str(REPO_ROOT) + ":" + os.environ.get("PYTHONPATH", ""),
+            },
+        )
+        assert result.returncode != 0
+        assert "no-such-profile" in result.stderr or "unknown" in result.stderr
