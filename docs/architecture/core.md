@@ -37,16 +37,16 @@ flowchart LR
 | --- | --- | --- |
 | `base` | `base` | 全プロファイル共通基盤（Nix flake・just・pre-commit・CI） |
 | `scale` | `scale/small` | ドキュメント骨格（`docs/draft/`） |
-| `purpose` | `purpose/cli` / `purpose/web-api` / `purpose/library` | 用途別 src スケルトン（`src/main.py` 等） |
+| `starter` | `starter/cli` / `starter/web-api` / `starter/library` | 用途別 src スケルトン（`src/main.py` 等） |
 | `lang` | `lang/python` / `lang/typescript` | 言語環境（flake.nix replace・treefmt・justfile） |
 | `features` | `features/ai-agent` / `features/github-project` / `features/github-rulesets` / `features/logging-*` | オプション機能 |
 
 ### 現行プロファイル
 
 ```text
-small-cli     = base + scale/small + purpose/cli     + features/*
-small-web-api = base + scale/small + purpose/web-api + features/*
-small-library = base + scale/small + purpose/library + features/*
+starter-cli     = base + scale/small + starter/cli     + features/*
+starter-web-api = base + scale/small + starter/web-api + features/*
+starter-library = base + scale/small + starter/library + features/*
 ```
 
 ## 3. モジュール責務
@@ -99,32 +99,31 @@ tooling.generator.cli
 
 ### 6.1. Part レイヤー構成（目標）
 
-| レイヤー | Parts | 役割 |
-| --- | --- | --- |
-| `base` | `base` | 現行と同じ |
-| `starter` | `starter/cli` / `starter/web-api` / `starter/library` | 即動くスターター（`src/main.py` 等）。architecture 不要 |
-| `scale` | `scale/small` / `scale/medium` / `scale/large` | 段階的 docs 骨格（requirements / architecture / design）＋文書テンプレート（`docs/_templates/`） |
-| `architecture` | `architecture/layered` / `architecture/ddd` / `architecture/ddd-modules` / `architecture/ddd-contexts` | src 層構造（presentation / domain / application / infrastructure / interface） |
-| `lang` | `lang/python` / `lang/typescript` | 言語環境（現行と同じ） |
-| `features` | `features/ai-agent`（拡充） / `features/github-project` / `features/github-rulesets` / `features/logging-*` | オプション機能 |
+> [!NOTE]
+> `starter` レイヤーと `starter-*` プロファイル名は Issue #60 で実装済みです。
+
+| レイヤー | Parts | 役割 | 状態 |
+| --- | --- | --- | --- |
+| `base` | `base` | 現行と同じ | 実装済み |
+| `starter` | `starter/cli` / `starter/web-api` / `starter/library` | 即動くスターター（`src/main.py` 等）。architecture 不要 | 実装済み |
+| `scale` | `scale/small` / `scale/medium` / `scale/large` | 段階的 docs 骨格（requirements / architecture / design）＋文書テンプレート（`docs/_templates/`） | 一部実装済み |
+| `architecture` | `architecture/layered` / `architecture/ddd` / `architecture/ddd-modules` / `architecture/ddd-contexts` | src 層構造（presentation / domain / application / infrastructure / interface） | 未実装 |
+| `lang` | `lang/python` / `lang/typescript` | 言語環境（現行と同じ） | 実装済み |
+| `features` | `features/ai-agent`（拡充） / `features/github-project` / `features/github-rulesets` / `features/logging-*` | オプション機能 | 実装済み |
 
 ### 6.2. プロファイル構成（目標）
 
 ```text
-starter-cli     = base + starter/cli     + features/*    （architecture 不要）
-starter-web-api = base + starter/web-api + features/*
-starter-library = base + starter/library + features/*
-small           = base + scale/small + architecture/layered + features/*
-small-ddd       = base + scale/small + architecture/ddd    + features/*
-medium-ddd      = base + scale/medium + architecture/ddd + architecture/ddd-modules + features/*
-large-ddd       = base + scale/large + architecture/ddd + architecture/ddd-contexts + features/*
+starter-cli     = base + starter/cli     + features/*    （architecture 不要）  ← 実装済み
+starter-web-api = base + starter/web-api + features/*                           ← 実装済み
+starter-library = base + starter/library + features/*                           ← 実装済み
+small           = base + scale/small + architecture/layered + features/*        （未実装）
+small-ddd       = base + scale/small + architecture/ddd    + features/*        （未実装）
+medium-ddd      = base + scale/medium + architecture/ddd + architecture/ddd-modules + features/*  （未実装）
+large-ddd       = base + scale/large + architecture/ddd + architecture/ddd-contexts + features/*  （未実装）
 ```
 
-### 6.3. `purpose` → `starter` 移行方針
-
-`purpose/*` は `starter/*` に改名します。`starter` は「architecture を持たない即動くスターター」を意味し、`small` 以上との段差を明確にします。現行の `small-cli` 等のプロファイル名は `starter-cli` 等に変更します。
-
-### 6.4. src 支配権の整理
+### 6.3. src 支配権の整理
 
 - `starter/*`: `src/main.py` など用途別の具体ファイルを提供する
 - `architecture/*`: `src/domain/`・`src/application/` などレイヤーの README 骨格を提供する
