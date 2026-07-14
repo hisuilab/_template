@@ -17,7 +17,7 @@
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    User["ユーザー<br/>--name foo<br/>--profile small-cli<br/>--lang python"]
+    User["ユーザー<br/>--name foo<br/>--profile starter-cli<br/>--lang python"]
     CLI["CLI<br/>cli.py"]
     Loader["Loader<br/>profile/part 読み込み"]
     Resolver["Resolver<br/>依存解決・順序決定"]

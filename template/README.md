@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-`tooling/` のジェネレータが読み込む Profile（生成元となるテンプレート一式）を置くディレクトリです。代表3プロファイル（`small-cli` / `small-web-api` / `small-library`）の Part payload が実装済みです。
+`tooling/` のジェネレータが読み込む Profile（生成元となるテンプレート一式）を置くディレクトリです。代表3プロファイル（`starter-cli` / `starter-web-api` / `starter-library`）の Part payload が実装済みです。
 
 ## 2. 責任
 
