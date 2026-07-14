@@ -27,7 +27,7 @@ just verify   # test + lint(format) + check-docs
 ```sh
 nix run github:hisuilab/_template -- generate \
   --name <project-name> \
-  --profile small-cli \
+  --profile starter-cli \
   --lang python \
   --output ~/Projects/<project-name>
 ```
@@ -37,7 +37,7 @@ nix run github:hisuilab/_template -- generate \
 ```sh
 nix run .# -- generate \
   --name <project-name> \
-  --profile small-cli \
+  --profile starter-cli \
   --lang python \
   --output ~/Projects/<project-name>
 ```
@@ -51,7 +51,7 @@ nix develop                       # 開発シェルに入る
 just verify                       # 動作確認
 ```
 
-利用可能なProfileは`small-cli`、`small-web-api`、`small-library`、利用可能な`--lang`は`python`、`typescript`です。
+利用可能なProfileは`starter-cli`、`starter-web-api`、`starter-library`、利用可能な`--lang`は`python`、`typescript`です。
 
 ## 3. 構成
 

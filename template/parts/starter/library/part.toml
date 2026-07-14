@@ -1,6 +1,6 @@
 [part]
-id = "purpose/library"
-layer = "purpose"
+id = "starter/library"
+layer = "starter"
 summary = "ライブラリ・SDK 向けの src/ 骨格（パッケージ構成・CHANGELOG.md）"
 requires = ["base"]
 conflicts = []

@@ -1,10 +1,16 @@
 ---
-status: draft
+status: migrated
 created: 2026-07-11
-updated: 2026-07-12
+updated: 2026-07-14
+migrated_at: 2026-07-14
+migrated_to: docs/requirements/product.md, docs/architecture/core.md
 ---
 
 # Project Direction: _template
+
+> [!NOTE]
+> このドキュメントは `docs/requirements/product.md` および `docs/architecture/core.md` へ移行済みです（`status: migrated`）。
+> 本文中の `purpose/*` / `small-cli` 等の名称は移行当時の記録であり、Issue #60 にて `starter/*` / `starter-cli` 等に改名されています。
 
 ## 目次
 

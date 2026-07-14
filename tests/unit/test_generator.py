@@ -39,8 +39,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 class TestLoader:
     def test_load_profile_returns_schema(self) -> None:
-        profile = load_profile("small-cli", TEMPLATE_ROOT)
-        assert profile.name == "small-cli"
+        profile = load_profile("starter-cli", TEMPLATE_ROOT)
+        assert profile.name == "starter-cli"
         assert "base" in profile.parts
 
     def test_load_profile_unknown_raises_load_error(self) -> None:
@@ -48,11 +48,11 @@ class TestLoader:
             load_profile("no-such-profile", TEMPLATE_ROOT)
 
     def test_load_parts_for_profile_returns_all_parts(self) -> None:
-        profile = load_profile("small-cli", TEMPLATE_ROOT)
+        profile = load_profile("starter-cli", TEMPLATE_ROOT)
         parts = load_parts_for_profile(profile, TEMPLATE_ROOT)
         part_ids = [p.id for p in parts]
         assert "base" in part_ids
-        assert "purpose/cli" in part_ids
+        assert "starter/cli" in part_ids
 
     def test_load_parts_missing_part_raises_load_error(self, tmp_path: Path) -> None:
         from template.schema.profile_schema import ProfileSchema
@@ -80,12 +80,12 @@ class TestResolver:
 
     def test_resolve_respects_requires_order(self) -> None:
         base = PartSchema(id="base", layer="base", summary="base")
-        cli = PartSchema(id="purpose/cli", layer="purpose", summary="cli", requires=("base",))
+        cli = PartSchema(id="starter/cli", layer="starter", summary="cli", requires=("base",))
         result = resolve([cli, base])
         assert result.index(base) < result.index(cli)
 
     def test_resolve_missing_requires_raises_resolve_error(self) -> None:
-        cli = PartSchema(id="purpose/cli", layer="purpose", summary="cli", requires=("base",))
+        cli = PartSchema(id="starter/cli", layer="starter", summary="cli", requires=("base",))
         with pytest.raises(ResolveError, match="base"):
             resolve([cli])
 
@@ -142,10 +142,10 @@ class TestPlanner:
         assert ".gitignore" in dest_paths
 
     def test_plan_substitutes_project_name_in_path(self, tmp_path: Path) -> None:
-        self._make_part_dir(tmp_path, "purpose/library", {"src/{{project_name}}/__init__.py": ""})
+        self._make_part_dir(tmp_path, "starter/library", {"src/{{project_name}}/__init__.py": ""})
         part = PartSchema(
-            id="purpose/library",
-            layer="purpose",
+            id="starter/library",
+            layer="starter",
             summary="lib",
             placeholders_required=("project_name",),
         )
@@ -155,10 +155,10 @@ class TestPlanner:
         assert "src/mylib/__init__.py" in dest_paths
 
     def test_plan_missing_placeholder_raises_plan_error(self, tmp_path: Path) -> None:
-        self._make_part_dir(tmp_path, "purpose/library", {"src/{{project_name}}/__init__.py": ""})
+        self._make_part_dir(tmp_path, "starter/library", {"src/{{project_name}}/__init__.py": ""})
         part = PartSchema(
-            id="purpose/library",
-            layer="purpose",
+            id="starter/library",
+            layer="starter",
             summary="lib",
             placeholders_required=("undeclared_var",),
         )
@@ -283,12 +283,12 @@ class TestApplier:
 class TestGeneratorIntegration:
     def test_generate_small_cli_creates_expected_files(self, tmp_path: Path) -> None:
         output = tmp_path / "foo"
-        profile = load_profile("small-cli", TEMPLATE_ROOT)
+        profile = load_profile("starter-cli", TEMPLATE_ROOT)
         parts = load_parts_for_profile(profile, TEMPLATE_ROOT)
         parts = resolve(parts)
         req = GenerateRequest(
             name="foo",
-            profile_id="small-cli",
+            profile_id="starter-cli",
             output_path=output,
             lang=(LangSpec(lang="python", role=None),),
         )
@@ -305,12 +305,12 @@ class TestGeneratorIntegration:
 
     def test_generate_substitutes_project_name_in_flake_nix(self, tmp_path: Path) -> None:
         output = tmp_path / "myapp"
-        profile = load_profile("small-cli", TEMPLATE_ROOT)
+        profile = load_profile("starter-cli", TEMPLATE_ROOT)
         parts = load_parts_for_profile(profile, TEMPLATE_ROOT)
         parts = resolve(parts)
         req = GenerateRequest(
             name="myapp",
-            profile_id="small-cli",
+            profile_id="starter-cli",
             output_path=output,
             lang=(LangSpec(lang="python", role=None),),
         )
@@ -353,7 +353,7 @@ class TestGeneratorIntegration:
                 "--name",
                 "../evil",
                 "--profile",
-                "small-cli",
+                "starter-cli",
                 "--lang",
                 "python",
                 "--output",
@@ -376,7 +376,7 @@ class TestGeneratorIntegration:
                 "--name",
                 "my app!",
                 "--profile",
-                "small-cli",
+                "starter-cli",
                 "--lang",
                 "python",
                 "--output",
@@ -398,7 +398,7 @@ class TestGeneratorIntegration:
                 "--name",
                 "bar",
                 "--profile",
-                "small-cli",
+                "starter-cli",
                 "--output",
                 str(tmp_path),
                 "--lang",
@@ -423,7 +423,7 @@ class TestGeneratorIntegration:
                 "--name",
                 "baz",
                 "--profile",
-                "small-cli",
+                "starter-cli",
                 "--output",
                 str(tmp_path),
                 # No --lang argument
@@ -448,7 +448,7 @@ class TestGeneratorIntegration:
                 "--name",
                 "x",
                 "--profile",
-                "small-cli",
+                "starter-cli",
                 "--output",
                 str(tmp_path),
                 "--lang",
@@ -472,7 +472,7 @@ class TestGeneratorIntegration:
                 "--name",
                 "myproj",
                 "--profile",
-                "small-cli",
+                "starter-cli",
                 "--lang",
                 "python",
             ],
@@ -500,7 +500,7 @@ class TestGeneratorIntegration:
                 "--name",
                 "myproj",
                 "--profile",
-                "small-cli",
+                "starter-cli",
                 "--lang",
                 "python",
                 "--output",
@@ -525,7 +525,7 @@ class TestGeneratorIntegration:
                 "--lang",
                 "python",
                 "--profile",
-                "small-cli",
+                "starter-cli",
             ],
             capture_output=True,
             text=True,
@@ -552,7 +552,7 @@ class TestGeneratorIntegration:
                 "--lang",
                 "python",
                 "--profile",
-                "small-cli",
+                "starter-cli",
                 "--output",
                 str(parent),
             ],
@@ -579,7 +579,7 @@ class TestGeneratorIntegration:
                 "--lang",
                 "cobol",
                 "--profile",
-                "small-cli",
+                "starter-cli",
             ],
             capture_output=True,
             text=True,

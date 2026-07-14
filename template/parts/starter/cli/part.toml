@@ -1,6 +1,6 @@
 [part]
-id = "purpose/cli"
-layer = "purpose"
+id = "starter/cli"
+layer = "starter"
 summary = "CLI ツール向けの src/ 骨格とエントリポイント"
 requires = ["base"]
 conflicts = []

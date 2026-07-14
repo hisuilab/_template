@@ -10,7 +10,8 @@
 
 ## 3. 責任外
 
-- 要件・アーキテクチャの上位方針（`docs/draft/project-direction.md` が持ちます）
+- 要件の上位方針（`docs/requirements/product.md` が持ちます）
+- アーキテクチャの上位方針（`docs/architecture/core.md` が持ちます）
 
 ## 4. 凡例
 

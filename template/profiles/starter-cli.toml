@@ -1,10 +1,10 @@
 [profile]
-name = "small-web-api"
-summary = "小規模 Web API サービス向けプロファイル"
+name = "starter-cli"
+summary = "スターター CLI ツール向けプロファイル"
 parts = [
   "base",
   "scale/small",
-  "purpose/web-api",
+  "starter/cli",
   "features/ai-agent",
   "features/github-rulesets",
   "features/github-project",
