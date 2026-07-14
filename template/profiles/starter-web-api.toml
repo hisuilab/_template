@@ -1,0 +1,13 @@
+[profile]
+name = "starter-web-api"
+summary = "スターター Web API サービス向けプロファイル"
+parts = [
+  "base",
+  "scale/small",
+  "starter/web-api",
+  "features/ai-agent",
+  "features/github-rulesets",
+  "features/github-project",
+]
+
+[variables]

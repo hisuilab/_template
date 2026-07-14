@@ -1,0 +1,13 @@
+[profile]
+name = "starter-library"
+summary = "スターターライブラリ・SDK 向けプロファイル（公開パッケージ想定）"
+parts = [
+  "base",
+  "scale/small",
+  "starter/library",
+  "features/ai-agent",
+  "features/github-rulesets",
+  "features/github-project",
+]
+
+[variables]
