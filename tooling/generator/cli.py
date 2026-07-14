@@ -195,9 +195,27 @@ def _cmd_create(args: argparse.Namespace) -> int:
     return _do_generate(answers.name, answers.profile, answers.lang, output)
 
 
+_PART_ID_RE = re.compile(r"^[a-zA-Z0-9/_-]+$")
+
+
+def _validate_part_id(part_id: str) -> str | None:
+    """Return an error message if part_id is invalid, else None."""
+    if not _PART_ID_RE.match(part_id) or ".." in part_id:
+        return (
+            f"error: invalid part id '{part_id}'. "
+            "Only alphanumerics, forward slashes, hyphens, and underscores are allowed."
+        )
+    return None
+
+
 def _cmd_inject(args: argparse.Namespace) -> int:
     target = Path(args.target).expanduser().resolve()
     part_id: str = args.part
+
+    part_id_error = _validate_part_id(part_id)
+    if part_id_error:
+        print(part_id_error, file=sys.stderr)
+        return 1
 
     try:
         manifest = read_manifest(target)
