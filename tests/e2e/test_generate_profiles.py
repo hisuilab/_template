@@ -19,7 +19,8 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _generate(name: str, profile: str, output: Path, lang: str = "python") -> None:
+def _generate(name: str, profile: str, parent: Path, lang: str = "python") -> Path:
+    """Generate a project into parent/name and return the output path."""
     r = subprocess.run(
         [
             sys.executable,
@@ -31,7 +32,7 @@ def _generate(name: str, profile: str, output: Path, lang: str = "python") -> No
             "--profile",
             profile,
             "--output",
-            str(output),
+            str(parent),
             "--lang",
             lang,
         ],
@@ -40,6 +41,7 @@ def _generate(name: str, profile: str, output: Path, lang: str = "python") -> No
         cwd=str(REPO_ROOT),
     )
     assert r.returncode == 0, f"generate failed:\n{r.stderr}"
+    return parent / name
 
 
 def _git_init(path: Path) -> None:
@@ -91,30 +93,25 @@ def _assert_rumdl_toml_present(output: Path) -> None:
 
 class TestGenerateSmallCli:
     def test_base_files_exist(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapp"
-        _generate("myapp", "small-cli", output)
+        output = _generate("myapp", "small-cli", tmp_path)
         _assert_base_files(output)
 
     def test_cli_src_exists(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapp"
-        _generate("myapp", "small-cli", output)
+        output = _generate("myapp", "small-cli", tmp_path)
         assert (output / "src" / "main.py").exists()
         assert (output / "src" / "README.md").exists()
 
     def test_project_name_substituted(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapp"
-        _generate("myapp", "small-cli", output)
+        output = _generate("myapp", "small-cli", tmp_path)
         assert "myapp" in (output / "flake.nix").read_text()
         assert "{{project_name}}" not in (output / "flake.nix").read_text()
 
     def test_rumdl_toml_present(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapp"
-        _generate("myapp", "small-cli", output)
+        output = _generate("myapp", "small-cli", tmp_path)
         _assert_rumdl_toml_present(output)
 
     def test_check_scripts_pass(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapp"
-        _generate("myapp", "small-cli", output)
+        output = _generate("myapp", "small-cli", tmp_path)
         _git_init(output)
         _assert_scripts_pass(output)
 
@@ -126,24 +123,20 @@ class TestGenerateSmallCli:
 
 class TestGenerateSmallWebApi:
     def test_base_files_exist(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapi"
-        _generate("myapi", "small-web-api", output)
+        output = _generate("myapi", "small-web-api", tmp_path)
         _assert_base_files(output)
 
     def test_web_api_src_exists(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapi"
-        _generate("myapi", "small-web-api", output)
+        output = _generate("myapi", "small-web-api", tmp_path)
         assert (output / "src" / "app.py").exists()
         assert (output / "src" / "routes" / "README.md").exists()
 
     def test_rumdl_toml_present(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapi"
-        _generate("myapi", "small-web-api", output)
+        output = _generate("myapi", "small-web-api", tmp_path)
         _assert_rumdl_toml_present(output)
 
     def test_check_scripts_pass(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapi"
-        _generate("myapi", "small-web-api", output)
+        output = _generate("myapi", "small-web-api", tmp_path)
         _git_init(output)
         _assert_scripts_pass(output)
 
@@ -155,25 +148,21 @@ class TestGenerateSmallWebApi:
 
 class TestGenerateSmallLibrary:
     def test_base_files_exist(self, tmp_path: Path) -> None:
-        output = tmp_path / "mylib"
-        _generate("mylib", "small-library", output)
+        output = _generate("mylib", "small-library", tmp_path)
         _assert_base_files(output)
 
     def test_library_package_exists(self, tmp_path: Path) -> None:
-        output = tmp_path / "mylib"
-        _generate("mylib", "small-library", output)
+        output = _generate("mylib", "small-library", tmp_path)
         assert (output / "src" / "mylib" / "__init__.py").exists()
         assert (output / "src" / "mylib" / "README.md").exists()
         assert (output / "CHANGELOG.md").exists()
 
     def test_rumdl_toml_present(self, tmp_path: Path) -> None:
-        output = tmp_path / "mylib"
-        _generate("mylib", "small-library", output)
+        output = _generate("mylib", "small-library", tmp_path)
         _assert_rumdl_toml_present(output)
 
     def test_check_scripts_pass(self, tmp_path: Path) -> None:
-        output = tmp_path / "mylib"
-        _generate("mylib", "small-library", output)
+        output = _generate("mylib", "small-library", tmp_path)
         _git_init(output)
         _assert_scripts_pass(output)
 
@@ -196,14 +185,14 @@ class TestLangCli:
                 "--profile",
                 "small-cli",
                 "--output",
-                str(tmp_path / "out"),
+                str(tmp_path),
             ],
             capture_output=True,
             text=True,
             cwd=str(REPO_ROOT),
         )
         assert r.returncode == 0, r.stderr
-        assert (tmp_path / "out" / "justfile").exists()
+        assert (tmp_path / "x" / "justfile").exists()
 
     def test_lang_multiple_error(self, tmp_path: Path) -> None:
         r = subprocess.run(
@@ -217,7 +206,7 @@ class TestLangCli:
                 "--profile",
                 "small-cli",
                 "--output",
-                str(tmp_path / "out"),
+                str(tmp_path),
                 "--lang",
                 "python,typescript",
             ],
@@ -228,38 +217,32 @@ class TestLangCli:
         assert r.returncode != 0
 
     def test_lang_python_flake_contains_python(self, tmp_path: Path) -> None:
-        output = tmp_path / "pyapp"
-        _generate("pyapp", "small-cli", output, lang="python")
+        output = _generate("pyapp", "small-cli", tmp_path, lang="python")
         flake = (output / "flake.nix").read_text()
         assert "python" in flake
 
     def test_lang_typescript_flake_contains_nodejs(self, tmp_path: Path) -> None:
-        output = tmp_path / "tsapp"
-        _generate("tsapp", "small-cli", output, lang="typescript")
+        output = _generate("tsapp", "small-cli", tmp_path, lang="typescript")
         flake = (output / "flake.nix").read_text()
         assert "nodejs" in flake
 
     def test_lang_typescript_flake_contains_biome(self, tmp_path: Path) -> None:
-        output = tmp_path / "tsapp"
-        _generate("tsapp", "small-cli", output, lang="typescript")
+        output = _generate("tsapp", "small-cli", tmp_path, lang="typescript")
         flake = (output / "flake.nix").read_text()
         assert "biome" in flake
 
     def test_lang_typescript_treefmt_uses_biome(self, tmp_path: Path) -> None:
-        output = tmp_path / "tsapp"
-        _generate("tsapp", "small-cli", output, lang="typescript")
+        output = _generate("tsapp", "small-cli", tmp_path, lang="typescript")
         treefmt = (output / "treefmt.nix").read_text()
         assert "biome" in treefmt
 
     def test_lang_typescript_justfile_has_lint(self, tmp_path: Path) -> None:
-        output = tmp_path / "tsapp"
-        _generate("tsapp", "small-cli", output, lang="typescript")
+        output = _generate("tsapp", "small-cli", tmp_path, lang="typescript")
         justfile = (output / "justfile").read_text()
         assert "biome" in justfile
 
     def test_lang_typescript_biome_json_exists(self, tmp_path: Path) -> None:
-        output = tmp_path / "tsapp"
-        _generate("tsapp", "small-cli", output, lang="typescript")
+        output = _generate("tsapp", "small-cli", tmp_path, lang="typescript")
         assert (output / "biome.json").exists()
 
 
@@ -270,8 +253,7 @@ class TestLangCli:
 
 class TestAiAgentPart:
     def test_claude_dev_policy_generated(self, tmp_path: Path) -> None:
-        output = tmp_path / "aiapp"
-        _generate("aiapp", "small-cli", output)
+        output = _generate("aiapp", "small-cli", tmp_path)
         assert (output / ".claude" / "rules" / "dev-policy.md").exists(), (
             ".claude/rules/dev-policy.md not found in generated output for small-cli profile"
         )
@@ -378,37 +360,32 @@ class TestGithubRulesetsInProfiles:
     """Verify that github-rulesets files are present via profile inclusion (no manual injection)."""
 
     def test_small_cli_generates_github_rulesets(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapp"
-        _generate("myapp", "small-cli", output)
+        output = _generate("myapp", "small-cli", tmp_path)
         assert (output / ".github" / "rulesets" / "solo.json").exists(), (
             "solo.json not found in small-cli generated output — "
             "add features/github-rulesets to small-cli profile parts"
         )
 
     def test_small_cli_generates_rules_preset(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapp"
-        _generate("myapp", "small-cli", output)
+        output = _generate("myapp", "small-cli", tmp_path)
         assert (output / ".github" / "rules-preset").exists(), (
             ".github/rules-preset not found in small-cli generated output"
         )
 
     def test_small_cli_generates_github_setup_rules_script(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapp"
-        _generate("myapp", "small-cli", output)
+        output = _generate("myapp", "small-cli", tmp_path)
         script = output / "scripts" / "github-setup-rules"
         assert script.exists(), "scripts/github-setup-rules not found in small-cli generated output"
         assert script.stat().st_mode & 0o111, "scripts/github-setup-rules is not executable"
 
     def test_small_web_api_generates_github_rulesets(self, tmp_path: Path) -> None:
-        output = tmp_path / "myapi"
-        _generate("myapi", "small-web-api", output)
+        output = _generate("myapi", "small-web-api", tmp_path)
         assert (output / ".github" / "rulesets" / "solo.json").exists(), (
             "solo.json not found in small-web-api generated output"
         )
 
     def test_small_library_generates_github_rulesets(self, tmp_path: Path) -> None:
-        output = tmp_path / "mylib"
-        _generate("mylib", "small-library", output)
+        output = _generate("mylib", "small-library", tmp_path)
         assert (output / ".github" / "rulesets" / "solo.json").exists(), (
             "solo.json not found in small-library generated output"
         )
