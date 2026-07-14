@@ -1,0 +1,9 @@
+[part]
+id = "features/github-project"
+layer = "features"
+summary = "GitHub プロジェクト管理テンプレート（Issue テンプレート・PR テンプレート・CI ワークフロー・dependabot・CODEOWNERS）"
+requires = ["base"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]

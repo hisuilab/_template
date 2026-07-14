@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "prototype"]
+  pull_request:
+    branches: ["main", "prototype"]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v14
+      - uses: DeterminateSystems/magic-nix-cache-action@v8
+      - name: Verify
+        run: nix develop --command just verify

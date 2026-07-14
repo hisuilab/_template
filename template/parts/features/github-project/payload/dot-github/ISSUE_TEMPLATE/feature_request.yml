@@ -1,0 +1,27 @@
+name: "機能追加"
+description: "{{project_name}} への新機能や改善を提案する"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提案ありがとうございます。背景と目的を明確にして記入してください。
+  - type: textarea
+    id: problem
+    attributes:
+      label: "解決したい課題"
+      description: "現在どのような問題や不便があるかを説明してください"
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: "提案する解決策"
+      description: "どのような機能や変更があれば解決できるかを説明してください"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "検討した代替案"
+      description: "他に検討した方法があれば記載してください（任意）"

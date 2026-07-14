@@ -1,0 +1,9 @@
+# CODEOWNERS — レビュアー自動アサインのひな型
+#
+# チームで開発する場合はコメントを外してオーナーを設定してください。
+# 書式: <パターン> <GitHubユーザー or チーム>
+#
+# 例:
+# * @your-github-username
+# /src/ @your-team/backend
+# *.ts  @your-team/frontend
