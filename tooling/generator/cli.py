@@ -13,7 +13,6 @@ from template.schema.profile_schema import ProfileSchema
 from tooling.generator.applier import apply, inject
 from tooling.generator.errors import (
     ApplyError,
-    InjectError,
     LoadError,
     ManifestError,
     PlanError,
@@ -121,7 +120,15 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
         write_manifest(output, parts, project_name=name)
         print(f"Generated {len(result.files_written)} files in {result.output_path}")
         return 0
-    except (LoadError, ResolveError, PlanError, RenderError, ApplyError) as e:
+    except (
+        LoadError,
+        ResolveError,
+        PlanError,
+        RenderError,
+        ApplyError,
+        ManifestError,
+        OSError,
+    ) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
@@ -220,6 +227,15 @@ def _cmd_inject(args: argparse.Namespace) -> int:
             )
         return 1
 
+    conflicting = [c for c in part.conflicts if c in manifest.applied_part_ids]
+    if conflicting:
+        for c in conflicting:
+            print(
+                f"Error: part '{part_id}' conflicts with already-applied part '{c}'.",
+                file=sys.stderr,
+            )
+        return 1
+
     request = GenerateRequest(
         name=manifest.project_name,
         profile_id=part_id,
@@ -238,7 +254,7 @@ def _cmd_inject(args: argparse.Namespace) -> int:
             f"{len(result.files_added)} added, {len(result.files_skipped)} skipped"
         )
         return 0
-    except (PlanError, RenderError, ApplyError) as e:
+    except (PlanError, RenderError, ApplyError, ManifestError, OSError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 

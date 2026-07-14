@@ -11,24 +11,22 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _generate(name: str, profile: str, parent: Path) -> Path:
-    r = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "tooling.generator",
-            "generate",
-            "--name",
-            name,
-            "--profile",
-            profile,
-            "--output",
-            str(parent),
-        ],
-        capture_output=True,
-        text=True,
-        cwd=str(REPO_ROOT),
-    )
+def _generate(name: str, profile: str, parent: Path, lang: str | None = None) -> Path:
+    cmd = [
+        sys.executable,
+        "-m",
+        "tooling.generator",
+        "generate",
+        "--name",
+        name,
+        "--profile",
+        profile,
+        "--output",
+        str(parent),
+    ]
+    if lang is not None:
+        cmd += ["--lang", lang]
+    r = subprocess.run(cmd, capture_output=True, text=True, cwd=str(REPO_ROOT))
     assert r.returncode == 0, f"generate failed:\n{r.stderr}"
     return parent / name
 
@@ -95,3 +93,10 @@ class TestInjectSubcommand:
         output = _generate("myapp", "starter-cli", tmp_path)
         r = _inject("no-such-part", output)
         assert r.returncode != 0
+        assert "not found" in r.stderr.lower() or "available" in r.stderr.lower()
+
+    def test_inject_rejects_conflicting_part(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "starter-cli", tmp_path, lang="python")
+        r = _inject("lang/typescript", output)
+        assert r.returncode != 0
+        assert "conflicts" in r.stderr.lower()

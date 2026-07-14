@@ -29,7 +29,3 @@ class WorkspaceError(Exception):
 
 class ManifestError(Exception):
     pass
-
-
-class InjectError(Exception):
-    pass

@@ -16,7 +16,6 @@ import pytest
 from tooling.generator.applier import apply, inject
 from tooling.generator.errors import (
     ApplyError,
-    InjectError,
     LoadError,
     ManifestError,
     PlanError,

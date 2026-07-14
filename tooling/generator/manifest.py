@@ -48,6 +48,6 @@ def update_manifest(project_path: Path, *, part_id: str) -> None:
         raise ManifestError(f"manifest not found at '{path}'")
     today = date.today().isoformat()
     with path.open("a") as f:
-        f.write(f"\n[[applied]]\n")
+        f.write("\n[[applied]]\n")
         f.write(f'part_id = "{part_id}"\n')
         f.write(f'applied_at = "{today}"\n')
