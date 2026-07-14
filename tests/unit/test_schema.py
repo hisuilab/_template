@@ -98,11 +98,23 @@ def test_missing_part_table_is_rejected() -> None:
 def test_valid_profile_parses() -> None:
     schema = validate_profile(_load_fixture("valid_profile.toml"), source="valid_profile.toml")
     assert schema == ProfileSchema(
-        name="small-cli",
-        summary="小規模 CLI ツール向けプロファイル",
-        parts=("base", "scale/small", "purpose/cli"),
+        name="starter-cli",
+        summary="スターター CLI ツール向けプロファイル",
+        parts=("base", "scale/small", "starter/cli"),
         variables={},
     )
+
+
+def test_starter_layer_is_accepted() -> None:
+    data = {"part": {"id": "starter/cli", "layer": "starter", "summary": "cli"}}
+    schema = validate_part(data, source="<test>")
+    assert schema.layer == "starter"
+
+
+def test_purpose_layer_is_rejected() -> None:
+    data = {"part": {"id": "purpose/cli", "layer": "purpose", "summary": "cli"}}
+    with pytest.raises(SchemaError, match="part.layer"):
+        validate_part(data, source="<test>")
 
 
 def test_empty_parts_is_rejected() -> None:
@@ -133,7 +145,7 @@ def test_missing_profile_table_is_rejected() -> None:
 
 @pytest.mark.parametrize(
     "profile_name",
-    ["small-cli", "small-web-api", "small-library"],
+    ["starter-cli", "starter-web-api", "starter-library"],
 )
 def test_profile_toml_validates(profile_name: str) -> None:
     path = TEMPLATE_ROOT / "profiles" / f"{profile_name}.toml"

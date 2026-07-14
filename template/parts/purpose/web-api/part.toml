@@ -1,9 +1,0 @@
-[part]
-id = "purpose/web-api"
-layer = "purpose"
-summary = "Web API サービス向けの src/ 骨格（app.py・routes/）"
-requires = ["base"]
-conflicts = []
-
-[placeholders]
-required = ["project_name"]

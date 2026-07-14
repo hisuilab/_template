@@ -1,6 +1,6 @@
 [profile]
-name = "small-cli"
-summary = "小規模 CLI ツール向けプロファイル"
-parts = ["base", "scale/small", "purpose/cli"]
+name = "starter-cli"
+summary = "スターター CLI ツール向けプロファイル"
+parts = ["base", "scale/small", "starter/cli"]
 
 [variables]
