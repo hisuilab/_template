@@ -44,6 +44,14 @@ lint: check-format
 verify: test lint check-docs check-readme check-status check-encoding
 
 # =============================================================================
+# Workspace — ~/Projects 初期化
+# =============================================================================
+
+# ~/Projects ワークスペースを初期化する（flake.nix / .envrc / justfile を配置）
+init-workspace path="~/Projects" workspace="default":
+    nix run .# -- init-workspace --path {{path}} --workspace {{workspace}}
+
+# =============================================================================
 # GitHub — repository setup and status
 # =============================================================================
 
