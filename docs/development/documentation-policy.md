@@ -26,7 +26,7 @@
 | Issue 単位の設計詳細 | [`docs/design/`](../design/) | Issue を設計する時・実装で変わる時 |
 | どの順序で作るか | [`docs/milestones/`](../milestones/) | 対象範囲・依存順・完了条件が変わる時 |
 | 開発・運用手順 | [`docs/development/`](.) | 開発手順・検証手順・文書ポリシーが変わる時 |
-| AI エージェントの動作 | [`.claude/rules/`](../../.claude/rules/) | 権限・Role・Workflow・Command が変わる時 |
+| AI エージェントの動作 | `.claude/rules/` | 権限・Role・Workflow・Command が変わる時 |
 
 ## 3. 変更トリガー別更新先
 
