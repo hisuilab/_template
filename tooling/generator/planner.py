@@ -66,6 +66,8 @@ def plan(
             if dest in planned:
                 if strategy == "replace":
                     planned[dest] = PlannedFile(src_path=src, dest_path=dest, strategy=strategy)
+                elif strategy == "add":
+                    pass  # keep first part's version
                 else:
                     raise PlanError(
                         f"file '{dest}' is provided by multiple parts "

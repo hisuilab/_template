@@ -25,3 +25,11 @@ class ApplyError(Exception):
 
 class WorkspaceError(Exception):
     pass
+
+
+class ManifestError(Exception):
+    pass
+
+
+class InjectError(Exception):
+    pass

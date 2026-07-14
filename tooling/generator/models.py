@@ -38,3 +38,16 @@ class GenerationPlan:
 class GenerationResult:
     output_path: Path
     files_written: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class InjectResult:
+    target_path: Path
+    files_added: tuple[str, ...]
+    files_skipped: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ManifestData:
+    project_name: str
+    applied_part_ids: tuple[str, ...]

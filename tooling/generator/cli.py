@@ -10,16 +10,19 @@ import tempfile
 from pathlib import Path
 
 from template.schema.profile_schema import ProfileSchema
-from tooling.generator.applier import apply
+from tooling.generator.applier import apply, inject
 from tooling.generator.errors import (
     ApplyError,
+    InjectError,
     LoadError,
+    ManifestError,
     PlanError,
     RenderError,
     ResolveError,
     WorkspaceError,
 )
-from tooling.generator.loader import load_parts_for_profile, load_profile
+from tooling.generator.loader import load_part, load_parts_for_profile, load_profile
+from tooling.generator.manifest import read_manifest, update_manifest, write_manifest
 from tooling.generator.models import GenerateRequest, LangSpec
 from tooling.generator.planner import plan
 from tooling.generator.renderer import render
@@ -115,6 +118,7 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
             staging.mkdir()
             render(gen_plan, staging)
             result = apply(staging, output)
+        write_manifest(output, parts, project_name=name)
         print(f"Generated {len(result.files_written)} files in {result.output_path}")
         return 0
     except (LoadError, ResolveError, PlanError, RenderError, ApplyError) as e:
@@ -184,6 +188,61 @@ def _cmd_create(args: argparse.Namespace) -> int:
     return _do_generate(answers.name, answers.profile, answers.lang, output)
 
 
+def _cmd_inject(args: argparse.Namespace) -> int:
+    target = Path(args.target).expanduser().resolve()
+    part_id: str = args.part
+
+    try:
+        manifest = read_manifest(target)
+    except ManifestError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    if part_id in manifest.applied_part_ids:
+        print(
+            f"Error: part '{part_id}' is already applied to this project.",
+            file=sys.stderr,
+        )
+        return 1
+
+    try:
+        part = load_part(part_id, _TEMPLATE_ROOT)
+    except LoadError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    missing = [r for r in part.requires if r not in manifest.applied_part_ids]
+    if missing:
+        for m in missing:
+            print(
+                f"Error: required part '{m}' has not been applied. Run: just inject {m}",
+                file=sys.stderr,
+            )
+        return 1
+
+    request = GenerateRequest(
+        name=manifest.project_name,
+        profile_id=part_id,
+        output_path=target,
+    )
+    try:
+        gen_plan = plan(request, [part], template_root=_TEMPLATE_ROOT)
+        with tempfile.TemporaryDirectory() as tmp:
+            staging = Path(tmp) / "staging"
+            staging.mkdir()
+            render(gen_plan, staging)
+            result = inject(staging, target)
+        update_manifest(target, part_id=part_id)
+        print(
+            f"Injected '{part_id}': "
+            f"{len(result.files_added)} added, {len(result.files_skipped)} skipped"
+        )
+        return 0
+    except (PlanError, RenderError, ApplyError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
 def _cmd_init_workspace(args: argparse.Namespace) -> int:
     from tooling.generator.workspace import init_workspace
 
@@ -240,9 +299,17 @@ def main() -> None:
         help="Parent directory; generated at OUTPUT/name (default: current directory)",
     )
 
+    inj = sub.add_parser("inject", help="Inject a Part into an existing generated project")
+    inj.add_argument(
+        "--part", required=True, help="Part ID to inject (e.g. features/logging-python)"
+    )
+    inj.add_argument("--target", required=True, help="Target project directory")
+
     args = parser.parse_args()
     if args.command == "generate":
         sys.exit(_cmd_generate(args))
+    elif args.command == "inject":
+        sys.exit(_cmd_inject(args))
     elif args.command == "init-workspace":
         sys.exit(_cmd_init_workspace(args))
     elif args.command == "create":
