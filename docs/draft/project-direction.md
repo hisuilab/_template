@@ -1,7 +1,9 @@
 ---
-status: draft
+status: migrated
 created: 2026-07-11
-updated: 2026-07-12
+updated: 2026-07-14
+migrated_at: 2026-07-14
+migrated_to: docs/requirements/product.md, docs/architecture/core.md
 ---
 
 # Project Direction: _template
