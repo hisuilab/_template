@@ -389,3 +389,84 @@ class TestGithubRulesetsInProfiles:
         assert (output / ".github" / "rulesets" / "solo.json").exists(), (
             "solo.json not found in small-library generated output"
         )
+
+
+# ---------------------------------------------------------------------------
+# features/github-project: profile inclusion (small-cli / small-web-api / small-library)
+# ---------------------------------------------------------------------------
+
+
+class TestGithubProjectInProfiles:
+    """Verify that github-project files are present via profile inclusion."""
+
+    def test_small_cli_generates_pr_template(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "PULL_REQUEST_TEMPLATE.md").exists(), (
+            "PULL_REQUEST_TEMPLATE.md not found — add features/github-project to small-cli profile"
+        )
+
+    def test_small_cli_generates_bug_report_template(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml").exists(), (
+            "ISSUE_TEMPLATE/bug_report.yml not found in small-cli generated output"
+        )
+
+    def test_small_cli_generates_feature_request_template(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "ISSUE_TEMPLATE" / "feature_request.yml").exists(), (
+            "ISSUE_TEMPLATE/feature_request.yml not found in small-cli generated output"
+        )
+
+    def test_small_cli_generates_task_template(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "ISSUE_TEMPLATE" / "task.yml").exists(), (
+            "ISSUE_TEMPLATE/task.yml not found in small-cli generated output"
+        )
+
+    def test_small_cli_generates_issue_template_config(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "ISSUE_TEMPLATE" / "config.yml").exists(), (
+            "ISSUE_TEMPLATE/config.yml not found in small-cli generated output"
+        )
+
+    def test_small_cli_generates_ci_workflow(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "workflows" / "ci.yml").exists(), (
+            ".github/workflows/ci.yml not found in small-cli generated output"
+        )
+
+    def test_small_cli_generates_update_flake_workflow(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "workflows" / "update-flake.yml").exists(), (
+            ".github/workflows/update-flake.yml not found in small-cli generated output"
+        )
+
+    def test_small_cli_generates_dependabot(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "dependabot.yml").exists(), (
+            ".github/dependabot.yml not found in small-cli generated output"
+        )
+
+    def test_small_cli_generates_codeowners(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        assert (output / ".github" / "CODEOWNERS").exists(), (
+            ".github/CODEOWNERS not found in small-cli generated output"
+        )
+
+    def test_project_name_substituted_in_bug_report(self, tmp_path: Path) -> None:
+        output = _generate("myapp", "small-cli", tmp_path)
+        content = (output / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml").read_text()
+        assert "myapp" in content, "project_name not substituted in bug_report.yml"
+        assert "{{project_name}}" not in content, "{{project_name}} placeholder not replaced"
+
+    def test_small_web_api_generates_github_project(self, tmp_path: Path) -> None:
+        output = _generate("myapi", "small-web-api", tmp_path)
+        assert (output / ".github" / "PULL_REQUEST_TEMPLATE.md").exists(), (
+            "PULL_REQUEST_TEMPLATE.md not found in small-web-api generated output"
+        )
+
+    def test_small_library_generates_github_project(self, tmp_path: Path) -> None:
+        output = _generate("mylib", "small-library", tmp_path)
+        assert (output / ".github" / "PULL_REQUEST_TEMPLATE.md").exists(), (
+            "PULL_REQUEST_TEMPLATE.md not found in small-library generated output"
+        )
