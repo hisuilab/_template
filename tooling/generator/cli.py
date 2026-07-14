@@ -73,6 +73,14 @@ def _validate_lang(lang_value: str, available: list[str]) -> tuple[LangSpec | No
     return LangSpec(lang=lang_value, role=None), None
 
 
+def _validate_profile(profile: str, available: list[str]) -> str | None:
+    """Return an error message if profile is invalid, else None."""
+    if profile not in available:
+        avail_str = ", ".join(available) if available else "(none)"
+        return f"error: unknown profile '{profile}'. Available: {avail_str}"
+    return None
+
+
 def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int:
     """Run the generation pipeline with a pre-resolved output path."""
     available = _available_langs(_TEMPLATE_ROOT)
@@ -121,6 +129,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         return 1
 
     output = _resolve_output_path(args.name, args.output)
+    print(f"→ Generating at {output}...")
     return _do_generate(args.name, args.profile, args.lang, output)
 
 
@@ -143,7 +152,27 @@ def _cmd_create(args: argparse.Namespace) -> int:
     if args.profile is not None:
         prefill["profile"] = args.profile
 
-    answers = run_wizard(available_langs, available_profiles, prefill=prefill or None)
+    # Early-validate prefilled lang / profile before entering the wizard
+    if "lang" in prefill:
+        _, err = _validate_lang(prefill["lang"], available_langs)
+        if err:
+            print(err, file=sys.stderr)
+            return 1
+    if "profile" in prefill:
+        err = _validate_profile(prefill["profile"], available_profiles)
+        if err:
+            print(err, file=sys.stderr)
+            return 1
+
+    # Warn if no choices are available (would cause silent exit in wizard)
+    if not available_langs and "lang" not in prefill:
+        print("error: no language parts found in template", file=sys.stderr)
+        return 1
+    if not available_profiles and "profile" not in prefill:
+        print("error: no profiles found in template", file=sys.stderr)
+        return 1
+
+    answers = run_wizard(available_langs, available_profiles, prefill=prefill)
 
     name_error = _validate_name(answers.name)
     if name_error:
@@ -202,7 +231,7 @@ def main() -> None:
     )
 
     crt = sub.add_parser("create", help="Interactively create a new project (wizard)")
-    crt.add_argument("--name", default=None, help="Project name (skips name prompt)")
+    crt.add_argument("name", nargs="?", default=None, help="Project name (skips name prompt)")
     crt.add_argument("--lang", default=None, help="Language runtime (skips lang prompt)")
     crt.add_argument("--profile", default=None, help="Profile ID (skips profile prompt)")
     crt.add_argument(
