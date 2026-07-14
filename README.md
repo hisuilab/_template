@@ -22,6 +22,24 @@ nix develop   # devShellを有効化(direnv利用時は `direnv allow` でも可
 just verify   # test + lint(format) + check-docs
 ```
 
+### ワークスペースの初期化（初回のみ）
+
+`~/Projects` に `flake.nix`・`.envrc`・`justfile` を配置します。`~/Projects` が存在しない場合は自動作成されます。
+
+```sh
+nix run github:hisuilab/_template -- init-workspace --path ~/Projects
+direnv allow ~/Projects
+```
+
+ローカルの `_template` リポジトリから実行する場合、または `just` で実行する場合:
+
+```sh
+just init-workspace               # デフォルト: ~/Projects
+just init-workspace path=~/Work   # パスを変える場合
+```
+
+### 新規プロジェクトの生成
+
 新規プロジェクトを生成するには、次のコマンドを実行します。`_template` ディレクトリにいなくても呼び出せます。
 
 ```sh
