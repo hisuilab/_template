@@ -59,22 +59,23 @@ flowchart LR
     CLI["inject CLI<br/>--part / --target"]
     Manifest["manifest.py<br/>read / check"]
     Loader["loader.py<br/>load_part()"]
-    Resolver["resolver.py<br/>resolve()"]
     Planner["planner.py<br/>plan()"]
     Renderer["renderer.py<br/>render()"]
     Applier["applier.inject()<br/>skip existing"]
     ManifestW["manifest.py<br/>write / update"]
 
-    CLI --> Manifest --> Loader --> Resolver --> Planner --> Renderer --> Applier --> ManifestW
+    CLI --> Manifest --> Loader --> Planner --> Renderer --> Applier --> ManifestW
 ```
+
+> **実装注記**: `inject` は単一 Part のみを処理するため Resolver を省略。複数 Part の一括 inject は将来対応（未解決事項 7.1）。
 
 ### 4.2. 変更ファイルと責務
 
 | ファイル | 変更内容 |
 | --- | --- |
 | `template/schema/part_schema.py` | `STRATEGIES` に `"add"` を追加 |
-| `tooling/generator/models.py` | `InjectRequest` / `InjectResult` / `ManifestData` を追加 |
-| `tooling/generator/errors.py` | `InjectError` / `ManifestError` を追加 |
+| `tooling/generator/models.py` | `InjectResult` / `ManifestData` を追加（`InjectRequest` は `GenerateRequest` を流用） |
+| `tooling/generator/errors.py` | `ManifestError` を追加 |
 | `tooling/generator/manifest.py` | 新規: `.template-manifest.toml` の読み書き |
 | `tooling/generator/planner.py` | `"add"` strategy: 先行 Part が同名ファイルを持つ場合はスキップ |
 | `tooling/generator/applier.py` | `inject()` を追加: 既存ディレクトリ許容・既存ファイルはスキップ |
@@ -124,11 +125,12 @@ inject --part <part-id> --target <dir>
 ```
 
 1. `<dir>/.template-manifest.toml` を読む（なければ `ManifestError`）
-2. `<part-id>` がマニフェストの `applied` に含まれていれば `InjectError` で終了
+2. `<part-id>` がマニフェストの `applied` に含まれていればエラー終了（二重適用防止）
 3. Part の `requires` 全件がマニフェストに含まれているか確認。未適用のものがあれば
    `just inject <missing-part>` を案内してエラー終了
-4. `load_part(part_id)` でロード → `plan()` → `render()` → `applier.inject()`
-5. マニフェストに `[[applied]]` を追記
+4. Part の `conflicts` がマニフェストの `applied` と重複する場合はエラー終了
+5. `load_part(part_id)` でロード → `plan()` → `render()` → `applier.inject()`
+6. マニフェストに `[[applied]]` を追記
 
 ### 4.6. `generate` へのマニフェスト追記
 

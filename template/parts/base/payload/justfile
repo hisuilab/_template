@@ -28,7 +28,7 @@ verify: lint check-docs check-readme check-status check-encoding
 
 # 既存プロジェクトに Part を追加する（例: just inject features/logging-python）
 inject part:
-    nix run github:hisuilab/_template -- inject --part {{ part }} --target .
+    nix run github:hisuilab/_template -- inject --part "{{ part }}" --target .
 
 # run once after generation: initialize git repository and install pre-commit hooks
 init:
