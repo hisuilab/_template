@@ -103,7 +103,7 @@ tooling.generator.cli
 | --- | --- | --- |
 | `base` | `base` | 現行と同じ |
 | `starter` | `starter/cli` / `starter/web-api` / `starter/library` | 即動くスターター（`src/main.py` 等）。architecture 不要 |
-| `scale` | `scale/small` / `scale/medium` / `scale/large` | 段階的 docs 骨格（requirements / architecture / design） |
+| `scale` | `scale/small` / `scale/medium` / `scale/large` | 段階的 docs 骨格（requirements / architecture / design）＋文書テンプレート（`docs/_templates/`） |
 | `architecture` | `architecture/layered` / `architecture/ddd` / `architecture/ddd-modules` / `architecture/ddd-contexts` | src 層構造（presentation / domain / application / infrastructure / interface） |
 | `lang` | `lang/python` / `lang/typescript` | 言語環境（現行と同じ） |
 | `features` | `features/ai-agent`（拡充） / `features/github-project` / `features/github-rulesets` / `features/logging-*` | オプション機能 |
@@ -130,6 +130,22 @@ large-ddd       = base + scale/large + architecture/ddd + architecture/ddd-conte
 - `architecture/*`: `src/domain/`・`src/application/` などレイヤーの README 骨格を提供する
 - 両者のパスは重複しないため、将来の `inject` コマンド（Issue #59）で後から `architecture/*` を注入できる
 
+### 6.5. 文書テンプレートの配置方針
+
+生成プロジェクト内で新しい文書（milestone・decision・design-proposal 等）を作成する際の雛形を、`scale/*` Part のペイロードとして提供します。
+
+```text
+scale/small/payload/docs/_templates/
+  milestone.md
+  decision.md
+  design-proposal.md
+  draft.md
+```
+
+- `scale/*` を選択したプロジェクトのみ受け取る（starter/* プロジェクトは対象外）
+- フロントマター + 節構成（概要/完了条件/実装計画 等）を雛形として提供する
+- `features/ai-agent` には含めない（AI ワークフロー前提でないプロジェクトでも有用なため）
+
 ## 7. 未解決の論点
 
 | ID | 論点 | 優先度 |
@@ -140,3 +156,4 @@ large-ddd       = base + scale/large + architecture/ddd + architecture/ddd-conte
 | U-08 | `features/ai-agent` Part の汎用化スコープ | 高（フェーズ4） |
 | U-10 | `architecture/*` Parts 実装時の `part.toml` requires 設計（`architecture/ddd-modules` は `architecture/ddd` を requires にするか） | 高（フェーズ4） |
 | U-11 | `inject` コマンド実装（Issue #59）の優先順位 | 中（フェーズ5） |
+| U-12 | `scale/*` ペイロードに含める文書テンプレートの具体的な種別・フロントマター仕様の確定 | 中（フェーズ4） |
