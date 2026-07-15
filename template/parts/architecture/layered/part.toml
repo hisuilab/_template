@@ -1,0 +1,6 @@
+[part]
+id = "architecture/layered"
+layer = "architecture"
+summary = "レイヤードアーキテクチャ（src/ 4層 + tests/ 構成 + 依存関係図）"
+requires = ["scale/small"]
+conflicts = ["architecture/ddd"]
