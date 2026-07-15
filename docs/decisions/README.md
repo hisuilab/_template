@@ -22,3 +22,5 @@
 | 2026-07-13 | [workspace-justfile-repo-reference](2026-07-13-workspace-justfile-repo-reference.md) | justfile でのリポジトリ参照方式 |
 | 2026-07-13 | [justfile-parameter-vs-placeholder-escape](2026-07-13-justfile-parameter-vs-placeholder-escape.md) | just レシピパラメータと generator プレースホルダーの衝突回避 |
 | 2026-07-13 | [ai-agent-unconditional-inclusion](2026-07-13-ai-agent-unconditional-inclusion.md) | features/ai-agent を全プロファイルに無条件同梱する |
+| 2026-07-15 | [git-hooks-nix-migration](2026-07-15-git-hooks-nix-migration.md) | pre-commit フック管理を prek から git-hooks.nix へ移行 |
+| 2026-07-15 | [nix-in-docker-devcontainer](2026-07-15-nix-in-docker-devcontainer.md) | devcontainer に Nix-in-Docker を採用 |
