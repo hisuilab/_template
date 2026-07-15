@@ -31,11 +31,10 @@ type-check:
 
 verify: lint check-docs check-readme check-status check-encoding
 
-# run once after generation: initialize git repository and install pre-commit hooks
+# run once after generation: initialize git repository
 init:
     git init
     git add -A
-    prek install --hook-type pre-commit --hook-type commit-msg
 
 # show versions of all development tools
 versions:

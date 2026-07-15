@@ -8,10 +8,6 @@ format:
 check-format:
     treefmt --fail-on-change
 
-# requires: git, prek
-precommit:
-    ./scripts/precommit
-
 # requires: rumdl
 check-docs:
     if [ -d docs ]; then rumdl check --config rumdl.toml docs/; fi
