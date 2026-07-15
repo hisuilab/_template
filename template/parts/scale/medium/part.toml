@@ -1,0 +1,6 @@
+[part]
+id = "scale/medium"
+layer = "scale"
+summary = "中規模プロジェクト向けドキュメント（要件・アーキテクチャ・設計の具体ファイル群）"
+requires = ["scale/small"]
+conflicts = []
