@@ -1,6 +1,6 @@
 # _TEMPLATE
 
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![git-hooks.nix](https://img.shields.io/badge/git--hooks-nix-5277C3?logo=nixos&logoColor=white)](https://github.com/cachix/git-hooks.nix)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 ## 目次
@@ -17,9 +17,24 @@
 
 ## 2. クイックスタート
 
+### Nix 環境（macOS / Linux）
+
 ```sh
 nix develop   # devShellを有効化(direnv利用時は `direnv allow` でも可)
 just verify   # test + lint(format) + check-docs
+```
+
+### devcontainer（Windows / Nix 未経験者）
+
+Docker と VS Code がインストールされていれば Nix 不要で開発できます。
+
+1. VS Code でリポジトリを開く
+2. コマンドパレット →「Reopen in Container」
+3. コンテナ起動後、ターミナルで `nix develop` に入ると git フックが自動インストールされます
+
+```sh
+nix develop          # devShell に入る（初回は nix store のダウンロードに数分かかります）
+just verify          # test + lint + check-docs
 ```
 
 ### ワークスペースの初期化（初回のみ）

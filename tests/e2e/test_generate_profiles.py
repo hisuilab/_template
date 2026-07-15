@@ -69,7 +69,16 @@ def _run_script(script: str, cwd: Path) -> subprocess.CompletedProcess:
 
 
 def _assert_base_files(output: Path) -> None:
-    for rel in [".gitignore", "flake.nix", "justfile", "LICENSE", "README.md", "treefmt.nix"]:
+    for rel in [
+        ".gitignore",
+        ".devcontainer/devcontainer.json",
+        ".devcontainer/README.md",
+        "flake.nix",
+        "justfile",
+        "LICENSE",
+        "README.md",
+        "treefmt.nix",
+    ]:
         assert (output / rel).exists(), f"missing base file: {rel}"
 
 

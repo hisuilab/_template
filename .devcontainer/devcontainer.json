@@ -1,0 +1,15 @@
+{
+  "name": "_template",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/nix:1": {
+      "extraNixConfig": "experimental-features = nix-command flakes"
+    }
+  },
+  "postCreateCommand": "nix develop --command echo 'devShell ready'",
+  "customizations": {
+    "vscode": {
+      "extensions": ["jnoortheen.nix-ide"]
+    }
+  }
+}
