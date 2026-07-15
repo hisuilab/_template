@@ -1,0 +1,6 @@
+[part]
+id = "architecture/ddd"
+layer = "architecture"
+summary = "DDD向け構成（docs/domain/ ドメイン設計 + src/ 4層 + tests/ 3層）"
+requires = ["scale/small"]
+conflicts = ["architecture/layered"]
