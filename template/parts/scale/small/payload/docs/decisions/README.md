@@ -10,4 +10,6 @@
 
 ## 3. 責任外
 
-- 要件定義・機能設計（各専用ディレクトリが担当）
+- 要件定義（`docs/requirements/` が担当）
+- 機能設計（`docs/design/` が担当）
+- アーキテクチャ概要（`docs/architecture/` が担当）
