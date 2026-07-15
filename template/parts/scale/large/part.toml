@@ -1,0 +1,6 @@
+[part]
+id = "scale/large"
+layer = "scale"
+summary = "大規模プロジェクト向けドキュメント（制約・観測性・スケーラビリティ・マイルストーン管理）"
+requires = ["scale/medium"]
+conflicts = []
