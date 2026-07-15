@@ -12,4 +12,4 @@
 
 ## 3. 責任外
 
-- フォーマッタ・linter 本体のロジック（treefmt / rumdl / gitleaks / prek が個別に持ちます）
+- フォーマッタ・linter 本体のロジック（treefmt / rumdl / gitleaks / convco が個別に持ちます）

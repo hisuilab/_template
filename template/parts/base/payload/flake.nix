@@ -5,10 +5,17 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
+    git-hooks.url = "github:cachix/git-hooks.nix";
+    git-hooks.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
-    { nixpkgs, treefmt-nix, ... }:
+    {
+      nixpkgs,
+      treefmt-nix,
+      git-hooks,
+      ...
+    }:
     let
       systems = [
         "aarch64-darwin"
@@ -27,6 +34,45 @@
         system:
         let
           pkgs = pkgsFor system;
+          hooks = git-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              # ── フォーマット（Nix / TOML / JSON / YAML / shell）──
+              treefmt = {
+                enable = true;
+                package = treefmtEval.${system}.config.build.wrapper;
+              };
+
+              # ── Markdown lint / fix ──
+              rumdl = {
+                enable = true;
+                entry = "${pkgs.rumdl}/bin/rumdl check --fix --config rumdl.toml";
+                types = [ "markdown" ];
+              };
+
+              # ── シークレット検出 ──
+              gitleaks = {
+                enable = true;
+                name = "Detect secrets with gitleaks";
+                entry = "${pkgs.gitleaks}/bin/gitleaks protect --staged --redact --config .gitleaks.toml";
+                pass_filenames = false;
+              };
+
+              # ── プロジェクト固有チェック ──
+              check-readme = {
+                enable = true;
+                name = "Require README.md (概要/責任) in every owned directory";
+                entry = "./scripts/check-readme";
+                pass_filenames = false;
+              };
+
+              # ── Conventional Commits（commit-msg ステージ）──
+              convco = {
+                enable = true;
+                stages = [ "commit-msg" ];
+              };
+            };
+          };
         in
         {
           default = pkgs.mkShell {
@@ -37,18 +83,13 @@
               pkgs.gitleaks
               pkgs.jq
               pkgs.just
-              pkgs.prek
               pkgs.rumdl
               pkgs.shellcheck
               pkgs.shfmt
               treefmtEval.${system}.config.build.wrapper
             ];
 
-            shellHook = ''
-              if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-                prek install --hook-type pre-commit --hook-type commit-msg >/dev/null
-              fi
-            '';
+            shellHook = hooks.shellHook;
           };
         }
       );

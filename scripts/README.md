@@ -6,9 +6,12 @@
 
 ## 2. 責任
 
-- 保持するもの: `precommit`(gitで追跡されているファイルに対して`prek run`を実行するエントリーポイント)、`check-readme`(ディレクトリごとのREADME.md必須チェック)、`check-status`(`docs/draft`・`docs/milestones`・`docs/decisions`配下のYAML frontmatter `status`値の検証)
-- 対応テスト: `tests/unit/scripts/precommit.bats`、`tests/unit/scripts/check-readme.bats`、`tests/unit/scripts/check-status.bats`
+- `check-readme`: ディレクトリごとのREADME.md必須チェック
+- `check-status`: `docs/draft`・`docs/milestones`・`docs/decisions`配下のYAML frontmatter `status`値の検証
+- `check-encoding`: U+FFFD文字化けの検出
+- 対応テスト: `tests/unit/scripts/check-readme.bats`、`tests/unit/scripts/check-status.bats`、`tests/unit/scripts/check-encoding.bats`
 
 ## 3. 責任外
 
-- フォーマッタ・linter本体のロジック(treefmt/rumdl/gitleaks/prekが個別に持ちます)
+- フォーマッタ・linter本体のロジック（treefmt / rumdl / gitleaks / convco が個別に持ちます）
+- gitフックの管理（`git-hooks.nix`のshellHookが担当します）
