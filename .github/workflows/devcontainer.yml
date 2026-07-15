@@ -1,0 +1,42 @@
+name: devcontainer
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".devcontainer/**"
+      - "flake.nix"
+      - "flake.lock"
+  push:
+    branches: [main]
+    paths:
+      - ".devcontainer/**"
+      - "flake.nix"
+      - "flake.lock"
+
+concurrency:
+  group: devcontainer-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and smoke-test devcontainer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Build devcontainer and run smoke test
+        uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
+        with:
+          runCmd: nix develop --command echo "devShell OK"
+          cacheFrom: type=gha
+          cacheTo: type=gha,mode=max
+          push: never
