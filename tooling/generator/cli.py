@@ -291,6 +291,10 @@ def _cmd_init_workspace(args: argparse.Namespace) -> int:
             run_flake_update=not args.no_flake_update,
         )
         print(f"Initialized workspace at {path}")
+        print()
+        print("Next steps:")
+        print(f"  cd {path}")
+        print("  just new      # create your first project interactively")
         return 0
     except WorkspaceError as e:
         print(f"Error: {e}", file=sys.stderr)
