@@ -55,20 +55,18 @@ just init-workspace path=~/Work   # パスを変える場合
 
 ### 新規プロジェクトの生成
 
-新規プロジェクトを生成するには、次のコマンドを実行します。`_template` ディレクトリにいなくても呼び出せます。
+ワークスペース初期化後は `just new` でプロジェクトを対話的に作成できます。
+
+```sh
+cd ~/Projects
+just new                          # 対話ウィザードで生成
+just new myapp                    # 名前を事前入力してウィザード起動
+```
+
+`just new` は `nix run github:hisuilab/_template -- create` を呼び出します。ウィザードを使わずに直接生成する場合:
 
 ```sh
 nix run github:hisuilab/_template -- generate \
-  --name <project-name> \
-  --profile starter-cli \
-  --lang python \
-  --output ~/Projects/<project-name>
-```
-
-またはローカルの `_template` リポジトリから実行する場合:
-
-```sh
-nix run .# -- generate \
   --name <project-name> \
   --profile starter-cli \
   --lang python \
