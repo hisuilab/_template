@@ -7,7 +7,7 @@ VS Code devcontainer の設定ファイルを置くディレクトリです。Do
 ## 2. 責任
 
 - `devcontainer.json`: ベースイメージ・Nix feature・postCreateCommand・VS Code 拡張の構成
-- `postCreateCommand` で `nix develop --command` を実行し、devShell の shellHook 経由で git フック（treefmt / rumdl / gitleaks / check-readme / convco）を自動インストールします
+- `postCreateCommand` で `nix develop --command` を実行し、devShell の shellHook 経由で git フック（treefmt / rumdl / gitleaks / check-readme / check-status / check-encoding / convco）を自動インストールします
 
 ## 3. 責任外
 
