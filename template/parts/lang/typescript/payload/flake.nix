@@ -58,6 +58,18 @@
                 entry = "./scripts/check-readme";
                 pass_filenames = false;
               };
+              check-status = {
+                enable = true;
+                name = "Validate status frontmatter in docs/";
+                entry = "./scripts/check-status";
+                pass_filenames = false;
+              };
+              check-encoding = {
+                enable = true;
+                name = "Detect U+FFFD replacement characters";
+                entry = "./scripts/check-encoding";
+                pass_filenames = false;
+              };
               convco = {
                 enable = true;
                 stages = [ "commit-msg" ];
