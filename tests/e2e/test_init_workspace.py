@@ -47,6 +47,12 @@ class TestInitWorkspace:
         assert r.returncode == 0
         assert "new" in (ws / "justfile").read_text()
 
+    def test_completion_message_includes_next_steps(self, tmp_path: Path) -> None:
+        ws = tmp_path / "ws"
+        r = _init_workspace(ws)
+        assert r.returncode == 0
+        assert "just new" in r.stdout, f"expected 'just new' in stdout:\n{r.stdout}"
+
     def test_fails_if_flake_nix_exists(self, tmp_path: Path) -> None:
         ws = tmp_path / "ws"
         ws.mkdir()
