@@ -30,10 +30,11 @@ verify: lint check-docs check-readme check-status check-encoding
 inject part:
     nix run github:hisuilab/_template -- inject --part "{{ part }}" --target .
 
-# run once after generation: initialize git repository
+# run once after generation: initialize git repository and allow direnv
 init:
     git init
     git add -A
+    if command -v direnv > /dev/null 2>&1; then direnv allow .; fi
 
 # show versions of all development tools
 versions:
