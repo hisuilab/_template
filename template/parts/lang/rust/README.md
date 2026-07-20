@@ -10,7 +10,7 @@ Rust 言語環境（rustc / cargo / clippy / rustfmt）を提供する lang Part
 - `payload/flake.nix`: base packages + rustc + cargo + clippy + rustfmt を含む devShell
 - `payload/treefmt.nix`: `treefmt-base.nix`を`imports`+rustfmt（.rs）
 - `payload/justfile`: `common.just`を`import`+`test`（cargo test）+`lint`（treefmt + cargo clippy）+`verify`（`github-*`等の共通レシピは`common.just`側にあり複製しない。issue #97）
-- `payload/Cargo.toml` / `payload/src/main.rs`: `cargo test` / `cargo clippy` / `cargo build` の実行に必要な最小マニフェストとプレースホルダー（pytest と異なりマニフェスト無しでは動作しないため）
+- `payload/Cargo.toml` / `payload/src/main.rs`: `cargo test` / `cargo clippy` / `cargo build` の実行に必要な最小マニフェストとプレースホルダー（pytest と異なりマニフェスト無しでは動作しないため）。基盤依存として`tracing`・`tracing-subscriber`・`serde`・`serde_json`・`anyhow`・`thiserror`を同梱（issue #100。初回`cargo build`はcrates.ioへのネットワークアクセスが必要）
 - `payload/dot-gitignore`: base 共通内容 + `target/`
 
 ## 3. 責任外
