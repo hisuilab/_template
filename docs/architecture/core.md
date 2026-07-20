@@ -38,8 +38,8 @@ flowchart LR
 | `base` | `base` | 全プロファイル共通基盤（Nix flake・just・pre-commit・CI） |
 | `scale` | `scale/small` | ドキュメント骨格（`docs/draft/`） |
 | `starter` | `starter/cli` / `starter/web-api` / `starter/library` | 用途別 src 骨格（lang 非依存、README 等） |
-| `starter`（複合） | `starter/cli-python` / `starter/web-api-python` / `starter/library-python` | 用途別 src 実装（`src/main.py` 等）。対応する `starter/<id>` + `lang/<x>` が揃った場合のみ`--lang <x>`指定時にCLIが追加注入する |
-| `lang` | `lang/python` / `lang/typescript` | 言語環境（flake.nix replace・treefmt・justfile・.gitignore） |
+| `starter`（複合） | `starter/cli-python` / `starter/web-api-python` / `starter/library-python` / `starter/web-api-rust` | 用途別 src 実装（`src/main.py`・axum等）。対応する `starter/<id>` + `lang/<x>` が揃った場合のみ`--lang <x>`指定時にCLIが追加注入する |
+| `lang` | `lang/python` / `lang/typescript` / `lang/rust` / `lang/go` | 言語環境（flake.nix replace・treefmt・justfile・.gitignore）。`lang/rust`はWebAPI等の複合Partが積む基盤依存(tracing/serde/anyhow等)もCargo.tomlに含む |
 | `features` | `features/ai-agent` / `features/github-project` / `features/github-rulesets` / `features/logging-*` | オプション機能 |
 
 ### 現行プロファイル
