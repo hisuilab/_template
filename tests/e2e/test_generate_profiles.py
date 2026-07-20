@@ -79,6 +79,8 @@ def _assert_base_files(output: Path) -> None:
         "LICENSE",
         "README.md",
         "treefmt.nix",
+        "common.just",
+        "treefmt-base.nix",
     ]:
         assert (output / rel).exists(), f"missing base file: {rel}"
 
@@ -473,6 +475,18 @@ class TestLangCli:
         output = _generate("goapp", "starter-cli", tmp_path, lang="go")
         assert not (output / "src" / "main.py").exists()
 
+    @pytest.mark.parametrize("lang", ["python", "typescript", "rust", "go"])
+    def test_lang_justfile_imports_common(self, tmp_path: Path, lang: str) -> None:
+        output = _generate("app", "starter-cli", tmp_path, lang=lang)
+        justfile = (output / "justfile").read_text()
+        assert "import 'common.just'" in justfile
+
+    @pytest.mark.parametrize("lang", ["python", "typescript", "rust", "go"])
+    def test_lang_treefmt_imports_base(self, tmp_path: Path, lang: str) -> None:
+        output = _generate("app", "starter-cli", tmp_path, lang=lang)
+        treefmt = (output / "treefmt.nix").read_text()
+        assert "treefmt-base.nix" in treefmt
+
 
 # ---------------------------------------------------------------------------
 # features/ai-agent: .claude/rules/dev-policy.md
@@ -592,9 +606,10 @@ class TestGithubRulesetsPart:
         )
 
     def test_justfile_has_github_recipes(self, tmp_path: Path) -> None:
+        # github-* recipes live in common.just (issue #97), imported by justfile.
         output = tmp_path / "ghapp"
         self._generate_with_rulesets("ghapp", output)
-        justfile = (output / "justfile").read_text()
+        common_just = (output / "common.just").read_text()
         for recipe in [
             "github-init",
             "github-setup",
@@ -602,7 +617,7 @@ class TestGithubRulesetsPart:
             "github-status",
             "github-rules-status",
         ]:
-            assert recipe in justfile, f"justfile missing recipe: {recipe}"
+            assert recipe in common_just, f"common.just missing recipe: {recipe}"
 
 
 # ---------------------------------------------------------------------------
