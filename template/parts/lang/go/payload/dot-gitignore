@@ -1,0 +1,22 @@
+# === 一時ファイル ===
+.DS_Store
+tmp/
+
+# === Nix / direnv ===
+.direnv/
+result
+
+# === AI エージェント設定 ===
+.claude/
+
+# === エディタ設定 ===
+.vscode/
+
+# === Go ===
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out

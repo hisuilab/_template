@@ -3,7 +3,7 @@ id = "lang/typescript"
 layer = "lang"
 summary = "TypeScript 言語環境（nodejs / biome）"
 requires = ["base"]
-conflicts = ["lang/python", "lang/rust"]
+conflicts = ["lang/python", "lang/rust", "lang/go"]
 
 [placeholders]
 required = ["project_name"]

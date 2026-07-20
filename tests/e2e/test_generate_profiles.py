@@ -424,6 +424,55 @@ class TestLangCli:
         output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
         assert not (output / "src" / "main.py").exists()
 
+    def test_lang_go_flake_contains_go(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        flake = (output / "flake.nix").read_text()
+        assert "go" in flake
+
+    def test_lang_go_flake_contains_golangci_lint(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        flake = (output / "flake.nix").read_text()
+        assert "golangci-lint" in flake
+
+    def test_lang_go_treefmt_uses_gofmt(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        treefmt = (output / "treefmt.nix").read_text()
+        assert "gofmt" in treefmt
+
+    def test_lang_go_justfile_has_golangci_lint(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        justfile = (output / "justfile").read_text()
+        assert "golangci-lint" in justfile
+
+    def test_lang_go_mod_exists(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        assert (output / "go.mod").exists()
+
+    def test_lang_go_main_go_exists(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        assert (output / "main.go").exists()
+
+    def test_lang_go_check_scripts_pass(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        _git_init(output)
+        _assert_scripts_pass(output)
+
+    def test_lang_go_gitignore_contains_exe(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        gitignore = (output / ".gitignore").read_text()
+        assert "*.exe" in gitignore
+
+    def test_lang_go_gitignore_does_not_contain_pycache(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        gitignore = (output / ".gitignore").read_text()
+        assert "__pycache__/" not in gitignore
+
+    def test_lang_go_no_python_src_leak(self, tmp_path: Path) -> None:
+        # No starter/cli-go composite Part exists yet, so no src/ language
+        # content should be injected beyond lang/go's own root placeholder.
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        assert not (output / "src" / "main.py").exists()
+
 
 # ---------------------------------------------------------------------------
 # features/ai-agent: .claude/rules/dev-policy.md
