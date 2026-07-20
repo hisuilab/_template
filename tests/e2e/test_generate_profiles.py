@@ -255,6 +255,21 @@ class TestLangCli:
         output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
         assert (output / "biome.json").exists()
 
+    def test_lang_python_gitignore_contains_pycache(self, tmp_path: Path) -> None:
+        output = _generate("pyapp", "starter-cli", tmp_path, lang="python")
+        gitignore = (output / ".gitignore").read_text()
+        assert "__pycache__/" in gitignore
+
+    def test_lang_typescript_gitignore_contains_node_modules(self, tmp_path: Path) -> None:
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        gitignore = (output / ".gitignore").read_text()
+        assert "node_modules/" in gitignore
+
+    def test_lang_typescript_gitignore_does_not_contain_pycache(self, tmp_path: Path) -> None:
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        gitignore = (output / ".gitignore").read_text()
+        assert "__pycache__/" not in gitignore
+
 
 # ---------------------------------------------------------------------------
 # features/ai-agent: .claude/rules/dev-policy.md
