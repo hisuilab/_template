@@ -6,7 +6,8 @@ Python stdlib logging を使ったロギング基盤を追加する features/log
 
 ## 2. 責任
 
-- `part.toml` によるメタデータと依存宣言
+- `part.toml` によるメタデータと依存宣言（requires: base, lang/python。`.py`ファイルを
+  同梱するため`lang/python`の`.gitignore`(`__pycache__/`無視)を前提とする）
 - `payload/src/logger.py`: `get_logger(name: str) -> logging.Logger` ヘルパー
 
 ## 3. 責任外
