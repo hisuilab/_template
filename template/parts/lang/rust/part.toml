@@ -1,9 +1,9 @@
 [part]
-id = "lang/typescript"
+id = "lang/rust"
 layer = "lang"
-summary = "TypeScript 言語環境（nodejs / biome）"
+summary = "Rust言語環境（rustc / cargo / clippy / rustfmt）"
 requires = ["base"]
-conflicts = ["lang/python", "lang/rust"]
+conflicts = ["lang/python", "lang/typescript"]
 
 [placeholders]
 required = ["project_name"]
@@ -21,7 +21,11 @@ path = "justfile"
 strategy = "replace"
 
 [[files]]
-path = "biome.json"
+path = "Cargo.toml"
+strategy = "replace"
+
+[[files]]
+path = "src/main.rs"
 strategy = "replace"
 
 [[files]]

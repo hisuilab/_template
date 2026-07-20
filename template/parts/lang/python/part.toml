@@ -3,7 +3,7 @@ id = "lang/python"
 layer = "lang"
 summary = "Python 言語環境（python3 / uv / ruff / pytest）"
 requires = ["base"]
-conflicts = ["lang/typescript"]
+conflicts = ["lang/typescript", "lang/rust"]
 
 [placeholders]
 required = ["project_name"]
