@@ -115,9 +115,11 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
     )
     try:
         loaded_profile = load_profile(profile, _TEMPLATE_ROOT)
-        extra_parts = (f"lang/{lang_spec.lang}",) if lang_spec else ()
+        extra_parts: tuple[str, ...] = ()
         if lang_spec:
-            extra_parts += _starter_lang_parts(loaded_profile.parts, lang_spec.lang, _TEMPLATE_ROOT)
+            extra_parts = (f"lang/{lang_spec.lang}",) + _starter_lang_parts(
+                loaded_profile.parts, lang_spec.lang, _TEMPLATE_ROOT
+            )
         extended_profile = ProfileSchema(
             name=loaded_profile.name,
             summary=loaded_profile.summary,

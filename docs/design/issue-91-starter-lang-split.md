@@ -181,8 +181,12 @@ just inject starter/cli-python   # src/main.py を追加(requires=["base","start
   `starter/cli-typescript`等の中身は、それぞれの言語のpurpose Part追加時(#87・#88関連、
   および将来のTypeScript対応)に個別Issueとして積みます
 - **`--lang typescript`/`rust`のsrc内容変更**: 4.3節の通り、既存の「Pythonが紛れ込む」
-  状態から「何も無い」状態に変わります。これは意図した改善ですが、利用者から見ると
-  `--lang typescript`で生成したプロジェクトに`src/`の中身が無くなる体験の変化があるため、
-  ルートREADME等で明示するかは`/build:docs`フェーズで判断します
+  状態から「何も無い」状態に変わります。これは意図した改善であり、ルートREADMEに
+  `--lang`省略時の挙動として明記しました
 - **U-06との関係**: 複数lang同時指定時の複合Part解決は、flake.nixの`append`戦略と同じ
   タイミング（フェーズ5）でまとめて設計します
+- **`base`の`__pycache__/`再検討の余地**(#89との関係): #89は「`starter/*`がPython専用で
+  lang非依存になっていない」ことを理由に`base`へ`__pycache__/`を残しましたが、本Issueで
+  その前提(lang未定・非Python選択時のPython混入)を解消しました。`--lang python`選択時のみ
+  `__pycache__/`が必要という状態に近づいたため、`base`から`lang/python`へ移す再設計が
+  将来可能です。ただし本Issueのスコープ外とし、対応するかは別Issueで判断します
