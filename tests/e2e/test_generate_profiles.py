@@ -399,6 +399,14 @@ class TestLangCli:
         output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
         assert (output / "Cargo.toml").exists()
 
+    @pytest.mark.parametrize(
+        "crate", ["tracing", "tracing-subscriber", "serde", "serde_json", "anyhow", "thiserror"]
+    )
+    def test_lang_rust_cargo_toml_has_foundation_deps(self, tmp_path: Path, crate: str) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        cargo_toml = (output / "Cargo.toml").read_text()
+        assert crate in cargo_toml
+
     def test_lang_rust_src_main_rs_exists(self, tmp_path: Path) -> None:
         output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
         assert (output / "src" / "main.rs").exists()
