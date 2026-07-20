@@ -154,9 +154,14 @@ versions:
 
 ## 5. 失敗とロールバック
 
-- `common.just`・`treefmt-base.nix`は新規ファイルで、既存の生成結果(レシピの実行結果・
-  formatter設定)は変更しません。回帰は「レシピ一覧・formatter設定が現状と完全に一致する
-  こと」をe2e/手動確認で担保します
+- `common.just`・`treefmt-base.nix`は新規ファイルで、formatter設定(`nix build .#formatter`の
+  Nix store pathがレビュー時点でbyte-for-byte一致)は変更しません
+- **レシピ一覧については完全一致ではありません**(レビューで判明)。`lang/rust`・`lang/go`は
+  現行の`base`と同期した状態で作られていたため一致しますが、`lang/python`・`lang/typescript`
+  は`base`が先行して`inject`レシピ・`init`のdirenv対応を獲得した後もドリフトしたまま
+  だったため(1節で述べた保守コストの実例そのもの)、本Issueの`common.just`化によって
+  最新の`base`と同期され、`inject`・direnv対応`init`を獲得します。これは意図した副次効果
+  であり、まさに1節の問題を解消するものです
 - `set allow-duplicate-recipes := true`は`just`の標準機能であり、Nix以外の追加依存は
   発生しません
 - ロールバックは`git revert`で可能です
