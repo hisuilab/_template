@@ -1,6 +1,8 @@
 # === 一時ファイル ===
 .DS_Store
 tmp/
+__pycache__/
+*.pyc
 
 # === Nix / direnv ===
 .direnv/

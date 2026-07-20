@@ -19,7 +19,3 @@ strategy = "replace"
 [[files]]
 path = "justfile"
 strategy = "replace"
-
-[[files]]
-path = ".gitignore"
-strategy = "replace"
