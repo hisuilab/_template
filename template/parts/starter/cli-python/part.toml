@@ -1,0 +1,9 @@
+[part]
+id = "starter/cli-python"
+layer = "starter"
+summary = "starter/cli の Python 実装（src/main.py）"
+requires = ["base", "starter/cli", "lang/python"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]

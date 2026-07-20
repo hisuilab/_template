@@ -1,0 +1,9 @@
+[part]
+id = "starter/web-api-python"
+layer = "starter"
+summary = "starter/web-api の Python 実装（src/app.py）"
+requires = ["base", "starter/web-api", "lang/python"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]
