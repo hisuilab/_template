@@ -11,3 +11,7 @@ result
 
 # === エディタ設定 ===
 .vscode/
+
+# === Python ===
+__pycache__/
+*.pyc
