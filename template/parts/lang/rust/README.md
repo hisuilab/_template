@@ -8,8 +8,8 @@ Rust 言語環境（rustc / cargo / clippy / rustfmt）を提供する lang Part
 
 - `part.toml` によるメタデータと依存宣言（requires: base, conflicts: lang/python, lang/typescript）
 - `payload/flake.nix`: base packages + rustc + cargo + clippy + rustfmt を含む devShell
-- `payload/treefmt.nix`: base フォーマット設定 + rustfmt（.rs）
-- `payload/justfile`: base レシピ + `test`（cargo test）+ `lint`（treefmt + cargo clippy）、`github-*` レシピ（`strategy=replace` のため base justfile の全内容を複製）
+- `payload/treefmt.nix`: `treefmt-base.nix`を`imports`+rustfmt（.rs）
+- `payload/justfile`: `common.just`を`import`+`test`（cargo test）+`lint`（treefmt + cargo clippy）+`verify`（`github-*`等の共通レシピは`common.just`側にあり複製しない。issue #97）
 - `payload/Cargo.toml` / `payload/src/main.rs`: `cargo test` / `cargo clippy` / `cargo build` の実行に必要な最小マニフェストとプレースホルダー（pytest と異なりマニフェスト無しでは動作しないため）
 - `payload/dot-gitignore`: base 共通内容 + `target/`
 
