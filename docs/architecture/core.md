@@ -37,17 +37,21 @@ flowchart LR
 | --- | --- | --- |
 | `base` | `base` | 全プロファイル共通基盤（Nix flake・just・pre-commit・CI） |
 | `scale` | `scale/small` | ドキュメント骨格（`docs/draft/`） |
-| `starter` | `starter/cli` / `starter/web-api` / `starter/library` | 用途別 src スケルトン（`src/main.py` 等） |
-| `lang` | `lang/python` / `lang/typescript` | 言語環境（flake.nix replace・treefmt・justfile） |
+| `starter` | `starter/cli` / `starter/web-api` / `starter/library` | 用途別 src 骨格（lang 非依存、README 等） |
+| `starter`（複合） | `starter/cli-python` / `starter/web-api-python` / `starter/library-python` | 用途別 src 実装（`src/main.py` 等）。対応する `starter/<id>` + `lang/<x>` が揃った場合のみ`--lang <x>`指定時にCLIが追加注入する |
+| `lang` | `lang/python` / `lang/typescript` | 言語環境（flake.nix replace・treefmt・justfile・.gitignore） |
 | `features` | `features/ai-agent` / `features/github-project` / `features/github-rulesets` / `features/logging-*` | オプション機能 |
 
 ### 現行プロファイル
 
 ```text
-starter-cli     = base + scale/small + starter/cli     + features/*
-starter-web-api = base + scale/small + starter/web-api + features/*
-starter-library = base + scale/small + starter/library + features/*
+starter-cli     = base + scale/small + starter/cli     + features/*  (+ starter/cli-<lang>     if --lang <lang> and it exists)
+starter-web-api = base + scale/small + starter/web-api + features/*  (+ starter/web-api-<lang> if --lang <lang> and it exists)
+starter-library = base + scale/small + starter/library + features/*  (+ starter/library-<lang> if --lang <lang> and it exists)
 ```
+
+`--lang`省略時はsrc骨格(README等)のみが生成されます。`--lang python`時は対応する`-python`
+複合Partが自動で追加注入され、現状と同じPython実装が生成されます。
 
 ## 3. モジュール責務
 

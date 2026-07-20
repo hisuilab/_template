@@ -6,8 +6,10 @@
 
 ## 2. 責任
 
-- `main.py`: CLI エントリポイント
+- lang 非依存の骨格(このディレクトリ自体)
 
 ## 3. 責任外
 
 - テストコード（`tests/` が担当）
+- 言語別のエントリポイント実装（`main.py` 等。`--lang python` 選択時は `starter/cli-python` が
+  `main.py` を提供。`--lang` 省略時や対応する複合 Part が無い言語では生成されない）

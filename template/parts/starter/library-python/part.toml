@@ -1,0 +1,9 @@
+[part]
+id = "starter/library-python"
+layer = "starter"
+summary = "starter/library の Python 実装（パッケージディレクトリの __init__.py）"
+requires = ["base", "starter/library", "lang/python"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]
