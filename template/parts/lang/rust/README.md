@@ -11,6 +11,7 @@ Rust 言語環境（rustc / cargo / clippy / rustfmt）を提供する lang Part
 - `payload/treefmt.nix`: base フォーマット設定 + rustfmt（.rs）
 - `payload/justfile`: base レシピ + `test`（cargo test）+ `lint`（treefmt + cargo clippy）、`github-*` レシピ（`strategy=replace` のため base justfile の全内容を複製）
 - `payload/Cargo.toml` / `payload/src/main.rs`: `cargo test` / `cargo clippy` / `cargo build` の実行に必要な最小マニフェストとプレースホルダー（pytest と異なりマニフェスト無しでは動作しないため）
+- `payload/dot-gitignore`: base 共通内容 + `target/`
 
 ## 3. 責任外
 

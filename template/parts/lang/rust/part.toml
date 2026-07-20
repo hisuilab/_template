@@ -27,3 +27,7 @@ strategy = "replace"
 [[files]]
 path = "src/main.rs"
 strategy = "replace"
+
+[[files]]
+path = ".gitignore"
+strategy = "replace"

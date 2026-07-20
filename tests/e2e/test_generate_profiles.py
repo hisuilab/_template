@@ -407,6 +407,24 @@ class TestLangCli:
         _git_init(output)
         _assert_scripts_pass(output)
 
+    def test_lang_rust_gitignore_contains_target(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        gitignore = (output / ".gitignore").read_text()
+        assert "target/" in gitignore
+
+    def test_lang_rust_gitignore_still_contains_pycache(self, tmp_path: Path) -> None:
+        # lang/rust's .gitignore is a full replace of base's, so it must keep
+        # carrying base's shared entries.
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        gitignore = (output / ".gitignore").read_text()
+        assert "__pycache__/" in gitignore
+
+    def test_lang_rust_no_python_src_leak(self, tmp_path: Path) -> None:
+        # No starter/cli-rust composite Part exists yet, so no src/ language
+        # content should be injected beyond lang/rust's own placeholder.
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        assert not (output / "src" / "main.py").exists()
+
 
 # ---------------------------------------------------------------------------
 # features/ai-agent: .claude/rules/dev-policy.md
