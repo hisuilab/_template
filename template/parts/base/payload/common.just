@@ -1,0 +1,100 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+# requires: treefmt
+format:
+    treefmt
+
+# requires: treefmt
+lint:
+    treefmt --fail-on-change
+
+# requires: rumdl
+check-docs:
+    if [ -d docs ]; then rumdl check --config rumdl.toml docs/; fi
+
+# requires: git
+check-readme:
+    ./scripts/check-readme
+
+# requires: git
+check-status:
+    ./scripts/check-status
+
+# requires: git
+check-encoding:
+    ./scripts/check-encoding
+
+# 既存プロジェクトに Part を追加する（例: just inject features/logging-python）
+inject part:
+    nix run github:hisuilab/_template -- inject --part "{{ part }}" --target .
+
+# run once after generation: initialize git repository and allow direnv
+init:
+    git init
+    git add -A
+    if command -v direnv > /dev/null 2>&1; then direnv allow .; fi
+
+# =============================================================================
+# GitHub — repository setup and status
+# =============================================================================
+
+# requires: gh
+# [初回のみ・冪等でない] GitHub リポジトリを作成し全設定を適用する
+# 2回目以降は github-setup を使ってください
+github-init $visibility="private":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    gh auth status > /dev/null 2>&1 \
+      || { echo "error: gh not authenticated. Run: gh auth login" >&2; exit 1; }
+    git rev-parse HEAD > /dev/null 2>&1 \
+      || { echo "error: no commits yet. Run: git add -A && git commit -m 'init'" >&2; exit 1; }
+    if git remote get-url origin > /dev/null 2>&1; then
+      echo "error: origin already set. Use: git push -u origin main && just github-setup" >&2
+      exit 1
+    fi
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+    if [ "$current_branch" != "main" ]; then
+      echo "error: github-init must be run from the 'main' branch (current: ${current_branch})" >&2
+      echo "       Switch with: git checkout main  (or: git checkout -b main)" >&2
+      exit 1
+    fi
+    gh repo create \
+      "$(gh api user --jq .login)/{{project_name}}" \
+      --"$visibility" --source=. --remote=origin --push
+    just github-setup
+    echo "✓ {{project_name}} initialized on GitHub"
+
+# requires: gh
+# 全 GitHub 設定を適用する（.github/rules-preset に従い冪等）
+github-setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    preset="$(cat .github/rules-preset 2>/dev/null || echo solo)"
+    just github-setup-rules "$preset"
+
+# requires: gh, jq
+# Rules プリセットを適用または更新し .github/rules-preset を記録する（default: solo）
+github-setup-rules $preset="solo":
+    #!/usr/bin/env bash
+    bash scripts/github-setup-rules "$preset"
+
+# requires: gh, jq
+# 全 GitHub 設定の現状を表示する
+github-status:
+    just github-rules-status
+
+# requires: gh, jq
+# 現在 GitHub に適用されている Rules を表示する
+github-rules-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! gh repo view --json nameWithOwner -q .nameWithOwner > /dev/null 2>&1; then
+      echo "No GitHub remote configured. Run: just github-init"
+      exit 0
+    fi
+    repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+    preset="$(cat .github/rules-preset 2>/dev/null || echo '(unknown)')"
+    echo "=== Rules: ${repo} (preset: ${preset}) ==="
+    gh api "repos/${repo}/rulesets" \
+      --header "X-GitHub-Api-Version: 2022-11-28" \
+      | jq '.[] | {id, name, enforcement, updated_at}'

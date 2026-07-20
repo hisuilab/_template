@@ -180,22 +180,20 @@ def test_justfile_github_recipes_export_parameters() -> None:
     In just shebang recipes, parameters are only available as env vars when the
     declaration uses a $ prefix (e.g., $visibility="private"). Without it,
     `set -euo pipefail` (nounset) causes an unbound variable error at runtime.
+
+    github-* recipes live in base's common.just (issue #97), imported by every
+    lang's justfile, so a single shared copy is the source of truth.
     """
-    justfiles = [
-        PARTS_ROOT / "base" / "payload" / "justfile",
-        PARTS_ROOT / "lang" / "python" / "payload" / "justfile",
-        PARTS_ROOT / "lang" / "typescript" / "payload" / "justfile",
-    ]
-    for jf in justfiles:
-        content = jf.read_text(encoding="utf-8")
-        assert "github-init $visibility=" in content, (
-            f"{jf}: github-init must declare '$visibility=' (not 'visibility=') "
-            "so just exports it as an env var in the shebang recipe"
-        )
-        assert "github-setup-rules $preset=" in content, (
-            f"{jf}: github-setup-rules must declare '$preset=' (not 'preset=') "
-            "so just exports it as an env var in the shebang recipe"
-        )
+    common_just = PARTS_ROOT / "base" / "payload" / "common.just"
+    content = common_just.read_text(encoding="utf-8")
+    assert "github-init $visibility=" in content, (
+        f"{common_just}: github-init must declare '$visibility=' (not 'visibility=') "
+        "so just exports it as an env var in the shebang recipe"
+    )
+    assert "github-setup-rules $preset=" in content, (
+        f"{common_just}: github-setup-rules must declare '$preset=' (not 'preset=') "
+        "so just exports it as an env var in the shebang recipe"
+    )
 
 
 def test_github_rulesets_provides_rules_preset() -> None:
@@ -206,34 +204,15 @@ def test_github_rulesets_provides_rules_preset() -> None:
     )
 
 
-def test_justfile_github_recipes_export_parameters() -> None:
-    justfiles = [
-        PARTS_ROOT / "base" / "payload" / "justfile",
-        PARTS_ROOT / "lang" / "python" / "payload" / "justfile",
-        PARTS_ROOT / "lang" / "typescript" / "payload" / "justfile",
-    ]
-    for jf in justfiles:
-        content = jf.read_text(encoding="utf-8")
-        assert "github-init $visibility=" in content, (
-            f"{jf}: github-init must declare $visibility= (dollar prefix for env var export)"
-        )
-        assert "github-setup-rules $preset=" in content, (
-            f"{jf}: github-setup-rules must declare $preset= (dollar prefix for env var export)"
-        )
-
-
 def test_justfile_github_init_guards_main_branch() -> None:
-    justfiles = [
-        PARTS_ROOT / "base" / "payload" / "justfile",
-        PARTS_ROOT / "lang" / "python" / "payload" / "justfile",
-        PARTS_ROOT / "lang" / "typescript" / "payload" / "justfile",
-    ]
-    for jf in justfiles:
-        content = jf.read_text(encoding="utf-8")
-        assert "git rev-parse --abbrev-ref HEAD" in content, (
-            f"{jf}: github-init must check current branch via git rev-parse --abbrev-ref HEAD"
-        )
-        assert '"main"' in content, f"{jf}: github-init must guard against non-main branch"
+    # github-* recipes live in base's common.just (issue #97), imported by
+    # every lang's justfile, so a single shared copy is the source of truth.
+    common_just = PARTS_ROOT / "base" / "payload" / "common.just"
+    content = common_just.read_text(encoding="utf-8")
+    assert "git rev-parse --abbrev-ref HEAD" in content, (
+        f"{common_just}: github-init must check current branch via git rev-parse --abbrev-ref HEAD"
+    )
+    assert '"main"' in content, f"{common_just}: github-init must guard against non-main branch"
 
 
 def test_github_rulesets_json_are_valid() -> None:
