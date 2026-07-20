@@ -1,6 +1,6 @@
 // Generated placeholder — delete when you add real code
 use anyhow::Result;
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 
 async fn health() -> &'static str {
     "ok"
