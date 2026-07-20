@@ -1,9 +1,9 @@
 [part]
-id = "lang/rust"
+id = "lang/go"
 layer = "lang"
-summary = "Rust言語環境（rustc / cargo / clippy / rustfmt）"
+summary = "Go言語環境（go / gofmt / golangci-lint）"
 requires = ["base"]
-conflicts = ["lang/python", "lang/typescript", "lang/go"]
+conflicts = ["lang/python", "lang/typescript", "lang/rust"]
 
 [placeholders]
 required = ["project_name"]
@@ -21,11 +21,15 @@ path = "justfile"
 strategy = "replace"
 
 [[files]]
-path = "Cargo.toml"
+path = "go.mod"
 strategy = "replace"
 
 [[files]]
-path = "src/main.rs"
+path = "main.go"
+strategy = "replace"
+
+[[files]]
+path = "main_test.go"
 strategy = "replace"
 
 [[files]]
