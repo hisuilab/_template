@@ -12,5 +12,6 @@ result
 # === エディタ設定 ===
 .vscode/
 
-# === Node.js / TypeScript ===
-node_modules/
+# === Python ===
+__pycache__/
+*.pyc
