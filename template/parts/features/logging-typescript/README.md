@@ -6,7 +6,7 @@ Node.js 組み込み `console` を使ったロギング基盤を追加する fea
 
 ## 2. 責任
 
-- `part.toml` によるメタデータと依存宣言
+- `part.toml` によるメタデータと依存宣言（requires: base, lang/typescript）
 - `payload/src/logger.ts`: `getLogger(name: string)` ヘルパー（`LOG_LEVEL` 環境変数で制御）
 
 ## 3. 責任外

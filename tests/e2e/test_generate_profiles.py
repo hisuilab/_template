@@ -329,11 +329,10 @@ class TestLangCli:
         gitignore = (output / ".gitignore").read_text()
         assert "__pycache__/" in gitignore
 
-    def test_lang_omitted_gitignore_contains_pycache(self, tmp_path: Path) -> None:
-        # base still carries __pycache__/ unconditionally (issue #89); this
-        # stays true even though starter/cli no longer ships src/main.py
-        # unconditionally (issue #91) since base's .gitignore is shared by
-        # every profile regardless of which lang is eventually chosen.
+    def test_lang_omitted_gitignore_does_not_contain_pycache(self, tmp_path: Path) -> None:
+        # base no longer carries __pycache__/ unconditionally (issue #94):
+        # starter/cli ships no src/ language content when --lang is omitted
+        # (issue #91), so there is nothing Python to ignore.
         r = subprocess.run(
             [
                 sys.executable,
@@ -353,19 +352,19 @@ class TestLangCli:
         )
         assert r.returncode == 0, r.stderr
         gitignore = (tmp_path / "noflag" / ".gitignore").read_text()
-        assert "__pycache__/" in gitignore
+        assert "__pycache__/" not in gitignore
 
     def test_lang_typescript_gitignore_contains_node_modules(self, tmp_path: Path) -> None:
         output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
         gitignore = (output / ".gitignore").read_text()
         assert "node_modules/" in gitignore
 
-    def test_lang_typescript_gitignore_still_contains_pycache(self, tmp_path: Path) -> None:
-        # lang/typescript's .gitignore is a full replace of base's, so it must
-        # keep carrying base's shared entries.
+    def test_lang_typescript_gitignore_does_not_contain_pycache(self, tmp_path: Path) -> None:
+        # No starter/cli-typescript composite Part exists yet (issue #91), so
+        # no Python source is ever generated alongside --lang typescript.
         output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
         gitignore = (output / ".gitignore").read_text()
-        assert "__pycache__/" in gitignore
+        assert "__pycache__/" not in gitignore
 
     def test_lang_typescript_no_python_src_leak(self, tmp_path: Path) -> None:
         # No starter/cli-typescript composite Part exists yet, so no src/
@@ -412,12 +411,12 @@ class TestLangCli:
         gitignore = (output / ".gitignore").read_text()
         assert "target/" in gitignore
 
-    def test_lang_rust_gitignore_still_contains_pycache(self, tmp_path: Path) -> None:
-        # lang/rust's .gitignore is a full replace of base's, so it must keep
-        # carrying base's shared entries.
+    def test_lang_rust_gitignore_does_not_contain_pycache(self, tmp_path: Path) -> None:
+        # No starter/cli-rust composite Part exists yet (issue #91), so no
+        # Python source is ever generated alongside --lang rust.
         output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
         gitignore = (output / ".gitignore").read_text()
-        assert "__pycache__/" in gitignore
+        assert "__pycache__/" not in gitignore
 
     def test_lang_rust_no_python_src_leak(self, tmp_path: Path) -> None:
         # No starter/cli-rust composite Part exists yet, so no src/ language

@@ -51,7 +51,7 @@ def _inject(part: str, target: Path) -> subprocess.CompletedProcess:
 
 class TestInjectSubcommand:
     def test_inject_adds_new_part_files(self, tmp_path: Path) -> None:
-        output = _generate("myapp", "starter-cli", tmp_path)
+        output = _generate("myapp", "starter-cli", tmp_path, lang="python")
         r = _inject("features/logging-python", output)
         assert r.returncode == 0, f"inject failed:\n{r.stderr}"
         assert (output / "src" / "logger.py").exists(), (
@@ -59,7 +59,7 @@ class TestInjectSubcommand:
         )
 
     def test_inject_does_not_overwrite_existing_files(self, tmp_path: Path) -> None:
-        output = _generate("myapp", "starter-cli", tmp_path)
+        output = _generate("myapp", "starter-cli", tmp_path, lang="python")
         original = (output / "justfile").read_text()
         _inject("features/logging-python", output)
         assert (output / "justfile").read_text() == original, "justfile was overwritten by inject"
@@ -67,7 +67,7 @@ class TestInjectSubcommand:
     def test_inject_updates_manifest(self, tmp_path: Path) -> None:
         import tomllib
 
-        output = _generate("myapp", "starter-cli", tmp_path)
+        output = _generate("myapp", "starter-cli", tmp_path, lang="python")
         r = _inject("features/logging-python", output)
         assert r.returncode == 0, r.stderr
         with (output / ".template-manifest.toml").open("rb") as f:
@@ -76,11 +76,20 @@ class TestInjectSubcommand:
         assert "features/logging-python" in applied_ids
 
     def test_inject_rejects_already_applied_part(self, tmp_path: Path) -> None:
-        output = _generate("myapp", "starter-cli", tmp_path)
+        output = _generate("myapp", "starter-cli", tmp_path, lang="python")
         _inject("features/logging-python", output)
         r = _inject("features/logging-python", output)
         assert r.returncode != 0
         assert "already" in r.stderr.lower() or "applied" in r.stderr.lower()
+
+    def test_inject_rejects_logging_python_without_lang_python(self, tmp_path: Path) -> None:
+        # features/logging-python ships a .py file; without lang/python present,
+        # the project's .gitignore has no __pycache__/ entry (issue #94). This
+        # must be rejected rather than silently leaking untracked cache dirs.
+        output = _generate("myapp", "starter-cli", tmp_path)
+        r = _inject("features/logging-python", output)
+        assert r.returncode != 0
+        assert "lang/python" in r.stderr
 
     def test_inject_rejects_missing_manifest(self, tmp_path: Path) -> None:
         target = tmp_path / "no-manifest"

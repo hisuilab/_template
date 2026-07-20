@@ -2,5 +2,5 @@
 id = "features/logging-python"
 layer = "features"
 summary = "Python ロギング基盤（stdlib logging、get_logger ヘルパー）"
-requires = ["base"]
+requires = ["base", "lang/python"]
 conflicts = []
