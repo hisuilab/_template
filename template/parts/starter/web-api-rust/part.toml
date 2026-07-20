@@ -1,0 +1,17 @@
+[part]
+id = "starter/web-api-rust"
+layer = "starter"
+summary = "starter/web-api の Rust 実装（axum + tokio + reqwest）"
+requires = ["base", "starter/web-api", "lang/rust"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]
+
+[[files]]
+path = "Cargo.toml"
+strategy = "replace"
+
+[[files]]
+path = "src/main.rs"
+strategy = "replace"

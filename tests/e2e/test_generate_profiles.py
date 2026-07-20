@@ -198,6 +198,30 @@ class TestGenerateStarterWebApi:
         assert not (output / "src" / "app.py").exists()
         assert (output / "src" / "routes" / "README.md").exists()
 
+    def test_lang_rust_main_rs_exists(self, tmp_path: Path) -> None:
+        output = _generate("rsapi", "starter-web-api", tmp_path, lang="rust")
+        assert (output / "src" / "main.rs").exists()
+        assert (output / "src" / "routes" / "README.md").exists()
+
+    @pytest.mark.parametrize("crate", ["axum", "tokio", "reqwest"])
+    def test_lang_rust_cargo_toml_has_web_api_deps(self, tmp_path: Path, crate: str) -> None:
+        output = _generate("rsapi", "starter-web-api", tmp_path, lang="rust")
+        cargo_toml = (output / "Cargo.toml").read_text()
+        assert crate in cargo_toml
+
+    def test_lang_rust_cargo_toml_has_foundation_deps_too(self, tmp_path: Path) -> None:
+        # starter/web-api-rust's Cargo.toml must be a cumulative superset of
+        # lang/rust's foundation deps (issue #100), not a narrower replacement.
+        output = _generate("rsapi", "starter-web-api", tmp_path, lang="rust")
+        cargo_toml = (output / "Cargo.toml").read_text()
+        for crate in ["tracing", "serde", "anyhow", "thiserror"]:
+            assert crate in cargo_toml
+
+    def test_lang_rust_check_scripts_pass(self, tmp_path: Path) -> None:
+        output = _generate("rsapi", "starter-web-api", tmp_path, lang="rust")
+        _git_init(output)
+        _assert_scripts_pass(output)
+
 
 # ---------------------------------------------------------------------------
 # starter-library
