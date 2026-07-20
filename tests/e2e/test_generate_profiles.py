@@ -374,6 +374,39 @@ class TestLangCli:
         assert not (output / "src" / "main.py").exists()
         assert (output / "src" / "README.md").exists()
 
+    def test_lang_rust_flake_contains_cargo(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        flake = (output / "flake.nix").read_text()
+        assert "cargo" in flake
+
+    def test_lang_rust_flake_contains_clippy(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        flake = (output / "flake.nix").read_text()
+        assert "clippy" in flake
+
+    def test_lang_rust_treefmt_uses_rustfmt(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        treefmt = (output / "treefmt.nix").read_text()
+        assert "rustfmt" in treefmt
+
+    def test_lang_rust_justfile_has_clippy(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        justfile = (output / "justfile").read_text()
+        assert "clippy" in justfile
+
+    def test_lang_rust_cargo_toml_exists(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        assert (output / "Cargo.toml").exists()
+
+    def test_lang_rust_src_main_rs_exists(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        assert (output / "src" / "main.rs").exists()
+
+    def test_lang_rust_check_scripts_pass(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        _git_init(output)
+        _assert_scripts_pass(output)
+
 
 # ---------------------------------------------------------------------------
 # features/ai-agent: .claude/rules/dev-policy.md
