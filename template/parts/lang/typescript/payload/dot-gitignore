@@ -1,0 +1,18 @@
+# === 一時ファイル ===
+.DS_Store
+tmp/
+__pycache__/
+*.pyc
+
+# === Nix / direnv ===
+.direnv/
+result
+
+# === AI エージェント設定 ===
+.claude/
+
+# === エディタ設定 ===
+.vscode/
+
+# === Node.js / TypeScript ===
+node_modules/

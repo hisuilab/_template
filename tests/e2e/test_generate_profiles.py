@@ -255,6 +255,48 @@ class TestLangCli:
         output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
         assert (output / "biome.json").exists()
 
+    def test_lang_python_gitignore_contains_pycache(self, tmp_path: Path) -> None:
+        output = _generate("pyapp", "starter-cli", tmp_path, lang="python")
+        gitignore = (output / ".gitignore").read_text()
+        assert "__pycache__/" in gitignore
+
+    def test_lang_omitted_gitignore_contains_pycache(self, tmp_path: Path) -> None:
+        # starter/cli ships src/main.py unconditionally regardless of --lang
+        # (no TypeScript purpose Part yet), so __pycache__/ must stay ignored
+        # even when --lang is omitted entirely.
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "noflag",
+                "--profile",
+                "starter-cli",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 0, r.stderr
+        gitignore = (tmp_path / "noflag" / ".gitignore").read_text()
+        assert "__pycache__/" in gitignore
+
+    def test_lang_typescript_gitignore_contains_node_modules(self, tmp_path: Path) -> None:
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        gitignore = (output / ".gitignore").read_text()
+        assert "node_modules/" in gitignore
+
+    def test_lang_typescript_gitignore_still_contains_pycache(self, tmp_path: Path) -> None:
+        # lang/typescript's .gitignore is a full replace of base's, so it must
+        # keep carrying base's shared entries (starter/cli still ships main.py).
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        gitignore = (output / ".gitignore").read_text()
+        assert "__pycache__/" in gitignore
+
 
 # ---------------------------------------------------------------------------
 # features/ai-agent: .claude/rules/dev-policy.md
