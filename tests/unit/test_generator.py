@@ -37,6 +37,7 @@ from tooling.generator.planner import plan as make_plan
 from tooling.generator.renderer import render
 from tooling.generator.resolver import resolve
 from template.schema.part_schema import PartSchema
+from template.schema.profile_schema import ProfileSchema
 
 TEMPLATE_ROOT = Path(__file__).resolve().parents[2] / "template"
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -444,6 +445,14 @@ class TestGeneratorIntegration:
     def test_generate_small_cli_creates_expected_files(self, tmp_path: Path) -> None:
         output = tmp_path / "foo"
         profile = load_profile("starter-cli", TEMPLATE_ROOT)
+        # Mirror cli.py's --lang python injection: lang/python plus the
+        # matching starter/cli-python composite Part provide src/main.py.
+        profile = ProfileSchema(
+            name=profile.name,
+            summary=profile.summary,
+            parts=profile.parts + ("lang/python", "starter/cli-python"),
+            variables=profile.variables,
+        )
         parts = load_parts_for_profile(profile, TEMPLATE_ROOT)
         parts = resolve(parts)
         req = GenerateRequest(

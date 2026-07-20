@@ -125,6 +125,29 @@ class TestGenerateStarterCli:
         _git_init(output)
         _assert_scripts_pass(output)
 
+    def test_lang_omitted_no_python_src(self, tmp_path: Path) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "noflag",
+                "--profile",
+                "starter-cli",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 0, r.stderr
+        output = tmp_path / "noflag"
+        assert not (output / "src" / "main.py").exists()
+        assert (output / "src" / "README.md").exists()
+
 
 # ---------------------------------------------------------------------------
 # starter-web-api
@@ -149,6 +172,29 @@ class TestGenerateStarterWebApi:
         output = _generate("myapi", "starter-web-api", tmp_path)
         _git_init(output)
         _assert_scripts_pass(output)
+
+    def test_lang_omitted_no_python_src(self, tmp_path: Path) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "noflag",
+                "--profile",
+                "starter-web-api",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 0, r.stderr
+        output = tmp_path / "noflag"
+        assert not (output / "src" / "app.py").exists()
+        assert (output / "src" / "routes" / "README.md").exists()
 
 
 # ---------------------------------------------------------------------------
@@ -175,6 +221,29 @@ class TestGenerateStarterLibrary:
         output = _generate("mylib", "starter-library", tmp_path)
         _git_init(output)
         _assert_scripts_pass(output)
+
+    def test_lang_omitted_no_python_src(self, tmp_path: Path) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "noflag",
+                "--profile",
+                "starter-library",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 0, r.stderr
+        output = tmp_path / "noflag"
+        assert not (output / "src" / "noflag" / "__init__.py").exists()
+        assert (output / "src" / "noflag" / "README.md").exists()
 
 
 # ---------------------------------------------------------------------------
@@ -261,9 +330,10 @@ class TestLangCli:
         assert "__pycache__/" in gitignore
 
     def test_lang_omitted_gitignore_contains_pycache(self, tmp_path: Path) -> None:
-        # starter/cli ships src/main.py unconditionally regardless of --lang
-        # (no TypeScript purpose Part yet), so __pycache__/ must stay ignored
-        # even when --lang is omitted entirely.
+        # base still carries __pycache__/ unconditionally (issue #89); this
+        # stays true even though starter/cli no longer ships src/main.py
+        # unconditionally (issue #91) since base's .gitignore is shared by
+        # every profile regardless of which lang is eventually chosen.
         r = subprocess.run(
             [
                 sys.executable,
@@ -292,10 +362,17 @@ class TestLangCli:
 
     def test_lang_typescript_gitignore_still_contains_pycache(self, tmp_path: Path) -> None:
         # lang/typescript's .gitignore is a full replace of base's, so it must
-        # keep carrying base's shared entries (starter/cli still ships main.py).
+        # keep carrying base's shared entries.
         output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
         gitignore = (output / ".gitignore").read_text()
         assert "__pycache__/" in gitignore
+
+    def test_lang_typescript_no_python_src_leak(self, tmp_path: Path) -> None:
+        # No starter/cli-typescript composite Part exists yet, so no src/
+        # language content should be injected (no stray Python either).
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        assert not (output / "src" / "main.py").exists()
+        assert (output / "src" / "README.md").exists()
 
 
 # ---------------------------------------------------------------------------
