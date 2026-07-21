@@ -963,6 +963,58 @@ class TestRoleGeneration:
         assert r.returncode != 0
         assert "invalid --role format" in r.stderr
 
+    def test_role_with_unknown_profile_is_rejected_before_generating_anything(
+        self, tmp_path: Path
+    ) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "fullstack",
+                "--role",
+                "backend:profile=no-such-profile,lang=python",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+        assert "no-such-profile" in r.stderr or "unknown" in r.stderr
+        assert not (tmp_path / "fullstack" / "backend").exists()
+
+    def test_role_with_unknown_lang_on_second_role_leaves_first_role_ungenerated(
+        self, tmp_path: Path
+    ) -> None:
+        """All roles must be validated before any role is generated (no partial output)."""
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "fullstack",
+                "--role",
+                "backend:profile=starter-cli,lang=python",
+                "--role",
+                "frontend:profile=starter-cli,lang=cobol",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+        assert "cobol" in r.stderr or "unknown" in r.stderr
+        assert not (tmp_path / "fullstack" / "backend").exists()
+        assert not (tmp_path / "fullstack" / "frontend").exists()
+
     def test_role_with_empty_profile_value_is_rejected(self, tmp_path: Path) -> None:
         r = subprocess.run(
             [
@@ -983,3 +1035,34 @@ class TestRoleGeneration:
         )
         assert r.returncode != 0
         assert "invalid --role format" in r.stderr
+
+    def test_apply_failure_on_a_later_role_leaves_earlier_generated_roles_in_place(
+        self, tmp_path: Path
+    ) -> None:
+        """Documents the accepted no-rollback behavior (design issue-111): validation
+        catches bad --role arguments up front, but a low-level per-role failure (e.g. an
+        existing output directory) can still leave earlier roles generated on disk."""
+        output_root = tmp_path / "fullstack"
+        (output_root / "frontend").mkdir(parents=True)
+
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "fullstack",
+                "--role",
+                "backend:profile=starter-cli,lang=python",
+                "--role",
+                "frontend:profile=starter-cli,lang=python",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+        assert (output_root / "backend" / "src" / "main.py").exists()
