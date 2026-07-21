@@ -537,6 +537,11 @@ class TestLangCli:
         output = _generate("goapp", "starter-cli", tmp_path, lang="go")
         assert (output / "go.mod").exists()
 
+    def test_lang_go_mod_has_foundation_dep(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        go_mod = (output / "go.mod").read_text()
+        assert "godotenv" in go_mod
+
     def test_lang_go_main_go_exists(self, tmp_path: Path) -> None:
         output = _generate("goapp", "starter-cli", tmp_path, lang="go")
         assert (output / "main.go").exists()
