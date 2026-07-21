@@ -6,6 +6,9 @@ tmp/
 .direnv/
 result
 
+# === git-hooks.nix が生成するシンボリックリンク ===
+.pre-commit-config.yaml
+
 # === AI エージェント設定 ===
 .claude/
 
