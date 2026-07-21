@@ -185,17 +185,31 @@ def _write_role_readme(output_root: Path, roles: list[RoleSpec]) -> None:
             "",
         ]
     output_root.mkdir(parents=True, exist_ok=True)
-    (output_root / "README.md").write_text("\n".join(lines))
+    readme_path = output_root / "README.md"
+    try:
+        with readme_path.open("x") as f:
+            f.write("\n".join(lines))
+    except FileExistsError as e:
+        raise ApplyError(f"output root README already exists: '{readme_path}'") from e
 
 
 def _generate_roles(name: str, output_root: Path, roles: list[RoleSpec]) -> int:
     """Generate one independent sub-project per role under output_root."""
+    readme_path = output_root / "README.md"
+    if readme_path.exists():
+        print(f"Error: output root README already exists: '{readme_path}'", file=sys.stderr)
+        return 1
+
     print(f"→ Generating {len(roles)} role(s) at {output_root}...")
     for role in roles:
         rc = _do_generate(name, role.profile, role.lang, output_root / role.name)
         if rc != 0:
             return rc
-    _write_role_readme(output_root, roles)
+    try:
+        _write_role_readme(output_root, roles)
+    except (ApplyError, OSError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
     print(f"Generated {len(roles)} role(s) in {output_root}")
     return 0
 

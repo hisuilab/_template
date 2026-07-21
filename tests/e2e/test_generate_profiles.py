@@ -963,7 +963,38 @@ class TestRoleGeneration:
         assert r.returncode != 0
         assert "invalid --role format" in r.stderr
 
-    def test_role_with_unknown_profile_is_rejected_before_generating_anything(
+    def test_existing_root_readme_is_preserved_without_generating_any_roles(
+        self, tmp_path: Path
+    ) -> None:
+        output_root = tmp_path / "fullstack"
+        output_root.mkdir()
+        readme = output_root / "README.md"
+        readme.write_text("user-owned content")
+
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "fullstack",
+                "--role",
+                "backend:profile=starter-cli,lang=python",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+        assert "output root README already exists" in r.stderr
+        assert str(readme) in r.stderr
+        assert readme.read_text() == "user-owned content"
+        assert not (output_root / "backend").exists()
+
+    def test_role_with_unknown_profile_on_second_role_leaves_first_role_ungenerated(
         self, tmp_path: Path
     ) -> None:
         r = subprocess.run(
@@ -975,7 +1006,9 @@ class TestRoleGeneration:
                 "--name",
                 "fullstack",
                 "--role",
-                "backend:profile=no-such-profile,lang=python",
+                "backend:profile=starter-cli,lang=python",
+                "--role",
+                "frontend:profile=no-such-profile,lang=python",
                 "--output",
                 str(tmp_path),
             ],
@@ -984,8 +1017,8 @@ class TestRoleGeneration:
             cwd=str(REPO_ROOT),
         )
         assert r.returncode != 0
-        assert "no-such-profile" in r.stderr or "unknown" in r.stderr
-        assert not (tmp_path / "fullstack" / "backend").exists()
+        assert "error: unknown profile 'no-such-profile'" in r.stderr
+        assert not (tmp_path / "fullstack").exists()
 
     def test_role_with_unknown_lang_on_second_role_leaves_first_role_ungenerated(
         self, tmp_path: Path
@@ -1011,9 +1044,8 @@ class TestRoleGeneration:
             cwd=str(REPO_ROOT),
         )
         assert r.returncode != 0
-        assert "cobol" in r.stderr or "unknown" in r.stderr
-        assert not (tmp_path / "fullstack" / "backend").exists()
-        assert not (tmp_path / "fullstack" / "frontend").exists()
+        assert "error: unknown lang 'cobol'" in r.stderr
+        assert not (tmp_path / "fullstack").exists()
 
     def test_role_with_empty_profile_value_is_rejected(self, tmp_path: Path) -> None:
         r = subprocess.run(
@@ -1043,7 +1075,10 @@ class TestRoleGeneration:
         catches bad --role arguments up front, but a low-level per-role failure (e.g. an
         existing output directory) can still leave earlier roles generated on disk."""
         output_root = tmp_path / "fullstack"
-        (output_root / "frontend").mkdir(parents=True)
+        frontend = output_root / "frontend"
+        frontend.mkdir(parents=True)
+        sentinel = frontend / "user-owned.txt"
+        sentinel.write_text("keep me")
 
         r = subprocess.run(
             [
@@ -1065,4 +1100,8 @@ class TestRoleGeneration:
             cwd=str(REPO_ROOT),
         )
         assert r.returncode != 0
+        assert "output path already exists" in r.stderr
+        assert str(frontend) in r.stderr
         assert (output_root / "backend" / "src" / "main.py").exists()
+        assert (output_root / "backend" / ".template-manifest.toml").exists()
+        assert sentinel.read_text() == "keep me"
