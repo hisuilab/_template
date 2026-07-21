@@ -10,12 +10,16 @@ from template.schema._toml import require_str, require_table
 from template.schema.errors import SchemaError
 
 
+CATEGORIES = ("cli", "web", "library")
+
+
 @dataclass(frozen=True)
 class ProfileSchema:
     """Validated, immutable representation of a profile.toml document."""
 
     name: str
     summary: str
+    category: str
     parts: tuple[str, ...]
     variables: Mapping[str, str]
 
@@ -31,6 +35,13 @@ def validate_profile(data: dict, *, source: str) -> ProfileSchema:
 
     name = require_str(profile, "name", source=source, table_name="profile")
     summary = require_str(profile, "summary", source=source, table_name="profile")
+    category = require_str(profile, "category", source=source, table_name="profile")
+    if category not in CATEGORIES:
+        raise SchemaError(
+            f"category must be one of {CATEGORIES}, got {category!r}",
+            source=source,
+            field="profile.category",
+        )
 
     raw_parts = profile.get("parts")
     if (
@@ -52,4 +63,6 @@ def validate_profile(data: dict, *, source: str) -> ProfileSchema:
         )
     variables = MappingProxyType(dict(raw_variables))
 
-    return ProfileSchema(name=name, summary=summary, parts=parts, variables=variables)
+    return ProfileSchema(
+        name=name, summary=summary, category=category, parts=parts, variables=variables
+    )

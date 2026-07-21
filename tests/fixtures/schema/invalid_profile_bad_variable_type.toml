@@ -1,6 +1,7 @@
 [profile]
 name = "bad-variables"
 summary = "variables の値が文字列でない不正な profile.toml の例"
+category = "cli"
 parts = ["base"]
 
 [variables]

@@ -63,7 +63,12 @@ just new                          # 対話ウィザードで生成
 just new myapp                    # 名前を事前入力してウィザード起動
 ```
 
-`just new` は `nix run github:hisuilab/_template -- create` を呼び出します。ウィザードを使わずに直接生成する場合:
+`just new` は `nix run github:hisuilab/_template -- create` を呼び出します。ウィザードはまず
+「何を作りますか？」(CLIツール/Webアプリ/ライブラリ/骨格のみ)を尋ね、Webアプリを選んだ場合は
+フロントエンドとバックエンドを分けるかを追加で確認します。分ける場合は`backend/`・`frontend/`
+という独立したサブプロジェクトが生成されます(モノレポ型生成、下記`--role`と同じ仕組み)。
+
+ウィザードを使わずに直接生成する場合:
 
 ```sh
 nix run github:hisuilab/_template -- generate \
@@ -71,6 +76,17 @@ nix run github:hisuilab/_template -- generate \
   --profile starter-cli \
   --lang python \
   --output ~/Projects/<project-name>
+```
+
+役割ごとに異なるProfile/langを持つモノレポ型構成を非対話で直接生成する場合は`--role`を
+繰り返し指定します(`--profile`/`--lang`とは併用不可)。
+
+```sh
+nix run github:hisuilab/_template -- generate \
+  --name fullstack-app \
+  --role backend:profile=starter-web-api,lang=python \
+  --role frontend:profile=starter-web-htmx,lang=typescript \
+  --output ~/Projects/fullstack-app
 ```
 
 生成後はプロジェクトディレクトリに移動してセットアップします。

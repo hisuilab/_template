@@ -1,6 +1,7 @@
 [profile]
 name = "starter-web-htmx"
 summary = "スターター HTMX(サーバーレンダリング)サービス向けプロファイル"
+category = "web"
 parts = [
   "base",
   "scale/small",

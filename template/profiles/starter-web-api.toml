@@ -1,6 +1,7 @@
 [profile]
 name = "starter-web-api"
 summary = "スターター Web API サービス向けプロファイル"
+category = "web"
 parts = [
   "base",
   "scale/small",

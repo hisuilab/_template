@@ -198,6 +198,13 @@ _template/
 
 **M5 実装範囲:** 単一言語のみ（`role=None` かつ lang が 1 つ）。複数・役割指定は M6+ でappend戦略が揃ってから実装します。M5 では複数指定時にエラー終了します。
 
+> [!NOTE]
+> Issue #109 にて、この`--lang backend=python,frontend=typescript`構文（単一flakeへの
+> append戦略マージ）は採用せず、代わりに`--role name:profile=<p>[,lang=<l>]`によるモノレポ型
+> 生成（役割ごとに独立した`_do_generate`実行、`lang/*`間の`conflicts`はそのまま維持）を実装
+> しました。詳細は[`docs/design/issue-109-role-monorepo.md`](../design/issue-109-role-monorepo.md)
+> を参照してください。
+
 **`flake.nix` の replace 戦略:** `lang/<name>` Part は `file_rules` で `path = "flake.nix", strategy = "replace"` を宣言し、base packages + lang packages をまとめた完全な `flake.nix` を提供します。base の `flake.nix` は `--lang` なし時のフォールバックとして残します。
 
 ### 7.4. `init-workspace` フロー（目標設計 M10）

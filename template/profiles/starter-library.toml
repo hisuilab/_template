@@ -1,6 +1,7 @@
 [profile]
 name = "starter-library"
 summary = "スターターライブラリ・SDK 向けプロファイル（公開パッケージ想定）"
+category = "library"
 parts = [
   "base",
   "scale/small",
