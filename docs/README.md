@@ -19,4 +19,4 @@
 ## 3. 責任外
 
 - 実装コード（`tooling/`・`template/` が持ちます）
-- AI エージェントのワークフロー・権限定義（`.claude/rules/` が持ちます）
+- AI エージェントのワークフロー・権限定義（`agent-workflow/rules/` が持ちます）
