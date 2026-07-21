@@ -54,6 +54,20 @@ starter-web-htmx  = base + scale/small + starter/web-htmx  + features/*  (+ star
 `--lang`省略時はsrc骨格(README等)のみが生成されます。`--lang python`時は対応する`-python`
 複合Partが自動で追加注入され、現状と同じPython実装が生成されます。
 
+各Profileは`category`(`cli`|`web`|`library`)を必須で宣言し(`ProfileSchema.category`)、
+wizardが用途別にProfileを絞り込むために使用します。
+
+### 2.1. モノレポ型複数役割生成(`--role`)
+
+`--role name:profile=<p>[,lang=<l>]`を繰り返し指定すると、役割ごとに独立した
+`{output}/{role_name}/`を`_do_generate`(既存の単一lang生成パイプライン)でそのまま生成し、
+ルートに役割一覧を記す`README.md`を追加します。`lang/*`間の`conflicts`や`flake.nix`の
+マージは行わず、各役割は完全に独立したプロジェクトです(`tooling/generator/cli.py`の
+`_generate_roles`/`_parse_role`、`tooling/generator/models.py`の`RoleSpec`)。
+`--profile`/`--lang`とは併用不可です。wizardも同じ`RoleSpec`を組み立てて
+`_generate_roles`を直接呼び出します(CLIの`--role`文字列を経由しません)。詳細は
+[`docs/design/issue-109-role-monorepo.md`](../design/issue-109-role-monorepo.md)を参照。
+
 ## 3. モジュール責務
 
 | モジュール | 責務 | 責務外 |
@@ -156,7 +170,7 @@ scale/small/payload/docs/_templates/
 | --- | --- | --- |
 | U-04 | スケール・スタイル・用途の具体的な候補値の確定 | 低（フェーズ5） |
 | U-05 | 既存プロジェクトへの更新伝播方法 | 低 |
-| U-06 | 複数 lang Part の `flake.nix` マージ戦略（`append` 戦略） | 中（フェーズ5） |
+| U-06 | 複数 lang Part の `flake.nix` マージ戦略（`append` 戦略） | Issue #109にて`--role`によるモノレポ型生成(2.1節)で代替解決。単一flakeへのマージ自体は不採用 |
 | U-08 | `features/ai-agent` Part の汎用化スコープ | 高（フェーズ4） |
 | U-10 | `architecture/*` Parts 実装時の `part.toml` requires 設計（`architecture/ddd-modules` は `architecture/ddd` を requires にするか） | 高（フェーズ4） |
 | U-11 | `inject` コマンド実装（Issue #59）の優先順位 | 中（フェーズ5） |
