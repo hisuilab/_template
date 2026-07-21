@@ -224,6 +224,61 @@ class TestGenerateStarterWebApi:
 
 
 # ---------------------------------------------------------------------------
+# starter-web-htmx
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateStarterWebHtmx:
+    def test_base_files_exist(self, tmp_path: Path) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        _assert_base_files(output)
+
+    def test_web_htmx_src_exists(self, tmp_path: Path) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        assert (output / "src" / "main.rs").exists()
+        assert (output / "templates" / "layout.html").exists()
+        assert (output / "templates" / "index.html").exists()
+
+    @pytest.mark.parametrize("crate", ["askama", "askama_axum", "axum", "tower-http"])
+    def test_cargo_toml_has_htmx_deps(self, tmp_path: Path, crate: str) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        cargo_toml = (output / "Cargo.toml").read_text()
+        assert crate in cargo_toml
+
+    def test_cargo_toml_has_foundation_deps_too(self, tmp_path: Path) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        cargo_toml = (output / "Cargo.toml").read_text()
+        for crate in ["tracing", "serde", "anyhow", "thiserror"]:
+            assert crate in cargo_toml
+
+    def test_index_html_has_htmx_attribute(self, tmp_path: Path) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        index_html = (output / "templates" / "index.html").read_text()
+        assert "hx-get" in index_html
+
+    def test_layout_html_references_htmx_and_pico(self, tmp_path: Path) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        layout_html = (output / "templates" / "layout.html").read_text()
+        assert "htmx.org" in layout_html
+        assert "pico" in layout_html
+
+    def test_project_name_substituted_in_layout(self, tmp_path: Path) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        layout_html = (output / "templates" / "layout.html").read_text()
+        assert "myhtmx" in layout_html
+        assert "{{project_name}}" not in layout_html
+
+    def test_rumdl_toml_present(self, tmp_path: Path) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        _assert_rumdl_toml_present(output)
+
+    def test_check_scripts_pass(self, tmp_path: Path) -> None:
+        output = _generate("myhtmx", "starter-web-htmx", tmp_path, lang="rust")
+        _git_init(output)
+        _assert_scripts_pass(output)
+
+
+# ---------------------------------------------------------------------------
 # starter-library
 # ---------------------------------------------------------------------------
 
