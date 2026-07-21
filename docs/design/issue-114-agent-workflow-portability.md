@@ -1,8 +1,8 @@
 ---
-status: proposed
+status: approved
 proposed_at: 2026-07-21
-approved_at: null
-approved_by: null
+approved_at: 2026-07-21
+approved_by: PM
 implemented_at: null
 related: "#114"
 ---
