@@ -1,0 +1,29 @@
+[part]
+id = "starter/web-htmx-rust"
+layer = "starter"
+summary = "starter/web-htmx の Rust 実装（axum + askama + HTMX + Pico CSS）"
+requires = ["base", "starter/web-htmx", "lang/rust"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]
+
+[[files]]
+path = "Cargo.toml"
+strategy = "replace"
+
+[[files]]
+path = "src/main.rs"
+strategy = "replace"
+
+[[files]]
+path = "templates/layout.html"
+strategy = "replace"
+
+[[files]]
+path = "templates/index.html"
+strategy = "replace"
+
+[[files]]
+path = "templates/message.html"
+strategy = "replace"
