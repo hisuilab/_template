@@ -122,6 +122,12 @@ class TestGenerateStarterCli:
         output = _generate("myapp", "starter-cli", tmp_path)
         _assert_rumdl_toml_present(output)
 
+    def test_gitignore_contains_generated_pre_commit_config(self, tmp_path: Path) -> None:
+        """.pre-commit-config.yaml is a git-hooks.nix-generated symlink (issue #117)."""
+        output = _generate("myapp", "starter-cli", tmp_path)
+        gitignore = (output / ".gitignore").read_text()
+        assert ".pre-commit-config.yaml" in gitignore
+
     def test_check_scripts_pass(self, tmp_path: Path) -> None:
         output = _generate("myapp", "starter-cli", tmp_path)
         _git_init(output)
@@ -149,6 +155,31 @@ class TestGenerateStarterCli:
         output = tmp_path / "noflag"
         assert not (output / "src" / "main.py").exists()
         assert (output / "src" / "README.md").exists()
+
+    def test_lang_omitted_gitignore_contains_generated_pre_commit_config(
+        self, tmp_path: Path
+    ) -> None:
+        """Covers base's own dot-gitignore payload directly (no lang/* replace involved)."""
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "noflag",
+                "--profile",
+                "starter-cli",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 0, r.stderr
+        gitignore = (tmp_path / "noflag" / ".gitignore").read_text()
+        assert ".pre-commit-config.yaml" in gitignore
 
 
 # ---------------------------------------------------------------------------
@@ -462,6 +493,13 @@ class TestLangCli:
         gitignore = (output / ".gitignore").read_text()
         assert "node_modules/" in gitignore
 
+    def test_lang_typescript_gitignore_contains_generated_pre_commit_config(
+        self, tmp_path: Path
+    ) -> None:
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        gitignore = (output / ".gitignore").read_text()
+        assert ".pre-commit-config.yaml" in gitignore
+
     def test_lang_typescript_gitignore_does_not_contain_pycache(self, tmp_path: Path) -> None:
         # No starter/cli-typescript composite Part exists yet (issue #91), so
         # no Python source is ever generated alongside --lang typescript.
@@ -522,6 +560,11 @@ class TestLangCli:
         gitignore = (output / ".gitignore").read_text()
         assert "target/" in gitignore
 
+    def test_lang_rust_gitignore_contains_generated_pre_commit_config(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        gitignore = (output / ".gitignore").read_text()
+        assert ".pre-commit-config.yaml" in gitignore
+
     def test_lang_rust_gitignore_does_not_contain_pycache(self, tmp_path: Path) -> None:
         # No starter/cli-rust composite Part exists yet (issue #91), so no
         # Python source is ever generated alongside --lang rust.
@@ -577,6 +620,11 @@ class TestLangCli:
         output = _generate("goapp", "starter-cli", tmp_path, lang="go")
         gitignore = (output / ".gitignore").read_text()
         assert "*.exe" in gitignore
+
+    def test_lang_go_gitignore_contains_generated_pre_commit_config(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        gitignore = (output / ".gitignore").read_text()
+        assert ".pre-commit-config.yaml" in gitignore
 
     def test_lang_go_gitignore_does_not_contain_pycache(self, tmp_path: Path) -> None:
         output = _generate("goapp", "starter-cli", tmp_path, lang="go")
