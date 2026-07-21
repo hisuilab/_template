@@ -130,7 +130,7 @@ path = "templates/index.html"
 strategy = "replace"
 
 [[files]]
-path = "static/htmx.min.js"
+path = "templates/message.html"
 strategy = "replace"
 ```
 
@@ -153,13 +153,17 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 ```
 
-`src/main.rs`はaxumで`/`ルートをAskamaテンプレートでレンダリングし、`/static`を
-`tower-http`の`ServeDir`で配信する最小構成にします。
+`src/main.rs`はaxumで`/`(全体ページ)・`/message`(HTMXの`hx-get`が差し替える部分フラグメント)
+をAskamaテンプレートでレンダリングし、`/static`を`tower-http`の`ServeDir`で配信する最小構成に
+します。`askama_axum`(0.4系)は`Template`への自動`IntoResponse`実装を提供しないため、
+`askama_axum::into_response(&template)`で明示的に変換する必要があります(実装時に
+`cargo build`で判明、設計時点の想定から修正)。
 
 ```rust
 // Generated placeholder — delete when you add real code
 use anyhow::Result;
 use askama::Template;
+use askama_axum::Response;
 use axum::{Router, routing::get};
 use tower_http::services::ServeDir;
 
@@ -169,10 +173,22 @@ struct IndexTemplate {
     message: String,
 }
 
-async fn index() -> IndexTemplate {
-    IndexTemplate {
+#[derive(Template)]
+#[template(path = "message.html")]
+struct MessageTemplate {
+    message: String,
+}
+
+async fn index() -> Response {
+    askama_axum::into_response(&IndexTemplate {
         message: "Hello from HTMX!".to_string(),
-    }
+    })
+}
+
+async fn message() -> Response {
+    askama_axum::into_response(&MessageTemplate {
+        message: "Reloaded via HTMX!".to_string(),
+    })
 }
 
 #[tokio::main]
@@ -181,6 +197,7 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .route("/", get(index))
+        .route("/message", get(message))
         .nest_service("/static", ServeDir::new("static"));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
@@ -196,6 +213,10 @@ mod tests {
 }
 ```
 
+`hx-get="/message" hx-target="#message" hx-swap="outerHTML"`のボタンは`/`ではなく専用の
+`/message`エンドポイントを叩きます。`/`が返す全体ページをそのまま`#message`へ差し込むと
+HTMLがネストして壊れるため、部分フラグメント専用のルートを分けています。
+
 `templates/index.html`(Askama、`{{ message }}`はAskamaのランタイム変数としてスペース付きで
 記述。ジェネレータの`{{project_name}}`(スペース無し)とは記法上区別され、
 `justfile`の`{{ part }}`と同じ回避パターンです。詳細は
@@ -207,12 +228,14 @@ mod tests {
 {% block content %}
 <h1>{{project_name}}</h1>
 <p id="message">{{ message }}</p>
-<button hx-get="/" hx-target="#message" hx-swap="outerHTML">Reload</button>
+<button hx-get="/message" hx-target="#message" hx-swap="outerHTML">Reload</button>
 {% endblock %}
 ```
 
 `{{project_name}}`(スペース無し)はジェネレータが生成時に静的置換する部分(ページタイトル相当)、
-`{{ message }}`(スペース付き)はAskamaが実行時に埋め込むテンプレート変数です。
+`{{ message }}`(スペース付き)はAskamaが実行時に埋め込むテンプレート変数です。`templates/message.html`
+は`/message`が返す部分フラグメント専用のテンプレートで、`<p id="message">{{ message }}</p>`のみを
+含みます(4.3節参照)。
 
 `templates/layout.html`はHTMXとPico CSSをCDN経由で読み込む共通レイアウトです。
 
@@ -233,8 +256,8 @@ mod tests {
 </html>
 ```
 
-`static/htmx.min.js`はプレースホルダーのREADME相当のコメントのみとし、本Issueでは実ファイル
-vendoringを行いません(3.2節・7節)。
+HTMX・Pico CSSは3.2節の通りCDN経由のため、`static/`ディレクトリには`starter/web-htmx`骨格が
+提供するREADME.md以外のファイルを本Issueでは追加しません(vendoringは7節の未解決事項)。
 
 ## 5. 失敗とロールバック
 
