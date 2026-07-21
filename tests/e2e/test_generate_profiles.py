@@ -962,3 +962,24 @@ class TestRoleGeneration:
         )
         assert r.returncode != 0
         assert "invalid --role format" in r.stderr
+
+    def test_role_with_empty_profile_value_is_rejected(self, tmp_path: Path) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "bad",
+                "--role",
+                "backend:profile=",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+        assert "invalid --role format" in r.stderr

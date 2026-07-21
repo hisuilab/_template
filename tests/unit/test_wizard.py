@@ -124,6 +124,31 @@ class TestRunWizardWebSeparateIntent:
             ],
         )
 
+    def test_web_separate_asks_lang_per_role_even_with_a_lang_prefill(self) -> None:
+        """A single --lang prefill cannot represent two roles; each role must still be asked."""
+        text_mock, select_mock = _mock_prompts(
+            ["fullstack"],
+            [
+                "Web app",
+                "Yes (separate backend/frontend)",
+                "starter-web-api",
+                "python",
+                "starter-web-htmx",
+                "typescript",
+            ],
+        )
+
+        with (
+            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+            patch("tooling.generator.wizard.questionary.select", return_value=select_mock),
+        ):
+            result = run_wizard(_LANGS, _PROFILES, prefill={"lang": "rust"})
+
+        assert result.roles == [
+            RoleSpec(name="backend", profile="starter-web-api", lang="python"),
+            RoleSpec(name="frontend", profile="starter-web-htmx", lang="typescript"),
+        ]
+
 
 class TestRunWizardScaffoldOnlyIntent:
     def test_scaffold_only_skips_lang_and_asks_across_all_categories(self) -> None:
@@ -149,6 +174,22 @@ class TestRunWizardScaffoldOnlyIntent:
             "starter-web-api",
             "starter-web-htmx",
         }
+
+    def test_scaffold_only_still_honours_an_explicit_lang_prefill(self) -> None:
+        """A user-supplied --lang must not be silently dropped by the scaffold-only branch."""
+        text_mock, select_mock = _mock_prompts(
+            ["placeholder"], ["Scaffold only (decide later)", "starter-cli"]
+        )
+
+        with (
+            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+            patch("tooling.generator.wizard.questionary.select", return_value=select_mock),
+        ):
+            result = run_wizard(_LANGS, _PROFILES, prefill={"lang": "python"})
+
+        assert result == WizardAnswers(
+            name="placeholder", profile="starter-cli", lang="python", roles=[]
+        )
 
 
 class TestRunWizardExitBehaviour:

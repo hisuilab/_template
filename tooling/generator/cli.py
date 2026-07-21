@@ -209,7 +209,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         roles: list[RoleSpec] = []
         for role_str in args.role:
             role_name, profile, lang = _parse_role(role_str)
-            if role_name is None or profile is None:
+            if not role_name or not profile:
                 print(
                     f"error: invalid --role format '{role_str}'. "
                     "Expected 'name:profile=<p>[,lang=<l>]'",

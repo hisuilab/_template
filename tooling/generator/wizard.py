@@ -81,7 +81,7 @@ def run_wizard(
 
     if category is None:
         profile = _ask_profile([profile_id for profile_id, _ in profiles])
-        return WizardAnswers(name=name, profile=profile, lang=None, roles=[])
+        return WizardAnswers(name=name, profile=profile, lang=p.get("lang"), roles=[])
 
     web_profile_ids = _profiles_in_category(profiles, "web")
     separate_label = _ask_or_exit(
@@ -95,11 +95,13 @@ def run_wizard(
         lang = _ask_lang(available_langs, p.get("lang"))
         return WizardAnswers(name=name, profile=profile, lang=lang, roles=[])
 
+    # A single scalar --lang prefill can't represent two independently-chosen
+    # roles, so each role is always asked regardless of prefill.
     roles = [
         RoleSpec(
             name=role_name,
             profile=_ask_profile(web_profile_ids),
-            lang=_ask_lang(available_langs, p.get("lang")),
+            lang=_ask_lang(available_langs, None),
         )
         for role_name in _ROLE_NAMES
     ]
