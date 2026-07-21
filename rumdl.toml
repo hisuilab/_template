@@ -6,8 +6,11 @@ disable = ["MD013", "MD028"]
 # ドキュメントではないファイルを対象外にします。
 # PULL_REQUEST_TEMPLATE.mdはPR本文に挿入される前提でレベル1見出しを持たない慣習のため、MD041対象外にします。
 # LICENSEは法的テキストのためMarkdownルールを適用しません。
+# .claude/・agent-workflow/はAIエージェント運用の実行契約ファイルで、レベル1見出しを持たない
+# 慣習のため対象外にします(Issue #114/#115)。
 exclude = [
   ".claude/**",
+  "agent-workflow/**",
   ".github/PULL_REQUEST_TEMPLATE.md",
   "template/parts/**/payload/**/PULL_REQUEST_TEMPLATE.md",
   "LICENSE",
