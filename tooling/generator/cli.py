@@ -39,6 +39,13 @@ def _available_langs(template_root: Path) -> list[str]:
     return sorted(p.name for p in lang_dir.iterdir() if p.is_dir())
 
 
+def _available_profiles(template_root: Path) -> list[str]:
+    profiles_dir = template_root / "profiles"
+    if not profiles_dir.exists():
+        return []
+    return sorted(p.stem for p in profiles_dir.iterdir() if p.suffix == ".toml")
+
+
 _NAME_RE = re.compile(r"^[a-zA-Z0-9_\-]+$")
 
 
@@ -221,6 +228,20 @@ def _cmd_generate(args: argparse.Namespace) -> int:
                 print(role_name_error, file=sys.stderr)
                 return 1
             roles.append(RoleSpec(name=role_name, profile=profile, lang=lang))
+
+        available_profiles = _available_profiles(_TEMPLATE_ROOT)
+        available_langs = _available_langs(_TEMPLATE_ROOT)
+        for role in roles:
+            profile_error = _validate_profile(role.profile, available_profiles)
+            if profile_error:
+                print(profile_error, file=sys.stderr)
+                return 1
+            if role.lang is not None:
+                _, lang_error = _validate_lang(role.lang, available_langs)
+                if lang_error:
+                    print(lang_error, file=sys.stderr)
+                    return 1
+
         return _generate_roles(args.name, output, roles)
 
     if not args.profile:
@@ -235,12 +256,7 @@ def _cmd_create(args: argparse.Namespace) -> int:
     from tooling.generator.wizard import run_wizard
 
     available_langs = _available_langs(_TEMPLATE_ROOT)
-    profiles_dir = _TEMPLATE_ROOT / "profiles"
-    available_profiles = (
-        sorted(p.stem for p in profiles_dir.iterdir() if p.suffix == ".toml")
-        if profiles_dir.exists()
-        else []
-    )
+    available_profiles = _available_profiles(_TEMPLATE_ROOT)
 
     prefill: dict[str, str] = {}
     if args.name is not None:
