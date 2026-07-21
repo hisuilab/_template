@@ -1,0 +1,17 @@
+[part]
+id = "starter/web-api-go"
+layer = "starter"
+summary = "starter/web-api の Go 実装（chi）"
+requires = ["base", "starter/web-api", "lang/go"]
+conflicts = []
+
+[placeholders]
+required = ["project_name"]
+
+[[files]]
+path = "go.mod"
+strategy = "replace"
+
+[[files]]
+path = "main.go"
+strategy = "replace"
