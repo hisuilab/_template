@@ -9,18 +9,21 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func newRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("ok"))
+	})
+	return r
+}
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		slog.Info("no .env file found, using system environment variables")
 	}
 
-	r := chi.NewRouter()
-	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte("ok"))
-	})
-
 	slog.Info("listening", "addr", ":3000")
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	if err := http.ListenAndServe(":3000", newRouter()); err != nil {
 		slog.Error("server error", "error", err)
 	}
 }

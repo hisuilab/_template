@@ -15,3 +15,7 @@ strategy = "replace"
 [[files]]
 path = "main.go"
 strategy = "replace"
+
+[[files]]
+path = "main_test.go"
+strategy = "replace"
