@@ -1,0 +1,6 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>{{project_name}}</h1>
+<p id="message">{{ message }}</p>
+<button hx-get="/message" hx-target="#message" hx-swap="outerHTML">Reload</button>
+{% endblock %}

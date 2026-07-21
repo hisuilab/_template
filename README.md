@@ -82,7 +82,7 @@ nix develop                       # 開発シェルに入る
 just verify                       # 動作確認
 ```
 
-利用可能なProfileは`starter-cli`、`starter-web-api`、`starter-library`、利用可能な`--lang`は`python`、`typescript`、`rust`、`go`です。`--lang`を省略すると、言語別の実装(`src/main.py`等)を含まないlang非依存の骨格のみが生成されます。技術選定が未確定な段階で先にプロジェクトの土台だけ作りたい場合はこの形で生成し、確定後に`just inject lang/python`のようにPartを後から追加できます。
+利用可能なProfileは`starter-cli`、`starter-web-api`、`starter-library`、`starter-web-htmx`、利用可能な`--lang`は`python`、`typescript`、`rust`、`go`です。`--lang`を省略すると、言語別の実装(`src/main.py`等)を含まないlang非依存の骨格のみが生成されます。技術選定が未確定な段階で先にプロジェクトの土台だけ作りたい場合はこの形で生成し、確定後に`just inject lang/python`のようにPartを後から追加できます。
 
 ## 3. 構成
 

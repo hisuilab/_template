@@ -1,0 +1,13 @@
+[profile]
+name = "starter-web-htmx"
+summary = "スターター HTMX(サーバーレンダリング)サービス向けプロファイル"
+parts = [
+  "base",
+  "scale/small",
+  "starter/web-htmx",
+  "features/ai-agent",
+  "features/github-rulesets",
+  "features/github-project",
+]
+
+[variables]
