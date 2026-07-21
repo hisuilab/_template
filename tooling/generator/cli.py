@@ -22,7 +22,7 @@ from tooling.generator.errors import (
 )
 from tooling.generator.loader import load_part, load_parts_for_profile, load_profile
 from tooling.generator.manifest import read_manifest, update_manifest, write_manifest
-from tooling.generator.models import GenerateRequest, LangSpec
+from tooling.generator.models import GenerateRequest, LangSpec, RoleSpec
 from tooling.generator.planner import plan
 from tooling.generator.renderer import render
 from tooling.generator.resolver import resolve
@@ -123,6 +123,7 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
         extended_profile = ProfileSchema(
             name=loaded_profile.name,
             summary=loaded_profile.summary,
+            category=loaded_profile.category,
             parts=loaded_profile.parts + extra_parts,
             variables=loaded_profile.variables,
         )
@@ -150,13 +151,82 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
         return 1
 
 
+def _parse_role(role_str: str) -> tuple[str | None, str | None, str | None]:
+    """Parse 'name:profile=<p>[,lang=<l>]' into (name, profile, lang)."""
+    if ":" not in role_str:
+        return None, None, None
+    name, _, rest = role_str.partition(":")
+    kv = dict(pair.split("=", 1) for pair in rest.split(",") if "=" in pair)
+    return name, kv.get("profile"), kv.get("lang")
+
+
+def _write_role_readme(output_root: Path, roles: list[RoleSpec]) -> None:
+    lines = [f"# {output_root.name}", "", "## Roles", ""]
+    for role in roles:
+        lines.append(
+            f"- `{role.name}/`: profile=`{role.profile}`, lang=`{role.lang or '(omitted)'}`"
+        )
+    lines += ["", "## Getting started", ""]
+    for role in roles:
+        lines += [
+            "```sh",
+            f"cd {role.name}",
+            "nix develop --command just init",
+            "nix develop",
+            "just verify",
+            "```",
+            "",
+        ]
+    output_root.mkdir(parents=True, exist_ok=True)
+    (output_root / "README.md").write_text("\n".join(lines))
+
+
+def _generate_roles(name: str, output_root: Path, roles: list[RoleSpec]) -> int:
+    """Generate one independent sub-project per role under output_root."""
+    print(f"→ Generating {len(roles)} role(s) at {output_root}...")
+    for role in roles:
+        rc = _do_generate(name, role.profile, role.lang, output_root / role.name)
+        if rc != 0:
+            return rc
+    _write_role_readme(output_root, roles)
+    print(f"Generated {len(roles)} role(s) in {output_root}")
+    return 0
+
+
 def _cmd_generate(args: argparse.Namespace) -> int:
     name_error = _validate_name(args.name)
     if name_error:
         print(name_error, file=sys.stderr)
         return 1
 
+    if args.role and (args.profile or args.lang):
+        print("error: --role cannot be combined with --profile/--lang", file=sys.stderr)
+        return 1
+
     output = _resolve_output_path(args.name, args.output)
+
+    if args.role:
+        roles: list[RoleSpec] = []
+        for role_str in args.role:
+            role_name, profile, lang = _parse_role(role_str)
+            if role_name is None or profile is None:
+                print(
+                    f"error: invalid --role format '{role_str}'. "
+                    "Expected 'name:profile=<p>[,lang=<l>]'",
+                    file=sys.stderr,
+                )
+                return 1
+            role_name_error = _validate_name(role_name)
+            if role_name_error:
+                print(role_name_error, file=sys.stderr)
+                return 1
+            roles.append(RoleSpec(name=role_name, profile=profile, lang=lang))
+        return _generate_roles(args.name, output, roles)
+
+    if not args.profile:
+        print("error: --profile is required unless --role is used", file=sys.stderr)
+        return 1
+
     print(f"→ Generating at {output}...")
     return _do_generate(args.name, args.profile, args.lang, output)
 
@@ -200,7 +270,11 @@ def _cmd_create(args: argparse.Namespace) -> int:
         print("error: no profiles found in template", file=sys.stderr)
         return 1
 
-    answers = run_wizard(available_langs, available_profiles, prefill=prefill)
+    profiles = [
+        (profile_id, load_profile(profile_id, _TEMPLATE_ROOT).category)
+        for profile_id in available_profiles
+    ]
+    answers = run_wizard(available_langs, profiles, prefill=prefill)
 
     name_error = _validate_name(answers.name)
     if name_error:
@@ -208,6 +282,10 @@ def _cmd_create(args: argparse.Namespace) -> int:
         return 1
 
     output = _resolve_output_path(answers.name, args.output)
+
+    if answers.roles:
+        return _generate_roles(answers.name, output, answers.roles)
+
     print(f"→ Generating at {output}...")
     return _do_generate(answers.name, answers.profile, answers.lang, output)
 
@@ -324,13 +402,26 @@ def main() -> None:
 
     gen = sub.add_parser("generate", help="Generate a new project from a profile")
     gen.add_argument("--name", required=True, help="Project name")
-    gen.add_argument("--profile", required=True, help="Profile ID (e.g. small-cli)")
+    gen.add_argument(
+        "--profile",
+        default=None,
+        help="Profile ID (e.g. small-cli). Required unless --role is used",
+    )
     gen.add_argument(
         "--output",
         default=None,
         help="Parent directory; generated at OUTPUT/name (default: current directory)",
     )
     gen.add_argument("--lang", default=None, help="Language runtime (e.g. python, typescript)")
+    gen.add_argument(
+        "--role",
+        action="append",
+        default=[],
+        help=(
+            "Monorepo-style sub-generation per role "
+            "(e.g. backend:profile=starter-web-api,lang=python). Repeatable"
+        ),
+    )
 
     iws = sub.add_parser("init-workspace", help="Initialize a ~/Projects workspace")
     iws.add_argument("--path", required=True, help="Target directory to initialize")

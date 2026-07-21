@@ -13,6 +13,15 @@ class LangSpec:
 
 
 @dataclass(frozen=True)
+class RoleSpec:
+    """One '--role name:profile=<p>[,lang=<l>]' entry for monorepo-style generation."""
+
+    name: str
+    profile: str
+    lang: str | None
+
+
+@dataclass(frozen=True)
 class GenerateRequest:
     name: str
     profile_id: str
