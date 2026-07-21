@@ -24,3 +24,4 @@
 | 2026-07-13 | [ai-agent-unconditional-inclusion](2026-07-13-ai-agent-unconditional-inclusion.md) | features/ai-agent を全プロファイルに無条件同梱する |
 | 2026-07-15 | [git-hooks-nix-migration](2026-07-15-git-hooks-nix-migration.md) | pre-commit フック管理を prek から git-hooks.nix へ移行 |
 | 2026-07-15 | [nix-in-docker-devcontainer](2026-07-15-nix-in-docker-devcontainer.md) | devcontainer に Nix-in-Docker を採用 |
+| 2026-07-21 | [general-purpose-subagent-write-scope](2026-07-21-general-purpose-subagent-write-scope.md) | `general-purpose` subagentへ委譲する際の書き込み範囲の扱い |
