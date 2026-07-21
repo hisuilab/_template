@@ -100,9 +100,18 @@ def test_valid_profile_parses() -> None:
     assert schema == ProfileSchema(
         name="starter-cli",
         summary="スターター CLI ツール向けプロファイル",
+        category="cli",
         parts=("base", "scale/small", "starter/cli"),
         variables={},
     )
+
+
+def test_missing_category_is_rejected() -> None:
+    with pytest.raises(SchemaError, match="profile.category"):
+        validate_profile(
+            _load_fixture("invalid_profile_missing_category.toml"),
+            source="invalid_profile_missing_category.toml",
+        )
 
 
 def test_starter_layer_is_accepted() -> None:
@@ -154,7 +163,7 @@ def test_missing_profile_table_is_rejected() -> None:
 
 @pytest.mark.parametrize(
     "profile_name",
-    ["starter-cli", "starter-web-api", "starter-library"],
+    ["starter-cli", "starter-web-api", "starter-library", "starter-web-htmx"],
 )
 def test_profile_toml_validates(profile_name: str) -> None:
     path = TEMPLATE_ROOT / "profiles" / f"{profile_name}.toml"
@@ -162,6 +171,7 @@ def test_profile_toml_validates(profile_name: str) -> None:
     schema = validate_profile(_load_toml(path), source=str(path))
     assert schema.name == profile_name
     assert len(schema.parts) >= 1
+    assert schema.category in ("cli", "web", "library")
 
 
 def test_all_part_tomls_validate() -> None:

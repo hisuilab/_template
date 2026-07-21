@@ -2,21 +2,34 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from tooling.generator.models import RoleSpec
 from tooling.generator.wizard import WizardAnswers, run_wizard
 
 _LANGS = ["python", "typescript"]
-_PROFILES = ["small-cli", "small-library", "small-web-api"]
+_PROFILES = [
+    ("starter-cli", "cli"),
+    ("starter-library", "library"),
+    ("starter-web-api", "web"),
+    ("starter-web-htmx", "web"),
+]
 
 
-class TestRunWizardBasic:
-    def test_run_wizard_returns_wizard_answers(self) -> None:
-        text_mock = MagicMock()
-        text_mock.ask.side_effect = ["my-app"]
-        select_mock = MagicMock()
-        select_mock.ask.side_effect = ["python", "small-cli"]
+def _mock_prompts(text_answers: list[str], select_answers: list[str]):
+    text_mock = MagicMock()
+    text_mock.ask.side_effect = text_answers
+    select_mock = MagicMock()
+    select_mock.ask.side_effect = select_answers
+    return text_mock, select_mock
+
+
+class TestRunWizardCliIntent:
+    def test_cli_intent_auto_selects_sole_profile(self) -> None:
+        """Only one 'cli' category profile exists, so it must not be asked."""
+        text_mock, select_mock = _mock_prompts(["my-app"], ["CLI tool", "python"])
 
         with (
             patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
@@ -24,17 +37,12 @@ class TestRunWizardBasic:
         ):
             result = run_wizard(_LANGS, _PROFILES)
 
-        assert isinstance(result, WizardAnswers)
-        assert result.name == "my-app"
-        assert result.lang == "python"
-        assert result.profile == "small-cli"
+        assert result == WizardAnswers(
+            name="my-app", profile="starter-cli", lang="python", roles=[]
+        )
 
-    def test_run_wizard_passes_choices_to_select(self) -> None:
-        """run_wizard must forward available_langs / available_profiles to questionary.select."""
-        text_mock = MagicMock()
-        text_mock.ask.side_effect = ["app"]
-        select_mock = MagicMock()
-        select_mock.ask.side_effect = ["python", "small-cli"]
+    def test_intent_choices_are_forwarded_to_select(self) -> None:
+        text_mock, select_mock = _mock_prompts(["my-app"], ["CLI tool", "python"])
 
         with (
             patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
@@ -44,22 +52,107 @@ class TestRunWizardBasic:
         ):
             run_wizard(_LANGS, _PROFILES)
 
-        calls = mock_select.call_args_list
-        assert len(calls) == 2
-        _, first_kwargs = calls[0]
-        _, second_kwargs = calls[1]
-        assert set(first_kwargs.get("choices", [])) == set(_LANGS)
-        assert set(second_kwargs.get("choices", [])) == set(_PROFILES)
+        first_call_kwargs = mock_select.call_args_list[0].kwargs
+        assert set(first_call_kwargs.get("choices", [])) == {
+            "CLI tool",
+            "Web app",
+            "Library",
+            "Scaffold only (decide later)",
+        }
 
-    def test_wizard_answers_has_no_output_field(self) -> None:
-        """WizardAnswers no longer contains an output path — output is computed by the caller."""
-        answers = WizardAnswers(name="x", lang="python", profile="small-cli")
-        assert not hasattr(answers, "output")
+
+class TestRunWizardLibraryIntent:
+    def test_library_intent_auto_selects_sole_profile(self) -> None:
+        text_mock, select_mock = _mock_prompts(["my-lib"], ["Library", "typescript"])
+
+        with (
+            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+            patch("tooling.generator.wizard.questionary.select", return_value=select_mock),
+        ):
+            result = run_wizard(_LANGS, _PROFILES)
+
+        assert result == WizardAnswers(
+            name="my-lib", profile="starter-library", lang="typescript", roles=[]
+        )
+
+
+class TestRunWizardWebMonolithIntent:
+    def test_web_monolith_asks_profile_and_lang(self) -> None:
+        text_mock, select_mock = _mock_prompts(
+            ["my-web"],
+            ["Web app", "No (single project)", "starter-web-api", "python"],
+        )
+
+        with (
+            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+            patch("tooling.generator.wizard.questionary.select", return_value=select_mock),
+        ):
+            result = run_wizard(_LANGS, _PROFILES)
+
+        assert result == WizardAnswers(
+            name="my-web", profile="starter-web-api", lang="python", roles=[]
+        )
+
+
+class TestRunWizardWebSeparateIntent:
+    def test_web_separate_builds_backend_and_frontend_roles(self) -> None:
+        text_mock, select_mock = _mock_prompts(
+            ["fullstack"],
+            [
+                "Web app",
+                "Yes (separate backend/frontend)",
+                "starter-web-api",
+                "python",
+                "starter-web-htmx",
+                "typescript",
+            ],
+        )
+
+        with (
+            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+            patch("tooling.generator.wizard.questionary.select", return_value=select_mock),
+        ):
+            result = run_wizard(_LANGS, _PROFILES)
+
+        assert result == WizardAnswers(
+            name="fullstack",
+            profile=None,
+            lang=None,
+            roles=[
+                RoleSpec(name="backend", profile="starter-web-api", lang="python"),
+                RoleSpec(name="frontend", profile="starter-web-htmx", lang="typescript"),
+            ],
+        )
+
+
+class TestRunWizardScaffoldOnlyIntent:
+    def test_scaffold_only_skips_lang_and_asks_across_all_categories(self) -> None:
+        text_mock, select_mock = _mock_prompts(
+            ["placeholder"], ["Scaffold only (decide later)", "starter-cli"]
+        )
+
+        with (
+            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+            patch(
+                "tooling.generator.wizard.questionary.select", return_value=select_mock
+            ) as mock_select,
+        ):
+            result = run_wizard(_LANGS, _PROFILES)
+
+        assert result == WizardAnswers(
+            name="placeholder", profile="starter-cli", lang=None, roles=[]
+        )
+        profile_call_kwargs = mock_select.call_args_list[1].kwargs
+        assert set(profile_call_kwargs.get("choices", [])) == {
+            "starter-cli",
+            "starter-library",
+            "starter-web-api",
+            "starter-web-htmx",
+        }
 
 
 class TestRunWizardExitBehaviour:
     def test_run_wizard_exits_cleanly_when_name_is_none(self) -> None:
-        """Ctrl+C on the first prompt returns None; run_wizard should exit cleanly."""
         text_mock = MagicMock()
         text_mock.ask.return_value = None
 
@@ -70,8 +163,7 @@ class TestRunWizardExitBehaviour:
             with pytest.raises(SystemExit):
                 run_wizard(_LANGS, _PROFILES)
 
-    def test_run_wizard_exits_cleanly_when_lang_is_none(self) -> None:
-        """Ctrl+C on the lang select returns None; run_wizard should exit cleanly."""
+    def test_run_wizard_exits_cleanly_when_intent_is_none(self) -> None:
         text_mock = MagicMock()
         text_mock.ask.side_effect = ["my-app"]
         select_mock = MagicMock()
@@ -86,10 +178,40 @@ class TestRunWizardExitBehaviour:
 
 
 class TestRunWizardPrefill:
+    def test_prefill_profile_skips_intent_question_but_still_asks_lang(self) -> None:
+        text_mock, select_mock = _mock_prompts(["myapp"], ["python"])
+
+        with (
+            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
+            patch(
+                "tooling.generator.wizard.questionary.select", return_value=select_mock
+            ) as mock_select,
+        ):
+            result = run_wizard(_LANGS, _PROFILES, prefill={"profile": "starter-web-api"})
+
+        assert result == WizardAnswers(
+            name="myapp", profile="starter-web-api", lang="python", roles=[]
+        )
+        assert mock_select.call_count == 1
+
+    def test_prefill_profile_and_lang_skips_all_selects(self) -> None:
+        with (
+            patch("tooling.generator.wizard.questionary.text") as mock_text,
+            patch("tooling.generator.wizard.questionary.select") as mock_select,
+        ):
+            result = run_wizard(
+                _LANGS,
+                _PROFILES,
+                prefill={"name": "myapp", "lang": "python", "profile": "starter-cli"},
+            )
+
+        mock_text.assert_not_called()
+        mock_select.assert_not_called()
+        assert result == WizardAnswers(name="myapp", profile="starter-cli", lang="python", roles=[])
+
     def test_prefill_name_skips_name_question(self) -> None:
-        """When name is prefilled, questionary.text must not be called."""
         select_mock = MagicMock()
-        select_mock.ask.side_effect = ["python", "small-cli"]
+        select_mock.ask.side_effect = ["CLI tool", "python"]
 
         with (
             patch("tooling.generator.wizard.questionary.text") as mock_text,
@@ -99,64 +221,12 @@ class TestRunWizardPrefill:
 
         mock_text.assert_not_called()
         assert result.name == "prefilled"
+        assert result.profile == "starter-cli"
         assert result.lang == "python"
 
-    def test_prefill_lang_skips_lang_question(self) -> None:
-        """When lang is prefilled, the lang select prompt must not be called."""
-        text_mock = MagicMock()
-        text_mock.ask.side_effect = ["myapp"]
-        profile_select_mock = MagicMock()
-        profile_select_mock.ask.return_value = "small-cli"
 
-        with (
-            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
-            patch(
-                "tooling.generator.wizard.questionary.select",
-                return_value=profile_select_mock,
-            ) as mock_select,
-        ):
-            result = run_wizard(_LANGS, _PROFILES, prefill={"lang": "typescript"})
-
-        assert result.lang == "typescript"
-        assert mock_select.call_count == 1
-        _, kwargs = mock_select.call_args
-        assert set(kwargs.get("choices", [])) == set(_PROFILES)
-
-    def test_prefill_profile_skips_profile_question(self) -> None:
-        """When profile is prefilled, the profile select prompt must not be called."""
-        text_mock = MagicMock()
-        text_mock.ask.side_effect = ["myapp"]
-        lang_select_mock = MagicMock()
-        lang_select_mock.ask.return_value = "python"
-
-        with (
-            patch("tooling.generator.wizard.questionary.text", return_value=text_mock),
-            patch(
-                "tooling.generator.wizard.questionary.select",
-                return_value=lang_select_mock,
-            ) as mock_select,
-        ):
-            result = run_wizard(_LANGS, _PROFILES, prefill={"profile": "small-library"})
-
-        assert result.profile == "small-library"
-        assert mock_select.call_count == 1
-        _, kwargs = mock_select.call_args
-        assert set(kwargs.get("choices", [])) == set(_LANGS)
-
-    def test_prefill_all_skips_all_questions(self) -> None:
-        """When all fields are prefilled, no interactive prompts are shown."""
-        with (
-            patch("tooling.generator.wizard.questionary.text") as mock_text,
-            patch("tooling.generator.wizard.questionary.select") as mock_select,
-        ):
-            result = run_wizard(
-                _LANGS,
-                _PROFILES,
-                prefill={"name": "myapp", "lang": "python", "profile": "small-cli"},
-            )
-
-        mock_text.assert_not_called()
-        mock_select.assert_not_called()
-        assert result.name == "myapp"
-        assert result.lang == "python"
-        assert result.profile == "small-cli"
+def test_wizard_answers_has_no_output_field() -> None:
+    """WizardAnswers no longer contains an output path — output is computed by the caller."""
+    answers = WizardAnswers(name="x", profile="starter-cli", lang="python")
+    assert not hasattr(answers, "output")
+    assert answers.roles == []

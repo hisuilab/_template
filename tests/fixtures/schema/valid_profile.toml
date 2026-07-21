@@ -1,6 +1,7 @@
 [profile]
 name = "starter-cli"
 summary = "スターター CLI ツール向けプロファイル"
+category = "cli"
 parts = ["base", "scale/small", "starter/cli"]
 
 [variables]

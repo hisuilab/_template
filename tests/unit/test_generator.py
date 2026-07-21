@@ -10,6 +10,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -71,6 +72,7 @@ class TestLoader:
         profile = ProfileSchema(
             name="ghost",
             summary="test",
+            category="cli",
             parts=("nonexistent/part",),
             variables={},
         )
@@ -450,6 +452,7 @@ class TestGeneratorIntegration:
         profile = ProfileSchema(
             name=profile.name,
             summary=profile.summary,
+            category=profile.category,
             parts=profile.parts + ("lang/python", "starter/cli-python"),
             variables=profile.variables,
         )
@@ -785,3 +788,34 @@ class TestGeneratorIntegration:
         )
         assert result.returncode != 0
         assert "no-such-profile" in result.stderr or "unknown" in result.stderr
+
+    def test_create_wizard_roles_generates_role_subdirectories(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """When the wizard returns roles, _cmd_create must delegate to _generate_roles."""
+        import argparse
+
+        from tooling.generator import cli
+        from tooling.generator.models import RoleSpec
+        from tooling.generator.wizard import WizardAnswers
+
+        monkeypatch.chdir(tmp_path)
+        fake_answers = WizardAnswers(
+            name="fullstack",
+            profile=None,
+            lang=None,
+            roles=[
+                RoleSpec(name="backend", profile="starter-web-api", lang="python"),
+                RoleSpec(name="frontend", profile="starter-web-htmx", lang="typescript"),
+            ],
+        )
+        args = argparse.Namespace(name=None, lang=None, profile=None, output=None)
+
+        with patch("tooling.generator.wizard.run_wizard", return_value=fake_answers):
+            rc = cli._cmd_create(args)
+
+        assert rc == 0
+        output = tmp_path / "fullstack" / "fullstack-main"
+        assert (output / "backend" / "src" / "app.py").exists()
+        assert (output / "frontend" / "templates" / "README.md").exists()
+        assert (output / "README.md").exists()

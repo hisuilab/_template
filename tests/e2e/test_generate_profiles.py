@@ -667,6 +667,7 @@ class TestGithubRulesetsPart:
         extended = ProfileSchema(
             name=base_profile.name,
             summary=base_profile.summary,
+            category=base_profile.category,
             parts=base_profile.parts + ("lang/python", "features/github-rulesets"),
             variables=base_profile.variables,
         )
@@ -855,3 +856,109 @@ class TestGithubProjectInProfiles:
         assert (output / ".github" / "PULL_REQUEST_TEMPLATE.md").exists(), (
             "PULL_REQUEST_TEMPLATE.md not found in starter-library generated output"
         )
+
+
+# ---------------------------------------------------------------------------
+# --role: monorepo-style multi-role generation (issue #109)
+# ---------------------------------------------------------------------------
+
+
+class TestRoleGeneration:
+    def _generate_roles(self, name: str, parent: Path, *roles: str) -> Path:
+        cmd = [
+            sys.executable,
+            "-m",
+            "tooling.generator",
+            "generate",
+            "--name",
+            name,
+            "--output",
+            str(parent),
+        ]
+        for role in roles:
+            cmd += ["--role", role]
+        r = subprocess.run(cmd, capture_output=True, text=True, cwd=str(REPO_ROOT))
+        assert r.returncode == 0, f"generate failed:\n{r.stderr}"
+        return parent / name
+
+    def test_two_roles_each_generate_independent_project(self, tmp_path: Path) -> None:
+        output = self._generate_roles(
+            "fullstack",
+            tmp_path,
+            "backend:profile=starter-web-api,lang=python",
+            "frontend:profile=starter-web-htmx,lang=typescript",
+        )
+        assert (output / "backend" / "src" / "app.py").exists()
+        assert (output / "frontend" / "templates" / "README.md").exists()
+
+    def test_root_readme_lists_roles(self, tmp_path: Path) -> None:
+        output = self._generate_roles(
+            "fullstack",
+            tmp_path,
+            "backend:profile=starter-web-api,lang=python",
+            "frontend:profile=starter-web-htmx,lang=typescript",
+        )
+        readme = (output / "README.md").read_text()
+        assert "backend" in readme
+        assert "frontend" in readme
+
+    def test_each_role_subdirectory_passes_check_scripts(self, tmp_path: Path) -> None:
+        output = self._generate_roles(
+            "fullstack",
+            tmp_path,
+            "backend:profile=starter-web-api,lang=python",
+            "frontend:profile=starter-cli,lang=go",
+        )
+        for role in ["backend", "frontend"]:
+            role_dir = output / role
+            _git_init(role_dir)
+            _assert_scripts_pass(role_dir)
+
+    def test_role_without_lang_generates_shell_only(self, tmp_path: Path) -> None:
+        output = self._generate_roles("fullstack", tmp_path, "worker:profile=starter-cli")
+        assert not (output / "worker" / "src" / "main.py").exists()
+        assert (output / "worker" / "src" / "README.md").exists()
+
+    def test_role_and_profile_are_mutually_exclusive(self, tmp_path: Path) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "bad",
+                "--profile",
+                "starter-cli",
+                "--role",
+                "backend:profile=starter-web-api,lang=python",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+        assert "--role" in r.stderr
+
+    def test_invalid_role_format_is_rejected(self, tmp_path: Path) -> None:
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "bad",
+                "--role",
+                "not-a-valid-role-string",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode != 0
+        assert "invalid --role format" in r.stderr
