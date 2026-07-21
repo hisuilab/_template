@@ -222,6 +222,28 @@ class TestGenerateStarterWebApi:
         _git_init(output)
         _assert_scripts_pass(output)
 
+    def test_lang_go_main_go_exists(self, tmp_path: Path) -> None:
+        output = _generate("goapi", "starter-web-api", tmp_path, lang="go")
+        assert (output / "main.go").exists()
+        assert (output / "src" / "routes" / "README.md").exists()
+
+    def test_lang_go_mod_has_chi_dep(self, tmp_path: Path) -> None:
+        output = _generate("goapi", "starter-web-api", tmp_path, lang="go")
+        go_mod = (output / "go.mod").read_text()
+        assert "go-chi/chi" in go_mod
+
+    def test_lang_go_mod_has_foundation_dep_too(self, tmp_path: Path) -> None:
+        # starter/web-api-go's go.mod must be a cumulative superset of
+        # lang/go's foundation dep (issue #105), not a narrower replacement.
+        output = _generate("goapi", "starter-web-api", tmp_path, lang="go")
+        go_mod = (output / "go.mod").read_text()
+        assert "godotenv" in go_mod
+
+    def test_lang_go_check_scripts_pass(self, tmp_path: Path) -> None:
+        output = _generate("goapi", "starter-web-api", tmp_path, lang="go")
+        _git_init(output)
+        _assert_scripts_pass(output)
+
 
 # ---------------------------------------------------------------------------
 # starter-web-htmx
