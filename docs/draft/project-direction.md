@@ -69,6 +69,9 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 - `tooling/generator/` （Python 3.11+）が `template/` のProfileを読み込み、新規プロジェクト一式を出力します
 - 呼び出し形式:
 
+> [!NOTE]
+> 以下の表は初期構想であり、現行実装と一致しません。`--lang backend=python` 形式の役割指定構文は不採用（Issue #109）。現行の `--role name:profile=<p>[,lang=<l>]` と `--lang <single>` の仕様は `docs/architecture/core.md` を参照してください。
+
 | パターン | コマンド例 | 生成ディレクトリ構造 |
 | --- | --- | --- |
 | 単一言語 | `... --lang python` | `src/` |
