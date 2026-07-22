@@ -8,6 +8,7 @@ from types import MappingProxyType
 
 from template.schema._toml import require_str, require_table
 from template.schema.errors import SchemaError
+from template.schema.part_schema import _VALID_ID_RE as _PART_ID_RE
 
 
 CATEGORIES = ("cli", "web", "library")
@@ -52,6 +53,14 @@ def validate_profile(data: dict, *, source: str) -> ProfileSchema:
         raise SchemaError(
             "parts must be a non-empty list of strings", source=source, field="profile.parts"
         )
+    for item in raw_parts:
+        if not _PART_ID_RE.match(item):
+            raise SchemaError(
+                f"profile.parts contains invalid part id {item!r} "
+                f"(must match {_PART_ID_RE.pattern!r})",
+                source=source,
+                field="profile.parts",
+            )
     parts = tuple(raw_parts)
 
     raw_variables = data.get("variables", {})

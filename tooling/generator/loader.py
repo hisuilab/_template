@@ -35,21 +35,16 @@ def load_part(part_id: str, template_root: Path) -> PartSchema:
     with path.open("rb") as f:
         data = tomllib.load(f)
     try:
-        return validate_part(data, source=str(path))
+        schema = validate_part(data, source=str(path))
     except SchemaError as e:
         raise LoadError(str(e)) from e
+    if schema.id != part_id:
+        raise LoadError(
+            f"part.toml declares id={schema.id!r} but is located in directory "
+            f"{part_id!r} (they must match)"
+        )
+    return schema
 
 
 def load_parts_for_profile(profile: ProfileSchema, template_root: Path) -> list[PartSchema]:
-    parts: list[PartSchema] = []
-    for part_id in profile.parts:
-        path = template_root / "parts" / part_id / "part.toml"
-        if not path.exists():
-            raise LoadError(f"part.toml not found for part '{part_id}' (looked at {path})")
-        with path.open("rb") as f:
-            data = tomllib.load(f)
-        try:
-            parts.append(validate_part(data, source=str(path)))
-        except SchemaError as e:
-            raise LoadError(str(e)) from e
-    return parts
+    return [load_part(part_id, template_root) for part_id in profile.parts]
