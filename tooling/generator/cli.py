@@ -147,7 +147,15 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
             staging.mkdir()
             render(gen_plan, staging)
             result = apply(staging, output)
-        write_manifest(output, parts, project_name=name)
+        try:
+            write_manifest(output, parts, project_name=name)
+        except ManifestError as e:
+            print(
+                f"Warning: files were generated but manifest creation failed: {e}\n"
+                f"To recover: delete '{output}' and re-run generate.",
+                file=sys.stderr,
+            )
+            return 2
         print(f"Generated {len(result.files_written)} files in {result.output_path}")
         return 0
     except (
@@ -156,7 +164,6 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
         PlanError,
         RenderError,
         ApplyError,
-        ManifestError,
         OSError,
     ) as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -206,15 +213,30 @@ def _generate_roles(name: str, output_root: Path, roles: list[RoleSpec]) -> int:
         return 1
 
     print(f"→ Generating {len(roles)} role(s) at {output_root}...")
+    failed: list[str] = []
     for role in roles:
         rc = _do_generate(name, role.profile, role.lang, output_root / role.name)
         if rc != 0:
-            return rc
+            failed.append(role.name)
+
+    if len(failed) == len(roles):
+        return 1
+
     try:
         _write_role_readme(output_root, roles)
     except (ApplyError, OSError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
+
+    if failed:
+        failed_str = ", ".join(failed)
+        print(
+            f"Partial success: {len(roles) - len(failed)}/{len(roles)} role(s) generated.\n"
+            f"Failed roles: {failed_str}\n"
+            f"Re-run generate --role for each failed role to retry.",
+            file=sys.stderr,
+        )
+        return 2
     print(f"Generated {len(roles)} role(s) in {output_root}")
     return 0
 
@@ -396,13 +418,28 @@ def _cmd_inject(args: argparse.Namespace) -> int:
             staging.mkdir()
             render(gen_plan, staging)
             result = inject(staging, target)
-        update_manifest(target, part_id=part_id)
+        if not result.files_added:
+            print(
+                f"Injected '{part_id}': all {len(result.files_skipped)} file(s) already existed. "
+                "No changes made; manifest not updated. Re-run inject to retry.",
+                file=sys.stderr,
+            )
+            return 0
+        try:
+            update_manifest(target, part_id=part_id)
+        except ManifestError as e:
+            print(
+                f"Warning: files were injected but manifest update failed: {e}\n"
+                f"To recover, manually run: just inject {part_id}",
+                file=sys.stderr,
+            )
+            return 2
         print(
             f"Injected '{part_id}': "
             f"{len(result.files_added)} added, {len(result.files_skipped)} skipped"
         )
         return 0
-    except (PlanError, RenderError, ApplyError, ManifestError, OSError) as e:
+    except (PlanError, RenderError, ApplyError, OSError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
