@@ -44,7 +44,7 @@ review(audit) → ship`とコマンドの対応です。
 
 | フェーズ | コマンド | 担当Role |
 | --- | --- | --- |
-| 事前確認 | `/think:clarify` / `/think:risks` | Architect |
+| 事前確認 | `/think:clarify` / `/think:risks` / `/think:investigate` | Architect |
 | 要件定義 | `/plan:requirements` | Architect |
 | アーキテクチャ設計 | `/plan:architecture` | Architect |
 | マイルストーン/Issue設計 | `/plan:design` | Architect |
@@ -67,6 +67,7 @@ review(audit) → ship`とコマンドの対応です。
 | --- | --- |
 | 「確認したい」「曖昧な点を洗って」 | `/think:clarify` |
 | 「リスクを見て」「危なそうな点は?」 | `/think:risks` |
+| 「事実確認して」「再現確認して」「ブランチ確認して」 | `/think:investigate` |
 | 「要件をまとめて」「仕様を固めたい」 | `/plan:requirements` |
 | 「構成を設計して」「アーキテクチャを見直して」 | `/plan:architecture` |
 | 「このマイルストーン/Issueの設計をして」 | `/plan:design` |
@@ -99,7 +100,7 @@ milestone/issue ごとの進行状態は `tmp/milestone-{N}/phase-state.json`(Pr
 }
 ```
 
-- フェーズ名: `design` → `test` → `implement` → `docs` → `verify` → `review` → `ship`
+- フェーズ名: `investigate` → `design` → `test` → `implement` → `docs` → `verify` → `review` → `ship`
 - ファイルパスはブランチ名(`m{N}-slug` → `milestone-N`、`type/issue-N-topic` → `issue-N`)から決定します
 - テスト先行をスキップした場合は`skipped`へ`test`を追加し、`skip_reasons`へ理由を記録します
 - 各コマンドは開始時に読み込み、完了時に冪等に更新します。ファイルが無い場合は空状態として扱います

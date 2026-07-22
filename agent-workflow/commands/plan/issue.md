@@ -20,9 +20,11 @@ Production ModeのIssue作業ブランチを確定します。担当Role: Progra
 
 1. 引数からIssue番号またはタイトルを取得します
 2. `gh issue view N` で内容を確認します(既存Issueの場合)
-3. ブランチ名 `type/issue-N-topic` を意思決定レポートで提示し、承認を得ます
-4. `git checkout -b type/issue-N-topic` を実行します
-5. `tmp/issue-{N}/phase-state.json` を初期化します
+3. [`think:investigate`](../think/investigate.md)の手順に従い、事実確認を実施します
+   - Criticalな反証(指摘箇所が既修正・Issue重複等)がある場合はブランチ作成前にPMへ確認します
+4. ブランチ名 `type/issue-N-topic` を意思決定レポートで提示し、承認を得ます
+5. `git checkout -b type/issue-N-topic` を実行します
+6. `tmp/issue-{N}/phase-state.json` を初期化します
 
    ```json
    {
