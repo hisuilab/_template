@@ -50,6 +50,54 @@ PARTS = _discover_parts()
 
 
 # ---------------------------------------------------------------------------
+# CI invariants — duplicate IDs and [[files]].path vs payload (issue #128)
+# ---------------------------------------------------------------------------
+
+
+def test_no_duplicate_part_ids() -> None:
+    """template/parts/ 配下に重複 Part ID がないことを確認します。"""
+    ids = [part_id for part_id, _ in PARTS]
+    duplicates = [pid for pid in set(ids) if ids.count(pid) > 1]
+    assert not duplicates, f"Duplicate part IDs detected: {sorted(duplicates)}"
+
+
+def _strip_dot_prefix(seg: str) -> str:
+    if seg.startswith("dot-"):
+        return "." + seg[len("dot-") :]
+    return seg
+
+
+@pytest.mark.parametrize("part_id,part_dir", PARTS, ids=[p[0] for p in PARTS])
+def test_files_rules_match_payload_paths(part_id: str, part_dir: Path) -> None:
+    """[[files]].path がすべて実 payload ファイルの変換後パスと対応することを確認します。
+
+    変数置換は行わず dot- プレフィックスのみ変換します。
+    """
+    part_toml = part_dir / "part.toml"
+    with part_toml.open("rb") as f:
+        data = tomllib.load(f)
+    rules = data.get("files", [])
+    if not rules:
+        return
+
+    payload_dir = part_dir / "payload"
+    dest_paths: set[str] = set()
+    if payload_dir.is_dir():
+        for path in payload_dir.rglob("*"):
+            if not path.is_file():
+                continue
+            rel = str(path.relative_to(payload_dir)).replace("\\", "/")
+            dest = "/".join(_strip_dot_prefix(seg) for seg in rel.split("/"))
+            dest_paths.add(dest)
+
+    orphan = [r["path"] for r in rules if r.get("path") not in dest_paths]
+    assert not orphan, (
+        f"part '{part_id}': [[files]].path entries not found in payload: {orphan}\n"
+        f"Available payload paths: {sorted(dest_paths)}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Payload completeness (RED until implement phase)
 # ---------------------------------------------------------------------------
 

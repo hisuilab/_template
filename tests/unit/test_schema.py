@@ -91,6 +91,109 @@ def test_missing_part_table_is_rejected() -> None:
 
 
 # ---------------------------------------------------------------------------
+# PartSchema — ID format validation (issue #128)
+# ---------------------------------------------------------------------------
+
+
+def test_dotdot_part_id_is_rejected() -> None:
+    with pytest.raises(SchemaError, match="part.id"):
+        validate_part({"part": {"id": "..", "layer": "base", "summary": "x"}}, source="<test>")
+
+
+def test_absolute_part_id_is_rejected() -> None:
+    with pytest.raises(SchemaError, match="part.id"):
+        validate_part(
+            {"part": {"id": "/etc/passwd", "layer": "base", "summary": "x"}}, source="<test>"
+        )
+
+
+def test_empty_part_id_is_rejected() -> None:
+    with pytest.raises(SchemaError, match="part.id"):
+        validate_part({"part": {"id": "", "layer": "base", "summary": "x"}}, source="<test>")
+
+
+def test_path_traversal_part_id_is_rejected() -> None:
+    with pytest.raises(SchemaError, match="part.id"):
+        validate_part(
+            {"part": {"id": "../../etc/passwd", "layer": "base", "summary": "x"}},
+            source="<test>",
+        )
+
+
+# ---------------------------------------------------------------------------
+# FileRule — path format validation (issue #128)
+# ---------------------------------------------------------------------------
+
+
+def test_dotdot_files_path_is_rejected() -> None:
+    with pytest.raises(SchemaError, match=r"files\[0\]"):
+        validate_part(
+            {
+                "part": {"id": "base", "layer": "base", "summary": "x"},
+                "files": [{"path": "../escape", "strategy": "replace"}],
+            },
+            source="<test>",
+        )
+
+
+def test_absolute_files_path_is_rejected() -> None:
+    with pytest.raises(SchemaError, match=r"files\[0\]"):
+        validate_part(
+            {
+                "part": {"id": "base", "layer": "base", "summary": "x"},
+                "files": [{"path": "/etc/passwd", "strategy": "replace"}],
+            },
+            source="<test>",
+        )
+
+
+def test_empty_files_path_is_rejected() -> None:
+    with pytest.raises(SchemaError, match=r"files\[0\]"):
+        validate_part(
+            {
+                "part": {"id": "base", "layer": "base", "summary": "x"},
+                "files": [{"path": "", "strategy": "replace"}],
+            },
+            source="<test>",
+        )
+
+
+# ---------------------------------------------------------------------------
+# ProfileSchema — Part reference ID format validation (issue #128)
+# ---------------------------------------------------------------------------
+
+
+def test_dotdot_profile_part_ref_is_rejected() -> None:
+    with pytest.raises(SchemaError, match="profile.parts"):
+        validate_profile(
+            {
+                "profile": {
+                    "name": "x",
+                    "summary": "x",
+                    "category": "cli",
+                    "parts": [".."],
+                }
+            },
+            source="<test>",
+        )
+
+
+def test_absolute_profile_part_ref_is_rejected() -> None:
+    with pytest.raises(SchemaError, match="profile.parts"):
+        validate_profile(
+            {
+                "profile": {
+                    "name": "x",
+                    "summary": "x",
+                    "category": "cli",
+                    "parts": ["/absolute/path"],
+                }
+            },
+            source="<test>",
+        )
+
+
+# ---------------------------------------------------------------------------
 # ProfileSchema — unit tests using fixtures
 # ---------------------------------------------------------------------------
 

@@ -415,6 +415,18 @@ class TestLoaderPart:
         with pytest.raises(LoadError, match="no-such-part"):
             load_part("no-such-part", TEMPLATE_ROOT)
 
+    def test_load_part_id_dir_mismatch_raises_load_error(self, tmp_path: Path) -> None:
+        parts_dir = tmp_path / "parts" / "actual-dir"
+        parts_dir.mkdir(parents=True)
+        payload_dir = parts_dir / "payload"
+        payload_dir.mkdir()
+        (payload_dir / "README.md").write_text("# hello")
+        (parts_dir / "part.toml").write_text(
+            '[part]\nid = "different-id"\nlayer = "base"\nsummary = "mismatch"\n'
+        )
+        with pytest.raises(LoadError, match="different-id"):
+            load_part("actual-dir", tmp_path)
+
 
 # ---------------------------------------------------------------------------
 # Manifest
