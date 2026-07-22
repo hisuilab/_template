@@ -78,9 +78,9 @@ related: "#98"
   "private": true,
   "type": "module",
   "scripts": {
-    "type-check": "tsc --noEmit",
-    "lint": "biome check .",
-    "format": "biome check --write ."
+    "type-check": "just type-check",
+    "lint": "just lint",
+    "format": "just format"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
@@ -111,8 +111,9 @@ dependencies = [
 ]
 ```
 
-`src/app.py`は`/health`のみを持つ最小ASGIアプリに留めます。ルーティング分割、設定クラス、
-例外階層はプロジェクトごとの差が大きいため、今回のstarterには持ち込みません。
+`src/app.py`は`.env`を読み込んだうえで`/health`のみを持つ最小ASGIアプリに留めます。
+ルーティング分割、設定クラス、例外階層はプロジェクトごとの差が大きいため、今回のstarterには
+持ち込みません。
 
 ### 4.4. foundation Part判断
 
