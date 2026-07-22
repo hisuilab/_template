@@ -2,13 +2,14 @@
 
 ## 1. 概要
 
-`starter/web-api`のPython実装（アプリケーション本体`src/app.py`）を提供する複合Partです。
+`starter/web-api`のPython実装（FastAPI アプリケーション本体`src/app.py`）を提供する複合Partです。
 `--lang python`が選択され、かつ`starter/web-api`が適用されている場合にのみ注入されます。
 
 ## 2. 責任
 
 - `part.toml`によるメタデータと依存宣言（requires: base, starter/web-api, lang/python）
-- `payload/src/app.py`: Webアプリケーション本体
+- `payload/pyproject.toml`: FastAPI / httpx / python-dotenv / uvicorn のランタイム依存
+- `payload/src/app.py`: `/health`を持つ最小FastAPIアプリケーション本体
 
 ## 3. 責任外
 
