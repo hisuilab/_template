@@ -1,11 +1,12 @@
 ---
-status: approved
+status: implemented
 revision: 1
 proposed_at: 2026-07-22
 approved_at: 2026-07-22T23:58:18+09:00
 approved_by: PM
 approval_ref: "chat:2026-07-22 user approved design commit"
 related: "#147"
+implemented_at: 2026-07-23
 ---
 
 # 設計提案: Open Issueをグルーピングして着手優先順位を提案する

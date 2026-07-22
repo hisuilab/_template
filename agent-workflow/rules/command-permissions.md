@@ -66,6 +66,7 @@
 | コマンド | 権限 | 主な副作用 |
 | --- | --- | --- |
 | `/status` | read-only | なし |
+| `/manage:triage` | read-only | なし |
 | `/manage:status` | tmp-write | `tmp/worktrees.json`の観測値同期 |
 | `/manage:cleanup` | git-commit | 承認済みworktree・local branchの削除、レジストリ更新 |
 | `/verify` / `/verify:handoff` | tmp-write | 検証レポート |
