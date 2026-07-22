@@ -1,0 +1,476 @@
+#!/usr/bin/env bash
+# requires: gh, git, jq
+# jq filters intentionally use single-quoted jq variables such as $issue.
+# shellcheck disable=SC2016
+set -euo pipefail
+
+command_name="${1:-}"
+[ -n "$command_name" ] || {
+  echo "usage: worktree-safety <command> [options]" >&2
+  exit 2
+}
+shift
+
+manager_root=""
+issue=""
+branch=""
+worktree_path=""
+tool=""
+approved_base=""
+approved_head=""
+approved_plan=""
+pr_number=""
+owner_token=""
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+  --manager-root)
+    manager_root="${2:-}"
+    shift 2
+    ;;
+  --issue)
+    issue="${2:-}"
+    shift 2
+    ;;
+  --branch)
+    branch="${2:-}"
+    shift 2
+    ;;
+  --path)
+    worktree_path="${2:-}"
+    shift 2
+    ;;
+  --tool)
+    tool="${2:-}"
+    shift 2
+    ;;
+  --approved-base)
+    approved_base="${2:-}"
+    shift 2
+    ;;
+  --approved-head)
+    approved_head="${2:-}"
+    shift 2
+    ;;
+  --approved-plan)
+    approved_plan="${2:-}"
+    shift 2
+    ;;
+  --pr)
+    pr_number="${2:-}"
+    shift 2
+    ;;
+  --owner-token)
+    owner_token="${2:-}"
+    shift 2
+    ;;
+  *)
+    echo "unknown option: $1" >&2
+    exit 2
+    ;;
+  esac
+done
+
+die() {
+  jq -cn --arg error "$*" '{ok:false,error:$error}' >&2
+  exit 1
+}
+
+json_ok() {
+  jq -cn "$@"
+}
+
+require_manager() {
+  [ -n "$manager_root" ] || die "--manager-root is required"
+  [ -d "$manager_root" ] || die "manager root does not exist"
+  manager_root="$(cd "$manager_root" && pwd -P)"
+  git -C "$manager_root" rev-parse --git-dir >/dev/null 2>&1 || die "manager root is not a Git worktree"
+  [ "$(git -C "$manager_root" branch --show-current)" = "main" ] || die "manager worktree must be on main"
+  registry="$manager_root/tmp/worktrees.json"
+  lock_dir="$manager_root/tmp/worktrees.lock"
+  repo_name="$(basename "$manager_root")"
+  repo_name="${repo_name%-main}"
+  manager_parent="$(cd "$manager_root/.." && pwd -P)"
+}
+
+require_issue() {
+  [[ $issue =~ ^[1-9][0-9]*$ ]] || die "invalid issue number"
+  issue_key="issue-$issue"
+}
+
+normalize_tool() {
+  case "$tool" in
+  claude | codex | human) normalized_tool="$tool" ;;
+  none | null | "") normalized_tool="" ;;
+  *) die "invalid assigned tool" ;;
+  esac
+}
+
+registry_json() {
+  if [ -f "$registry" ]; then
+    cat "$registry"
+  else
+    printf '%s\n' '{"version":1,"worktrees":{}}'
+  fi
+}
+
+validate_registry() {
+  local data
+  data="$(registry_json)"
+  jq -e . >/dev/null 2>&1 <<<"$data" || die "invalid registry JSON"
+  [ "$(jq -r '.version // "missing"' <<<"$data")" = "1" ] || die "unsupported registry version"
+  jq -e '
+    (.worktrees | type == "object") and
+    ([.worktrees | to_entries[] |
+      .key as $key |
+      .value as $entry |
+      ($key == ("issue-" + ($entry.issue | tostring))) and
+      ($entry.path | type == "string") and
+      ($entry.branch | type == "string") and
+      ($entry.issue | type == "number") and
+      (($entry.assigned_tool == null) or (["claude","codex","human"] | index($entry.assigned_tool))) and
+      (($entry.pr == null) or ($entry.pr | type == "number")) and
+      (($entry.phase == null) or ($entry.phase | type == "string")) and
+      (["active","blocked_quota","pending_cleanup_approval"] | index($entry.status)) and
+      ($entry.updated_at | type == "string")
+    ] | all)
+  ' >/dev/null 2>&1 <<<"$data" || die "invalid registry schema"
+}
+
+normalize_sibling_path() {
+  [ -n "$worktree_path" ] || die "--path is required"
+  local path_parent expected_name
+  path_parent="$(cd "$(dirname "$worktree_path")" && pwd -P)" || die "worktree parent does not exist"
+  worktree_path="$path_parent/$(basename "$worktree_path")"
+  expected_name="$repo_name-issue-$issue"
+  [ "$path_parent" = "$manager_parent" ] && [ "$(basename "$worktree_path")" = "$expected_name" ] ||
+    die "expected sibling path $manager_parent/$expected_name"
+}
+
+validate_branch_name() {
+  [ -n "$branch" ] || die "--branch is required"
+  [[ $branch =~ ^[a-z]+/issue-${issue}-[a-z0-9][a-z0-9-]*$ ]] || die "invalid issue branch"
+}
+
+count_issue_worktrees() {
+  local line listed_path listed_name suffix
+  issue_worktree_count=0
+  while IFS= read -r line; do
+    [[ $line == worktree\ * ]] || continue
+    listed_path="${line#worktree }"
+    listed_name="$(basename "$listed_path")"
+    [[ $listed_name == "$repo_name-issue-"* ]] || continue
+    suffix="${listed_name#"$repo_name-issue-"}"
+    [[ $suffix =~ ^[1-9][0-9]*$ ]] || continue
+    issue_worktree_count=$((issue_worktree_count + 1))
+  done < <(git -C "$manager_root" worktree list --porcelain)
+}
+
+path_is_registered_worktree() {
+  git -C "$manager_root" worktree list --porcelain | grep -Fxq "worktree $1"
+}
+
+lock_owned=0
+active_token=""
+
+release_owned_lock() {
+  if [ "$lock_owned" -eq 1 ] && [ -d "$lock_dir" ]; then
+    local stored_token
+    stored_token="$(jq -r '.token // empty' "$lock_dir/owner.json" 2>/dev/null || true)"
+    if { [ -n "$active_token" ] && [ "$stored_token" = "$active_token" ]; } || [ ! -f "$lock_dir/owner.json" ]; then
+      rm -f "$lock_dir/owner.json" "$lock_dir/owner.json.tmp"
+      rmdir "$lock_dir" 2>/dev/null || true
+    fi
+  fi
+  lock_owned=0
+}
+
+acquire_lock() {
+  local operation="$1" host_name process_start acquired_at owner_tmp
+  mkdir -p "$manager_root/tmp"
+  mkdir "$lock_dir" 2>/dev/null || die "registry lock already held"
+  lock_owned=1
+  trap release_owned_lock EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  host_name="$(hostname)"
+  process_start="$(ps -o lstart= -p "$$" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  acquired_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  active_token="$host_name:$$:$acquired_at"
+  owner_tmp="$lock_dir/owner.json.tmp"
+  jq -cn \
+    --arg token "$active_token" \
+    --arg host "$host_name" \
+    --argjson pid "$$" \
+    --arg process_start "$process_start" \
+    --arg operation "$operation" \
+    --arg agent "${WORKTREE_AGENT:-unknown}" \
+    --arg acquired_at "$acquired_at" \
+    '{token:$token,host:$host,pid:$pid,process_start:$process_start,operation:$operation,agent:$agent,acquired_at:$acquired_at}' \
+    >"$owner_tmp"
+  mv "$owner_tmp" "$lock_dir/owner.json"
+}
+
+lock_state() {
+  LOCK_STATE="unlocked"
+  LOCK_TOKEN=""
+  [ -d "$lock_dir" ] || return
+  [ -f "$lock_dir/owner.json" ] || {
+    LOCK_STATE="unknown"
+    return
+  }
+  jq -e . "$lock_dir/owner.json" >/dev/null 2>&1 || {
+    LOCK_STATE="unknown"
+    return
+  }
+  local owner_host owner_pid owner_start current_start
+  LOCK_TOKEN="$(jq -r '.token // empty' "$lock_dir/owner.json")"
+  owner_host="$(jq -r '.host // empty' "$lock_dir/owner.json")"
+  owner_pid="$(jq -r '.pid // empty' "$lock_dir/owner.json")"
+  owner_start="$(jq -r '.process_start // empty' "$lock_dir/owner.json")"
+  if [ "$owner_host" != "$(hostname)" ] || ! [[ $owner_pid =~ ^[1-9][0-9]*$ ]]; then
+    LOCK_STATE="unknown"
+    return
+  fi
+  if kill -0 "$owner_pid" 2>/dev/null; then
+    current_start="$(ps -o lstart= -p "$owner_pid" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    if [ -n "$owner_start" ] && [ "$current_start" = "$owner_start" ]; then
+      LOCK_STATE="live"
+    else
+      LOCK_STATE="stale"
+    fi
+  else
+    LOCK_STATE="stale"
+  fi
+}
+
+ensure_registry_file() {
+  [ -f "$registry" ] && return
+  mkdir -p "$manager_root/tmp"
+  local tmp
+  tmp="$(mktemp "$manager_root/tmp/worktrees.json.XXXXXX")"
+  printf '%s\n' '{"version":1,"worktrees":{}}' >"$tmp"
+  mv "$tmp" "$registry"
+}
+
+atomic_registry_filter() {
+  local filter="$1"
+  shift
+  ensure_registry_file
+  local tmp
+  tmp="$(mktemp "$manager_root/tmp/worktrees.json.XXXXXX")"
+  jq "$@" "$filter" "$registry" >"$tmp" || {
+    rm -f "$tmp"
+    die "registry update failed"
+  }
+  jq -e . "$tmp" >/dev/null 2>&1 || {
+    rm -f "$tmp"
+    die "registry update produced invalid JSON"
+  }
+  mv "$tmp" "$registry"
+}
+
+validate_create_plan() {
+  require_issue
+  normalize_tool
+  normalize_sibling_path
+  validate_branch_name
+  validate_registry
+  [ "$(jq -r --arg key "$issue_key" '.worktrees | has($key)' <<<"$(registry_json)")" = "false" ] ||
+    die "issue already registered"
+  [ ! -e "$worktree_path" ] || die "worktree path already exists"
+  ! path_is_registered_worktree "$worktree_path" || die "worktree path already registered by Git"
+  ! git -C "$manager_root" show-ref --verify --quiet "refs/heads/$branch" || die "branch already exists"
+  count_issue_worktrees
+  [ "$issue_worktree_count" -lt 3 ] || die "worktree limit reached"
+  base_sha="$(git -C "$manager_root" rev-parse 'main^{commit}')"
+}
+
+emit_create_plan() {
+  local payload plan_token
+  payload="$(json_ok \
+    --arg operation create \
+    --argjson issue "$issue" \
+    --arg manager_root "$manager_root" \
+    --arg path "$worktree_path" \
+    --arg branch "$branch" \
+    --arg base_sha "$base_sha" \
+    --arg tool "$normalized_tool" \
+    --argjson worktree_count "$issue_worktree_count" \
+    '{operation:$operation,issue:$issue,manager_root:$manager_root,path:$path,branch:$branch,base_sha:$base_sha,assigned_tool:(if $tool == "" then null else $tool end),worktree_count:$worktree_count}')"
+  plan_token="$(git -C "$manager_root" hash-object --stdin <<<"$payload")"
+  jq -c --arg plan_token "$plan_token" '. + {ok:true,plan_token:$plan_token}' <<<"$payload"
+}
+
+resolve_registry_path() {
+  local stored_path="$1" parent
+  if [[ $stored_path = /* ]]; then
+    parent="$(cd "$(dirname "$stored_path")" && pwd -P)" || die "registered path parent does not exist"
+    worktree_path="$parent/$(basename "$stored_path")"
+  else
+    parent="$(cd "$manager_root/$(dirname "$stored_path")" && pwd -P)" || die "registered path parent does not exist"
+    worktree_path="$parent/$(basename "$stored_path")"
+  fi
+}
+
+observe_pr() {
+  local repo_json pr_json
+  repo_json="$(cd "$manager_root" && gh repo view --json nameWithOwner 2>/dev/null)" ||
+    die "failed to resolve GitHub repository"
+  repo_slug="$(jq -r '.nameWithOwner // empty' <<<"$repo_json")"
+  [ -n "$repo_slug" ] || die "invalid GitHub repository response"
+  pr_json="$(gh pr view "$pr_number" --repo "$repo_slug" --json state,headRefOid,headRefName 2>/dev/null)" ||
+    die "failed to resolve GitHub PR"
+  jq -e . >/dev/null 2>&1 <<<"$pr_json" || die "invalid GitHub PR response"
+  pr_state="$(jq -r '.state // empty' <<<"$pr_json")"
+  pr_head="$(jq -r '.headRefOid // empty' <<<"$pr_json")"
+  pr_head_branch="$(jq -r '.headRefName // empty' <<<"$pr_json")"
+}
+
+validate_cleanup_plan() {
+  require_issue
+  validate_registry
+  [[ $pr_number =~ ^[1-9][0-9]*$ ]] || die "invalid PR number"
+  local data stored_path current_branch upstream_sha
+  data="$(registry_json)"
+  [ "$(jq -r --arg key "$issue_key" '.worktrees | has($key)' <<<"$data")" = "true" ] || die "issue is not registered"
+  stored_path="$(jq -r --arg key "$issue_key" '.worktrees[$key].path' <<<"$data")"
+  branch="$(jq -r --arg key "$issue_key" '.worktrees[$key].branch' <<<"$data")"
+  resolve_registry_path "$stored_path"
+  normalize_sibling_path
+  observe_pr
+  [ "$pr_state" = "MERGED" ] || die "PR is not merged"
+  [[ $pr_head =~ ^[0-9a-fA-F]{40}$ ]] || die "invalid PR head SHA"
+  [ "$pr_head_branch" = "$branch" ] || die "PR head branch mismatch"
+  worktree_exists=false
+  branch_exists=false
+  force_branch=false
+  if path_is_registered_worktree "$worktree_path"; then
+    worktree_exists=true
+    current_branch="$(git -C "$worktree_path" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+    [ -n "$current_branch" ] || die "detached HEAD"
+    [ "$current_branch" = "$branch" ] || die "registered branch mismatch"
+    [ -z "$(git -C "$worktree_path" status --short)" ] || die "worktree is not clean"
+    [ "$(git -C "$worktree_path" rev-parse HEAD)" = "$pr_head" ] || die "PR head SHA mismatch"
+  elif [ -e "$worktree_path" ]; then
+    die "registered path is not a Git worktree"
+  fi
+  if git -C "$manager_root" show-ref --verify --quiet "refs/heads/$branch"; then
+    branch_exists=true
+    local_head="$(git -C "$manager_root" rev-parse "$branch^{commit}")"
+    [ "$local_head" = "$pr_head" ] || die "PR head SHA mismatch"
+    if upstream_sha="$(git -C "$manager_root" rev-parse "$branch@{upstream}^{commit}" 2>/dev/null)"; then
+      [ "$upstream_sha" = "$pr_head" ] || die "remote-tracking SHA mismatch"
+    fi
+    if ! git -C "$manager_root" merge-base --is-ancestor "$branch" main; then
+      force_branch=true
+    fi
+  else
+    local_head="$pr_head"
+  fi
+}
+
+emit_cleanup_plan() {
+  local payload plan_token
+  payload="$(json_ok \
+    --arg operation cleanup \
+    --argjson issue "$issue" \
+    --argjson pr "$pr_number" \
+    --arg pr_state "$pr_state" \
+    --arg repo "$repo_slug" \
+    --arg pr_head_branch "$pr_head_branch" \
+    --arg manager_root "$manager_root" \
+    --arg path "$worktree_path" \
+    --arg branch "$branch" \
+    --arg head_sha "$local_head" \
+    --argjson worktree_exists "$worktree_exists" \
+    --argjson branch_exists "$branch_exists" \
+    --argjson force_branch "$force_branch" \
+    '{operation:$operation,issue:$issue,repository:$repo,pr:$pr,pr_state:$pr_state,pr_head_branch:$pr_head_branch,manager_root:$manager_root,path:$path,branch:$branch,head_sha:$head_sha,worktree_exists:$worktree_exists,branch_exists:$branch_exists,force_branch:$force_branch}')"
+  plan_token="$(git -C "$manager_root" hash-object --stdin <<<"$payload")"
+  jq -c --arg plan_token "$plan_token" '. + {ok:true,plan_token:$plan_token}' <<<"$payload"
+}
+
+require_manager
+
+case "$command_name" in
+plan-create)
+  validate_create_plan
+  emit_create_plan
+  ;;
+apply-create)
+  [ -n "$approved_base" ] || die "--approved-base is required"
+  [ -n "$approved_plan" ] || die "--approved-plan is required"
+  acquire_lock apply-create
+  validate_create_plan
+  [ "$base_sha" = "$approved_base" ] || die "approved base changed"
+  create_plan="$(emit_create_plan)"
+  [ "$(jq -r '.plan_token' <<<"$create_plan")" = "$approved_plan" ] || die "approved create plan changed"
+  git -C "$manager_root" worktree add "$worktree_path" -b "$branch" "$approved_base" >/dev/null 2>&1 || die "worktree creation failed"
+  mkdir -p "$worktree_path/tmp/issue-$issue"
+  phase_tmp="$(mktemp "$worktree_path/tmp/issue-$issue/phase-state.json.XXXXXX")"
+  printf '%s\n' '{"completed":[],"skipped":[],"skip_reasons":{},"current":null}' >"$phase_tmp"
+  mv "$phase_tmp" "$worktree_path/tmp/issue-$issue/phase-state.json"
+  now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  stored_path="../$(basename "$worktree_path")"
+  atomic_registry_filter \
+    '.worktrees[$key] = {path:$path,branch:$branch,issue:$issue,assigned_tool:(if $tool == "" then null else $tool end),pr:null,phase:null,status:"active",updated_at:$updated_at}' \
+    --arg key "$issue_key" --arg path "$stored_path" --arg branch "$branch" --argjson issue "$issue" --arg tool "$normalized_tool" --arg updated_at "$now"
+  release_owned_lock
+  json_ok --arg operation create --argjson issue "$issue" --arg path "$worktree_path" --arg branch "$branch" '{ok:true,applied:true,operation:$operation,issue:$issue,path:$path,branch:$branch}'
+  ;;
+plan-cleanup)
+  validate_cleanup_plan
+  emit_cleanup_plan
+  ;;
+apply-cleanup)
+  [ -n "$approved_head" ] || die "--approved-head is required"
+  [ -n "$approved_plan" ] || die "--approved-plan is required"
+  acquire_lock apply-cleanup
+  validate_cleanup_plan
+  cleanup_plan="$(emit_cleanup_plan)"
+  [ "$(jq -r '.plan_token' <<<"$cleanup_plan")" = "$approved_plan" ] || die "approved cleanup plan changed"
+  [ "$local_head" = "$approved_head" ] || die "approved head changed"
+  if [ "$worktree_exists" = true ]; then
+    git -C "$manager_root" worktree remove -- "$worktree_path" >/dev/null 2>&1 || die "worktree removal failed"
+  fi
+  if [ "$branch_exists" = true ]; then
+    git -C "$manager_root" update-ref -d "refs/heads/$branch" "$approved_head" >/dev/null 2>&1 ||
+      die "branch changed before deletion"
+  fi
+  atomic_registry_filter 'del(.worktrees[$key])' --arg key "$issue_key"
+  release_owned_lock
+  json_ok --arg operation cleanup --argjson issue "$issue" --arg path "$worktree_path" --arg branch "$branch" '{ok:true,applied:true,operation:$operation,issue:$issue,path:$path,branch:$branch}'
+  ;;
+assign)
+  require_issue
+  normalize_tool
+  acquire_lock assign
+  validate_registry
+  [ "$(jq -r --arg key "$issue_key" '.worktrees | has($key)' <<<"$(registry_json)")" = "true" ] || die "issue is not registered"
+  now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  atomic_registry_filter \
+    '.worktrees[$key].assigned_tool = (if $tool == "" then null else $tool end) | .worktrees[$key].updated_at = $updated_at' \
+    --arg key "$issue_key" --arg tool "$normalized_tool" --arg updated_at "$now"
+  release_owned_lock
+  json_ok --arg operation assign --argjson issue "$issue" --arg tool "$normalized_tool" '{ok:true,operation:$operation,issue:$issue,assigned_tool:(if $tool == "" then null else $tool end)}'
+  ;;
+lock-status)
+  lock_state
+  json_ok --arg state "$LOCK_STATE" --arg token "$LOCK_TOKEN" '{ok:true,state:$state,owner_token:(if $token == "" then null else $token end)}'
+  ;;
+reclaim-lock)
+  [ -n "$owner_token" ] || die "--owner-token is required"
+  lock_state
+  [ "$LOCK_STATE" = "stale" ] || die "lock is not stale"
+  [ "$LOCK_TOKEN" = "$owner_token" ] || die "owner token mismatch"
+  [ "$(find "$lock_dir" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')" = "1" ] || die "lock directory contains unexpected files"
+  rm -f "$lock_dir/owner.json"
+  rmdir "$lock_dir" || die "lock reclaim failed"
+  json_ok --arg state reclaimed '{ok:true,state:$state}'
+  ;;
+*)
+  die "unknown command: $command_name"
+  ;;
+esac

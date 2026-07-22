@@ -21,7 +21,7 @@
 | `tmp-write` | `tmp/`配下へのレポート・計画・状態ファイルの書き込み | `/verify`、`/verify:handoff`、`/review:code` |
 | `docs-write` | 文書ファイルの作成・更新 | (現在該当コマンド無し) |
 | `source-write` | 実装・テスト・設定の作成・更新 | `/build:test`、`/build:implement` |
-| `git-commit` | `git add` / `git commit`、ローカルブランチ作成 | `/plan:requirements`・`/plan:architecture`(`project-direction.md`差分のcommit)、`/plan:design`(design分のcommit)、`/build:docs`(未commit差分をtest→feat→docsへ分割して連続commit)、`/ship:pr`のcommit段階(Production Mode) |
+| `git-commit` | `git add` / `git commit`、ローカルbranch・worktree操作 | `/plan:design`、`/build:docs`、`/manage:cleanup`、`/ship:pr`のcommit段階 |
 | `external-write` | push、PR作成など外部状態の変更 | `/ship:pr`のpush/PR段階(Production Modeのみ)、`/auto:issue`(Production Mode)、`/plan:issue`(GitHub Issue作成) |
 
 ## 2. 承認ルール
@@ -66,12 +66,14 @@
 | コマンド | 権限 | 主な副作用 |
 | --- | --- | --- |
 | `/status` | read-only | なし |
+| `/manage:status` | tmp-write | `tmp/worktrees.json`の観測値同期 |
+| `/manage:cleanup` | git-commit | 承認済みworktree・local branchの削除、レジストリ更新 |
 | `/verify` / `/verify:handoff` | tmp-write | 検証レポート |
 | `/review:design` / `/review:code` / `/review:docs` / `/review:test` / `/review:security` / `/review:audit` | tmp-write | `tmp/milestone-{N}/` または `tmp/issue-{N}/` 配下のレビューレポート |
 | `/think:clarify` / `/think:risks` | read-only | なし |
 | `/plan:requirements` / `/plan:architecture` | git-commit | `project-direction.md`更新+その差分のcommit |
 | `/plan:milestone` | git-commit | `m{N}-slug`ブランチ作成+`tmp/milestone-{N}/phase-state.json`初期化 |
-| `/plan:issue` | external-write | GitHub Issue作成+`type/issue-N-topic`ブランチ作成+`tmp/issue-{N}/phase-state.json`初期化 |
+| `/plan:issue` | external-write | GitHub Issue、Issue branch/worktree、phase-state、レジストリの作成 |
 | `/plan:design` | git-commit | マイルストーン文書/設計提案の作成+design分のcommit |
 | `/build:docs` | git-commit | README・マイルストーン文書・draft・decisions更新+未commit差分の複数commitへの分割実行 |
 | `/build:test` / `/build:implement` | source-write | テスト・実装(commitしない) |
