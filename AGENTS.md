@@ -3,7 +3,8 @@
 ## 目次
 
 - [1. AIエージェント運用ワークフロー](#1-aiエージェント運用ワークフロー)
-- [2. コミットメッセージ](#2-コミットメッセージ)
+- [2. リポジトリ探索](#2-リポジトリ探索)
+- [3. コミットメッセージ](#3-コミットメッセージ)
 
 ## 1. AIエージェント運用ワークフロー
 
@@ -28,7 +29,22 @@ Claude/Codex共通の入口はこのファイルです。
 `/issue:auto`のように順序が入れ替わった表記を受けた場合は、正しい表記(`/auto:issue`)へ
 読み替えられるかを確認し、対応する正本を読んでから作業します。
 
-## 2. コミットメッセージ
+## 2. リポジトリ探索
+
+AI agentはリポジトリ探索に次の優先順位で使います。
+
+1. テキスト検索（ripgrep）とファイル読み取りを基本とします
+2. LSP serverがdevShellで利用可能な場合、semantic探索（definition・references・
+   diagnostics・hover）をテキスト検索の補助として任意に使います
+3. MCP serverが設定されている場合、read-only toolを任意のsemantic探索補助として使います。
+   write toolの使用はユーザーへの確認なしに行いません
+4. LSP/MCPが利用できない場合はテキスト検索にfallbackします（hooks による強制は行いません）
+
+> [!NOTE]
+> 設計の詳細は`docs/design/issue-140-lsp-mcp-agent-context.md`を参照してください。
+> LSP/MCP候補パッケージの追加は#116後のfollow-up Issueで実施します。
+
+## 3. コミットメッセージ
 
 - 英語で、[Conventional Commits](https://www.conventionalcommits.org/)形式(`type(scope): description`)で書きます
 - `type`は`build`/`chore`/`ci`/`docs`/`feat`/`fix`/`perf`/`refactor`/`revert`/`style`/`test`のいずれかを使います
