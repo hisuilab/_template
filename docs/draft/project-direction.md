@@ -8,9 +8,17 @@ migrated_to: docs/requirements/product.md, docs/architecture/core.md
 
 # Project Direction: _template
 
-> [!NOTE]
-> このドキュメントは `docs/requirements/product.md` および `docs/architecture/core.md` へ移行済みです（`status: migrated`）。
-> 本文中の `purpose/*` / `small-cli` 等の名称は移行当時の記録であり、Issue #60 にて `starter/*` / `starter-cli` 等に改名されています。
+> [!IMPORTANT]
+> **このドキュメントは移行済みのアーカイブです。現行仕様の正本は以下を参照してください。**
+>
+> - 要件: [`docs/requirements/product.md`](../requirements/product.md)
+> - アーキテクチャ: [`docs/architecture/core.md`](../architecture/core.md)
+>
+> 本文は移行当時（2026-07-14）の記録です。以下の点は現行と異なります。
+>
+> - `purpose/*` / `small-cli` 等の名称は Issue #60 にて `starter/*` / `starter-cli` 等に改名済み
+> - 7.2 節のディレクトリツリーにある `purpose/` は現在 `starter/` に相当します
+> - 7.3 節の `--lang backend=python,frontend=typescript` 構文は Issue #109 にて不採用となり、代わりに `--role` によるモノレポ型生成が実装済みです（詳細: [`docs/design/issue-109-role-monorepo.md`](../design/issue-109-role-monorepo.md)）
 
 ## 目次
 
@@ -129,7 +137,7 @@ nix-stationで蓄積された改善を取り込み、再利用可能な基盤と
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    User["ユーザー<br/>--name foo<br/>--profile small-cli<br/>--lang python"]
+    User["ユーザー<br/>--name foo<br/>--profile starter-cli<br/>--lang python"]
     CLI["CLI<br/>cli.py<br/>LangSpec 生成<br/>lang Parts 注入"]
     Loader["Loader<br/>profile.toml<br/>part.toml 読み込み"]
     Resolver["Resolver<br/>Part 依存解決<br/>順序決定"]
@@ -171,7 +179,7 @@ _template/
     └── parts/               # コンポーネント群
         ├── base/            # 全プロファイル共通基盤
         ├── scale/           # スケール別 Part（small 等）
-        ├── purpose/         # 用途別 Part（cli / web-api / library）
+        ├── starter/         # 用途別 Part（cli / web-api / library）。移行当時は purpose/ という名称でした（Issue #60 で改名）
         ├── features/        # オプション機能 Part
         │   ├── ai-agent/    # AGENTS.md・CLAUDE.md・.claude/rules/dev-policy.md
         │   │                # 【目標設計 M9】.claude/ scaffold を追加
@@ -247,7 +255,7 @@ flowchart LR
 | `template/profiles/` | Profile 宣言（使用 Part リスト・変数定義） | Part の内容・lang 指定 |
 | `template/parts/base/` | 全プロファイル共通基盤ファイル（flake.nix フォールバック・justfile・rumdl.toml 等） | 言語環境 |
 | `template/parts/lang/` | 言語環境 Part（devShell・treefmt・justfile の言語固有設定） | アプリケーションコード・ディレクトリ構造 |
-| `template/parts/purpose/` | 用途別コードスケルトン（`src/` 構成） | 言語環境 |
+| `template/parts/starter/` | 用途別コードスケルトン（`src/` 構成）。移行当時は `purpose/` という名称でした（Issue #60 で改名） | 言語環境 |
 | `template/parts/features/` | オプション機能 Part（ai-agent・logging 等）。【目標設計 M9】ai-agent は `AGENTS.md`・`CLAUDE.md`・`.claude/rules/dev-policy.md` を提供 | lang 固有設定・ディレクトリ構造 |
 | `template/workspaces/` | 【目標設計 M10】`init-workspace` が使う固定テンプレート群（Parts システム不使用）。`default/` が標準ワークスペース | プロジェクト生成・Parts 合成 |
 
