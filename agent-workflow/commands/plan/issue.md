@@ -31,34 +31,22 @@ Production ModeのIssue作業worktreeを確定します。担当Role: Manager→
    title/bodyを作成します
 3. [`think:investigate`](../think/investigate.md)に従って事実確認します。Criticalな反証
    (指摘箇所が既修正・Issue重複等)があれば作成前にPMへ確認します
-4. `/manage:status`相当でレジストリと`git worktree list --porcelain`を照合します。未知version、
-   同じIssue・branch・pathの競合、または同時Issue worktree数3への到達時は作成を停止します
-5. `type/issue-N-topic` branchと`<repository>-issue-{N}` pathを決めます。新規Issueの場合は
-   Issue作成後に確定する番号を使います
-6. Issue内容、branch、絶対path、base commit、実行する外部操作を意思決定レポートで提示し、
-   承認を得ます
-7. 承認後、`tmp/worktrees.lock`を取得して手順4を再実行します。競合や上限到達を検出したら
-   外部操作前に停止します。lockは手順12まで保持し、途中失敗時も必ず解放します
-8. 新規Issueの場合のみGitHub Issueを作成します。既存Issueは変更しません
-9. `git worktree add <path> -b <branch> main`でworktreeを作成します。primary manager
-   worktree自体のbranchは切り替えません。branchが既に存在する場合は自動再利用せず、既存の
-   worktree・PRとの対応を報告して停止します
-10. `<path>/tmp/issue-{N}/phase-state.json`を初期化します
-
-    ```json
-    {
-      "completed": [],
-      "skipped": [],
-      "skip_reasons": {},
-      "current": null
-    }
-    ```
-
-11. primary manager worktreeの`tmp/worktrees.json`へ`status: active`で登録し、JSONを
-    原子的に置換します。担当ツール未定なら`assigned_tool: null`とします
-12. registry更新後にlockを解放します。Issue作成後にworktree作成が失敗してもIssueを
-    自動closeしません。worktree作成後にregistry更新が失敗した場合もworktreeを自動削除せず、
-    実在状態と再開手順を報告してからlockを解放します
+4. 新規Issueの場合はtitle/bodyとGitHubへの外部操作を先に提示して承認を得てから作成し、Issue番号を
+   確定します。既存Issueは変更しません。Issue作成に失敗した場合はworktree計画へ進みません
+5. 確定したIssue番号から`type/issue-N-topic` branch、`<repository>-issue-{N}`の絶対path、
+   担当toolを決めます
+6. `scripts/worktree-safety plan-create --manager-root <root> --issue <N> --branch <branch>
+   --path <path> --tool <tool>`を実行します。helperが未知version、Issue・branch・pathの競合、
+   未登録を含む同時Issue worktree数3への到達を検出した場合は停止します
+7. helperが返した作成計画JSONのIssue、branch、絶対path、base SHA、担当tool、現在のworktree数を
+   意思決定レポートで提示し、local Git操作の承認を得ます
+8. planと同じ入力へ`--approved-base <base_sha>`を付け、`scripts/worktree-safety apply-create`を
+   実行します。helper自身がlockを取得し、base・競合・上限・schemaを再検証してからworktree、
+   `phase-state.json`、registry entryを作成します
+9. helperが状態変化を検出した場合は承認を再利用せず停止します。primary manager worktreeの
+   branchは切り替えません。返却JSONと作成結果を報告します
+10. Issue作成後にapplyが失敗してもIssueを自動closeしません。部分的に作成されたworktree等を
+    自動削除せず、実在状態と再開手順を報告します
 
 ---
 
