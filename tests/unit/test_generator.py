@@ -399,6 +399,32 @@ class TestApplier:
         assert "new.txt" in result.files_added
         assert "old.txt" in result.files_skipped
 
+    def test_inject_rolls_back_added_files_on_io_error(self, tmp_path: Path) -> None:
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        (staging / "a.txt").write_text("a\n")
+        (staging / "b.txt").write_text("b\n")
+        output = tmp_path / "output"
+        output.mkdir()
+
+        call_count = 0
+
+        original_copy2 = __import__("shutil").copy2
+
+        def failing_copy2(src: object, dst: object) -> None:
+            nonlocal call_count
+            call_count += 1
+            if call_count >= 2:
+                raise OSError("simulated disk full")
+            original_copy2(src, dst)
+
+        with patch("tooling.generator.applier.shutil.copy2", side_effect=failing_copy2):
+            with pytest.raises(ApplyError, match="I/O error"):
+                inject(staging, output)
+
+        remaining = list(output.iterdir())
+        assert remaining == [], f"rollback failed: {remaining} still in output"
+
 
 # ---------------------------------------------------------------------------
 # Loader — load_part

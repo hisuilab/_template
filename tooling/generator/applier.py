@@ -47,6 +47,8 @@ def inject(staging_dir: Path, target_path: Path) -> InjectResult:
             shutil.copy2(src, dest)
             files_added.append(rel)
     except OSError as e:
+        for rel in files_added:
+            (target_path / rel).unlink(missing_ok=True)
         raise ApplyError(f"I/O error during inject: {e}") from e
 
     return InjectResult(

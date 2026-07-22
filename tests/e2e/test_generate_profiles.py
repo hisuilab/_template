@@ -1187,3 +1187,37 @@ class TestRoleGeneration:
         assert (output_root / "backend" / "src" / "main.py").exists()
         assert (output_root / "backend" / ".template-manifest.toml").exists()
         assert sentinel.read_text() == "keep me"
+
+    def test_role_partial_success_reports_failed_roles_and_exits_2(self, tmp_path: Path) -> None:
+        """--role 部分成功時に失敗ロールが報告され exit 2 になることを確認します。"""
+        output_root = tmp_path / "fullstack"
+        frontend = output_root / "frontend"
+        frontend.mkdir(parents=True)
+        (frontend / "user-owned.txt").write_text("keep me")
+
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "fullstack",
+                "--role",
+                "backend:profile=starter-cli,lang=python",
+                "--role",
+                "frontend:profile=starter-cli,lang=python",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 2, (
+            f"Expected exit 2 for partial success, got {r.returncode}.\nstdout: {r.stdout}\nstderr: {r.stderr}"
+        )
+        assert "frontend" in r.stderr.lower(), "failed role name should appear in stderr"
+        assert (output_root / "backend" / "src" / "main.py").exists(), (
+            "successful role should still be generated"
+        )
