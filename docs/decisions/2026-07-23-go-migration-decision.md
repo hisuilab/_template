@@ -1,5 +1,5 @@
 ---
-status: decided
+status: approved
 ---
 
 # ADR: Goジェネレータ移行の採否

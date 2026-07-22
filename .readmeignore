@@ -11,3 +11,8 @@ template/parts/**/payload/
 # .github/ は GitHub が規約として認識する特殊ディレクトリ(CODEOWNERS / workflows 等)のため
 # README.md を置くと GitHub がリポジトリの表示 README として優先描画してしまうため除外します
 .github/
+
+# tooling/poc-go/ のサブディレクトリは Go パッケージ構造(cmd/, internal/)のため
+# 日本語 README 規約の対象外とします。トップレベルの tooling/poc-go/README.md は対象です
+tooling/poc-go/cmd/
+tooling/poc-go/internal/

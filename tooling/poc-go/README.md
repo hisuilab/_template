@@ -4,19 +4,19 @@ status: draft
 
 # tooling/poc-go
 
-## 概要
+## 1. 概要
 
 Go言語によるジェネレータPoC（Proof of Concept）です。
 PythonジェネレータのGo移行可否判断（Issue #112）のために作成しました。
 
-## 責任
+## 2. 責任
 
 - Profile/PartのTOML読み込み（LOADステージ）
 - Part依存解決・順序決定（RESOLVEステージ）
 - 変数束縛・ファイル一覧作成（PLANステージ）
 - 複数ロール生成前のpreflight検証
 
-## 責任外
+## 3. 責任外
 
 - ファイル生成（RENDER/APPLYステージ）は実装しません
 - productionのentrypointへの統合はこのPoCのスコープ外です
