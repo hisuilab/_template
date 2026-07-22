@@ -6,4 +6,4 @@
 副作用: `tmp/worktrees.json`の`assigned_tool`・`updated_at`更新
 承認: 不要です。
 
-`../../../../agent-workflow/commands/manage.md`を読み、`3. manage:assign`の指示に従ってください。
+`../../../agent-workflow/commands/manage.md`を読み、`3. manage:assign`の指示に従ってください。

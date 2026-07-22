@@ -6,4 +6,4 @@
 副作用: `tmp/worktrees.json`の観測値・`updated_at`更新
 承認: 不要です。
 
-`../../../../agent-workflow/commands/manage.md`を読み、`2. manage:status`の指示に従ってください。
+`../../../agent-workflow/commands/manage.md`を読み、`2. manage:status`の指示に従ってください。
