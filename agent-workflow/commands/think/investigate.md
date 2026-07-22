@@ -16,11 +16,16 @@ Issue着手前にコード・ブランチで事実を検証します。担当Rol
 ## 手順
 
 1. `gh issue view N`でIssue本文・ラベル・担当者を読みます
-2. `git log main --oneline -20`と指摘ファイルの`git blame`で「指摘が今のmainにまだあるか」
-   を確認します
-3. `git branch --all`でIssue番号・関連キーワードを含むブランチを一覧し、並行作業中の
-   ブランチがないかを確認します
-4. Issue本文で言及されているファイル・シンボルをコードで確認します(存在確認・内容照合)
+2. `git log main --oneline -20`でmainの直近履歴を確認し、指摘ファイルの
+   `git blame main -- <file>`で「指摘が今のmainにまだあるか」を確認します。
+   コード照合は`git show main:<path>`でmain上の内容を参照し、作業ブランチの
+   変更が混入しないようにします
+3. `gh pr list --search "<keyword>" --state open`でリモートの並行PRを確認します。
+   あわせて`git fetch --all --prune`が実行可能な場合は実行し、`git branch --all`で
+   ローカル参照を最新化します。fetchが不可の場合は「ローカル参照ベースのため未確認の
+   リモートブランチが存在する可能性あり」として調査レポートに明記します
+4. Issue本文で言及されているファイル・シンボルを`git show main:<path>`で確認します
+   (存在確認・内容照合)
 5. 次の形式で調査レポートを出力します
 
    ```text
