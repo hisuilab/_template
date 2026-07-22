@@ -136,7 +136,12 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
         )
         parts = load_parts_for_profile(extended_profile, _TEMPLATE_ROOT)
         parts = resolve(parts)
-        gen_plan = plan(request, parts, template_root=_TEMPLATE_ROOT)
+        gen_plan = plan(
+            request,
+            parts,
+            template_root=_TEMPLATE_ROOT,
+            profile_variables=extended_profile.variables,
+        )
         with tempfile.TemporaryDirectory() as tmp:
             staging = Path(tmp) / "staging"
             staging.mkdir()

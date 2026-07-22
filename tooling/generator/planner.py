@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 from template.schema.part_schema import PartSchema
@@ -11,6 +12,7 @@ from tooling.generator.models import GenerateRequest, GenerationPlan, PlannedFil
 
 _PLACEHOLDER_RE = re.compile(r"\{\{(\w+)\}\}")
 _DOT_PREFIX = "dot-"
+_RESERVED: frozenset[str] = frozenset({"project_name"})
 
 
 def _substitute(text: str, variables: dict[str, str]) -> str:
@@ -40,8 +42,14 @@ def plan(
     request: GenerateRequest,
     parts: list[PartSchema],
     template_root: Path,
+    profile_variables: Mapping[str, str] | None = None,
 ) -> GenerationPlan:
-    variables: dict[str, str] = {"project_name": request.name}
+    variables: dict[str, str] = dict(profile_variables or {})
+    # Reserved keys always win; enforce via _RESERVED so adding a new reserved key here
+    # is sufficient — no other site needs updating.
+    _reserved_values: dict[str, str] = {"project_name": request.name}
+    for key in _RESERVED:
+        variables[key] = _reserved_values[key]
 
     for part in parts:
         for ph in part.placeholders_required:
