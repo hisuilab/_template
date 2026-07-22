@@ -2,16 +2,25 @@
 
 ## 1. 概要
 
-Codex CLI向けのアダプターを置くディレクトリです。ワークフローの内容そのもの(harness非依存の決めごと)は`agent-workflow/`が正本で、ここは薄いアダプターです(Issue #114/#115)。
+Codex CLI向けのアダプターを置くディレクトリです。ワークフローの内容そのもの(harness非依存の
+決めごと)は`agent-workflow/`が正本で、ここはCodex固有の実行機構だけを持つ薄いアダプターです
+(Issue #114/#115/#125)。
 
 ## 2. 責任
 
-- `AGENTS.md`: Codexへの入口。`agent-workflow/rules/`を読むよう指示する薄いプローズ
+- `hooks.json`: Codex hook設定
+- `hooks/`: Codex hookスクリプトと運用説明
+
+Codex/Claude共通の入口は、リポジトリルートの`AGENTS.md`です。Codexで擬似コマンドや
+ワークフローを使う場合も、ルート`AGENTS.md`から`agent-workflow/`の正本へ到達します。
 
 ## 3. 責任外
 
 - ワークフローの内容そのもの(`../agent-workflow/`が持ちます)
+- Codex/Claude共通の入口(`../AGENTS.md`が持ちます)
 
-## 4. 未検証事項
+## 4. 検証済み事項
 
-- Codexがルート`AGENTS.md`とは別に`.codex/AGENTS.md`というパスを自動探索・読み込みするかは、実際の`codex` CLIでの動作確認が必要です(このセッションでは`codex` CLIが利用できず検証できていません)。自動探索が成立しない場合、ルート`AGENTS.md`への追記など別方式への切り替えが必要になります(設計doc `docs/design/issue-114-agent-workflow-portability.md` 4.3節・7節U-01a参照)
+`codex debug prompt-input`で、リポジトリ直下から起動したCodexはルート`AGENTS.md`を初期
+コンテキストへ入れる一方、`.codex/AGENTS.md`は自動読込しないことを確認しました。
+このため`.codex/AGENTS.md`は入口として使わず、ルート`AGENTS.md`へ集約します。
