@@ -3,7 +3,7 @@ status: approved
 proposed_at: 2026-07-23
 approved_at: 2026-07-23
 approved_by: PM
-implemented_at: null
+implemented_at: 2026-07-23
 related: "#148"
 ---
 

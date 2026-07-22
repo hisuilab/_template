@@ -8,6 +8,7 @@ Claude Codeのスラッシュコマンド起動定義を置くディレクトリ
 
 - `status.md`・`verify.md`: フェーズに紐付かない横断コマンド
 - `think/`・`plan/`・`build/`・`review/`・`ship/`・`verify/`・`auto/`・`template/`: フェーズ別サブディレクトリ
+- `manage/`: 横断コマンド(並列worktree観測・担当変更・クリーンアップ)
 
 ## 3. 責任外
 
