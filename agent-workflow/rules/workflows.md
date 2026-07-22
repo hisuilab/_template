@@ -44,7 +44,7 @@ review(audit) → ship`とコマンドの対応です。
 
 | フェーズ | コマンド | 担当Role |
 | --- | --- | --- |
-| 事前確認 | `/think:clarify` / `/think:risks` | Architect |
+| 事前確認 | `/think:clarify` / `/think:risks` / `/think:investigate` | Architect |
 | 要件定義 | `/plan:requirements` | Architect |
 | アーキテクチャ設計 | `/plan:architecture` | Architect |
 | マイルストーン/Issue設計 | `/plan:design` | Architect |
@@ -67,6 +67,7 @@ review(audit) → ship`とコマンドの対応です。
 | --- | --- |
 | 「確認したい」「曖昧な点を洗って」 | `/think:clarify` |
 | 「リスクを見て」「危なそうな点は?」 | `/think:risks` |
+| 「事実確認して」「再現確認して」「ブランチ確認して」 | `/think:investigate` |
 | 「要件をまとめて」「仕様を固めたい」 | `/plan:requirements` |
 | 「構成を設計して」「アーキテクチャを見直して」 | `/plan:architecture` |
 | 「このマイルストーン/Issueの設計をして」 | `/plan:design` |
