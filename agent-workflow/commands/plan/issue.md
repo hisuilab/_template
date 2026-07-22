@@ -37,25 +37,28 @@ Production ModeのIssue作業worktreeを確定します。担当Role: Manager→
    Issue作成後に確定する番号を使います
 6. Issue内容、branch、絶対path、base commit、実行する外部操作を意思決定レポートで提示し、
    承認を得ます
-7. 新規Issueの場合のみGitHub Issueを作成します。既存Issueは変更しません
-8. `git worktree add <path> -b <branch> main`でworktreeを作成します。primary manager
+7. 承認後、`tmp/worktrees.lock`を取得して手順4を再実行します。競合や上限到達を検出したら
+   外部操作前に停止します。lockは手順12まで保持し、途中失敗時も必ず解放します
+8. 新規Issueの場合のみGitHub Issueを作成します。既存Issueは変更しません
+9. `git worktree add <path> -b <branch> main`でworktreeを作成します。primary manager
    worktree自体のbranchは切り替えません。branchが既に存在する場合は自動再利用せず、既存の
    worktree・PRとの対応を報告して停止します
-9. `<path>/tmp/issue-{N}/phase-state.json`を初期化します
+10. `<path>/tmp/issue-{N}/phase-state.json`を初期化します
 
-   ```json
-   {
-     "completed": [],
-     "skipped": [],
-     "skip_reasons": {},
-     "current": null
-   }
-   ```
+    ```json
+    {
+      "completed": [],
+      "skipped": [],
+      "skip_reasons": {},
+      "current": null
+    }
+    ```
 
-10. primary manager worktreeの`tmp/worktrees.json`へ`status: active`で登録し、JSONを
+11. primary manager worktreeの`tmp/worktrees.json`へ`status: active`で登録し、JSONを
     原子的に置換します。担当ツール未定なら`assigned_tool: null`とします
-11. Issue作成後にworktree作成が失敗してもIssueを自動closeしません。worktree作成後に
-    レジストリ更新が失敗した場合もworktreeを自動削除せず、実在状態と再開手順を報告します
+12. registry更新後にlockを解放します。Issue作成後にworktree作成が失敗してもIssueを
+    自動closeしません。worktree作成後にregistry更新が失敗した場合もworktreeを自動削除せず、
+    実在状態と再開手順を報告してからlockを解放します
 
 ---
 
