@@ -100,7 +100,7 @@ milestone/issue ごとの進行状態は `tmp/milestone-{N}/phase-state.json`(Pr
 }
 ```
 
-- フェーズ名: `design` → `test` → `implement` → `docs` → `verify` → `review` → `ship`
+- フェーズ名: `investigate` → `design` → `test` → `implement` → `docs` → `verify` → `review` → `ship`
 - ファイルパスはブランチ名(`m{N}-slug` → `milestone-N`、`type/issue-N-topic` → `issue-N`)から決定します
 - テスト先行をスキップした場合は`skipped`へ`test`を追加し、`skip_reasons`へ理由を記録します
 - 各コマンドは開始時に読み込み、完了時に冪等に更新します。ファイルが無い場合は空状態として扱います
