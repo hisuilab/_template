@@ -11,8 +11,9 @@ result
 # === git-hooks.nix が生成するシンボリックリンク ===
 .pre-commit-config.yaml
 
-# === AI エージェント設定 ===
-.claude/
+# === AI エージェント設定(ローカル状態のみ、内容は追跡対象) ===
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 # === エディタ設定 ===
 .vscode/

@@ -17,6 +17,7 @@ related: null
 - [3. 採用案](#3-採用案)
 - [4. 理由](#4-理由)
 - [5. トレードオフと影響](#5-トレードオフと影響)
+- [6. 追記(2026-07-22、Issue #115)](#6-追記2026-07-22issue-115)
 
 ## 1. 背景と問題
 
@@ -48,3 +49,13 @@ related: null
 - 生成プロジェクトでは `AGENTS.md`・`CLAUDE.md`・`.claude/rules/dev-policy.md` の3ファイルが提供される
 - `.claude/rules/dev-policy.md` は「ファイルを読んでから変更する」「検証結果を報告する」程度の最小ポリシーとし、プロジェクト固有の規約は生成後に手動で追加する運用とする
 - 将来的に commands/skills を標準化できた段階で M9 の発展版として再設計する余地を残す
+
+## 6. 追記(2026-07-22、Issue #115)
+
+「`_template` 自身の `.claude/` は実験運用中でありリスクが高い」という本Decisionの前提（1節）は、
+20件超のIssueで実運用された実績を踏まえて解消しました。Issue #114/#115で `_template` 自身の
+運用ワークフローをharness非依存の正本（`agent-workflow/`）とアダプター（`.claude/`・`.codex/`）
+へ再編し、git追跡対象にしています（詳細は
+[`docs/design/issue-114-agent-workflow-portability.md`](../design/issue-114-agent-workflow-portability.md)）。
+ただし本Decision自体の採用案（選択肢A、生成対象は最小限の`.claude/`scaffoldのまま）は変更しま
+せん。生成対象（`features/ai-agent`）の同梱範囲を見直すかどうかはIssue #116のスコープです。
