@@ -1,12 +1,12 @@
 ---
-status: approved
+status: implemented
 proposed_at: 2026-07-22
 approved_at: 2026-07-22T20:47:23+09:00
 approved_by: PM
 approval_ref: "chat:2026-07-22T20:47:23+09:00 user approved option 1"
 approved_scope: "Issue #142 design proposal and design commit"
 risk_acceptance: null
-implemented_at: null
+implemented_at: 2026-07-22
 related: "#142"
 ---
 
