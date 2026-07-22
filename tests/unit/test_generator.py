@@ -263,6 +263,25 @@ class TestPlanner:
         assert "myproj/README.md" in dest_paths
         assert "evil/README.md" not in dest_paths
 
+    def test_plan_profile_variables_reach_render_stage(self, tmp_path: Path) -> None:
+        payload = tmp_path / "parts" / "base" / "payload"
+        payload.mkdir(parents=True)
+        (payload / "config.txt").write_text("app={{app_name}}\n")
+        part = PartSchema(
+            id="base",
+            layer="base",
+            summary="base",
+            placeholders_required=("app_name",),
+        )
+        req = GenerateRequest(name="myproj", profile_id="test", output_path=tmp_path / "out")
+        gen_plan = make_plan(
+            req, [part], template_root=tmp_path, profile_variables={"app_name": "myapp"}
+        )
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        render(gen_plan, staging)
+        assert (staging / "config.txt").read_text() == "app=myapp\n"
+
 
 # ---------------------------------------------------------------------------
 # Renderer

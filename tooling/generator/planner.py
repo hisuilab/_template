@@ -45,8 +45,11 @@ def plan(
     profile_variables: Mapping[str, str] | None = None,
 ) -> GenerationPlan:
     variables: dict[str, str] = dict(profile_variables or {})
-    # Reserved keys always win; profile variables cannot override them.
-    variables["project_name"] = request.name
+    # Reserved keys always win; enforce via _RESERVED so adding a new reserved key here
+    # is sufficient — no other site needs updating.
+    _reserved_values: dict[str, str] = {"project_name": request.name}
+    for key in _RESERVED:
+        variables[key] = _reserved_values[key]
 
     for part in parts:
         for ph in part.placeholders_required:
