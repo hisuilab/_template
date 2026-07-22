@@ -131,27 +131,31 @@ tooling.generator.cli
 ### 6.1. Part レイヤー構成（目標）
 
 > [!NOTE]
-> `starter` レイヤーと `starter-*` プロファイル名は Issue #60 で実装済みです。
+> 「実装済み」の状態は 2.節（現行実装）が正本です。この表の「実装済み（2節参照）」行は 2.節に追従しています。未実装行はフェーズ4以降の目標です。
 
-| レイヤー | Parts | 役割 | 状態 |
+| レイヤー | Parts（目標構成） | 役割 | 状態 |
 | -------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------ |
-| `base` | `base` | 現行と同じ | 実装済み |
-| `starter` | `starter/cli` / `starter/web-api` / `starter/library` | 即動くスターター（`src/main.py` 等）。architecture 不要 | 実装済み |
-| `scale` | `scale/small` / `scale/medium` / `scale/large` | 段階的 docs 骨格（requirements / architecture / design）＋文書テンプレート（`docs/_templates/`） | 一部実装済み |
-| `architecture` | `architecture/layered` / `architecture/ddd` / `architecture/ddd-modules` / `architecture/ddd-contexts` | src 層構造（presentation / domain / application / infrastructure / interface） | 未実装 |
-| `lang` | `lang/python` / `lang/typescript` | 言語環境（現行と同じ） | 実装済み |
-| `features` | `features/ai-agent`（拡充） / `features/github-project` / `features/github-rulesets` / `features/logging-*` | オプション機能 | 実装済み |
+| `base` | `base` | 現行と同じ | 実装済み（2節参照） |
+| `starter` | `starter/cli` / `starter/web-api` / `starter/library` / `starter/web-htmx` ＋ 複合 Part（`-python`/`-rust`/`-go` 等） | 即動くスターター。architecture 不要 | 実装済み（2節参照） |
+| `scale` | `scale/small` / `scale/medium` / `scale/large` | 段階的 docs 骨格（requirements / architecture / design）＋文書テンプレート（`docs/_templates/`） | `scale/small` のみ実装済み |
+| `architecture` | `architecture/layered` / `architecture/ddd` / `architecture/ddd-modules` / `architecture/ddd-contexts` | src 層構造（presentation / domain / application / infrastructure / interface） | 未実装（フェーズ4） |
+| `lang` | `lang/python` / `lang/typescript` / `lang/rust` / `lang/go` | 言語環境（現行と同じ） | 実装済み（2節参照） |
+| `features` | `features/ai-agent`（拡充） / `features/github-project` / `features/github-rulesets` / `features/logging-*` | オプション機能 | 実装済み（2節参照） |
 
 ### 6.2. プロファイル構成（目標）
 
 ```text
-starter-cli     = base + starter/cli     + features/*    （architecture 不要）  ← 実装済み
-starter-web-api = base + starter/web-api + features/*                           ← 実装済み
-starter-library = base + starter/library + features/*                           ← 実装済み
-small           = base + scale/small + architecture/layered + features/*        （未実装）
-small-ddd       = base + scale/small + architecture/ddd    + features/*        （未実装）
-medium-ddd      = base + scale/medium + architecture/ddd + architecture/ddd-modules + features/*  （未実装）
-large-ddd       = base + scale/large + architecture/ddd + architecture/ddd-contexts + features/*  （未実装）
+# 実装済みプロファイル（現行 2節の現行プロファイルと対応）
+starter-cli       = base + scale/small + starter/cli       + features/*  ← 実装済み
+starter-web-api   = base + scale/small + starter/web-api   + features/*  ← 実装済み
+starter-library   = base + scale/small + starter/library   + features/*  ← 実装済み
+starter-web-htmx  = base + scale/small + starter/web-htmx  + features/*  ← 実装済み
+
+# フェーズ4以降の目標プロファイル（architecture レイヤーが必要）
+small             = base + scale/small  + architecture/layered + features/*                （未実装）
+small-ddd         = base + scale/small  + architecture/ddd     + features/*                （未実装）
+medium-ddd        = base + scale/medium + architecture/ddd + architecture/ddd-modules + features/*  （未実装）
+large-ddd         = base + scale/large  + architecture/ddd + architecture/ddd-contexts + features/* （未実装）
 ```
 
 ### 6.3. src 支配権の整理
