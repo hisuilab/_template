@@ -38,10 +38,11 @@ Production ModeのIssue作業worktreeを確定します。担当Role: Manager→
 6. `scripts/worktree-safety plan-create --manager-root <root> --issue <N> --branch <branch>
    --path <path> --tool <tool>`を実行します。helperが未知version、Issue・branch・pathの競合、
    未登録を含む同時Issue worktree数3への到達を検出した場合は停止します
-7. helperが返した作成計画JSONのIssue、branch、絶対path、base SHA、担当tool、現在のworktree数を
-   意思決定レポートで提示し、local Git操作の承認を得ます
-8. planと同じ入力へ`--approved-base <base_sha>`を付け、`scripts/worktree-safety apply-create`を
-   実行します。helper自身がlockを取得し、base・競合・上限・schemaを再検証してからworktree、
+7. helperが返した作成計画JSONのIssue、branch、絶対path、base SHA、担当tool、現在のworktree数、
+   `plan_token`を意思決定レポートで提示し、local Git操作の承認を得ます
+8. planと同じ入力へ`--approved-base <base_sha> --approved-plan <plan_token>`を付け、
+   `scripts/worktree-safety apply-create`を実行します。helper自身がlockを取得し、承認対象全体、
+   base・競合・上限・schemaを再検証してから承認済みbase SHAを起点にworktree、
    `phase-state.json`、registry entryを作成します
 9. helperが状態変化を検出した場合は承認を再利用せず停止します。primary manager worktreeの
    branchは切り替えません。返却JSONと作成結果を報告します

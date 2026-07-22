@@ -59,15 +59,20 @@ GitHubが一時的に参照できない場合は既存の`pr`を消去せず、s
 `issue-{N}`指定時は1件、`merged`指定時はマージ済み候補を検出します。人間と外部スケジューラーの
 どちらから呼ばれても同じ手順を使い、検出だけでは削除しません。
 
-1. `/manage:status`相当で対象候補を観測し、GitHubからPR stateとhead SHAを取得します
+1. `/manage:status`相当で対象候補を観測し、対象PR番号を特定します。stateやSHAを引数で指定しては
+   いけません
 2. 対象ごとに`scripts/worktree-safety plan-cleanup --manager-root <root> --issue <N>
-   --pr-state <state> --pr-head <sha>`を実行します
+   --pr <pr-number>`を実行します。helperがGitHubからrepository、state、head SHA、head branchを
+   取得します
 3. helperが非0終了した対象は候補から除外し、dirty・detached HEAD・path/branch/SHA不一致等の
    理由をそのまま報告します
-4. helperのJSONにあるIssue、絶対path、branch、head SHA、worktree/branchの有無、`force_branch`
-   を意思決定レポートで提示し、PMの承認を得ます
-5. 承認後、同じ入力と`--approved-head <sha>`を付けて`apply-cleanup`を実行します。helper自身が
-   lockを取得し、状態を再検証してからworktree・local branch・registry entryを削除します
+4. helperのJSONにあるIssue、repository、PR番号・state、PR head branch、絶対path、local branch、
+   head SHA、worktree/branchの有無、`force_branch`、`plan_token`を意思決定レポートで提示し、
+   PMの承認を得ます
+5. 承認後、同じ入力と`--approved-head <sha> --approved-plan <plan_token>`を付けて
+   `apply-cleanup`を実行します。helper自身がlockを取得し、GitHub状態を再取得して承認対象全体と
+   状態を再検証してから
+   worktreeを削除し、期待SHAとのcompare-and-deleteでlocal branchを削除してregistryを更新します
 6. helperが状態変化を検出した場合は承認を再利用せず停止します。返却JSONと完了済み操作を
    報告し、必要なら同じplanからやり直します
 

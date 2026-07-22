@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# requires: git, jq
+# requires: gh, git, jq
 # jq filters intentionally use single-quoted jq variables such as $issue.
 # shellcheck disable=SC2016
 set -euo pipefail
@@ -17,9 +17,9 @@ branch=""
 worktree_path=""
 tool=""
 approved_base=""
-pr_state=""
-pr_head=""
 approved_head=""
+approved_plan=""
+pr_number=""
 owner_token=""
 
 while [ "$#" -gt 0 ]; do
@@ -48,16 +48,16 @@ while [ "$#" -gt 0 ]; do
     approved_base="${2:-}"
     shift 2
     ;;
-  --pr-state)
-    pr_state="${2:-}"
-    shift 2
-    ;;
-  --pr-head)
-    pr_head="${2:-}"
-    shift 2
-    ;;
   --approved-head)
     approved_head="${2:-}"
+    shift 2
+    ;;
+  --approved-plan)
+    approved_plan="${2:-}"
+    shift 2
+    ;;
+  --pr)
+    pr_number="${2:-}"
     shift 2
     ;;
   --owner-token)
@@ -288,7 +288,8 @@ validate_create_plan() {
 }
 
 emit_create_plan() {
-  json_ok \
+  local payload plan_token
+  payload="$(json_ok \
     --arg operation create \
     --argjson issue "$issue" \
     --arg manager_root "$manager_root" \
@@ -297,7 +298,9 @@ emit_create_plan() {
     --arg base_sha "$base_sha" \
     --arg tool "$normalized_tool" \
     --argjson worktree_count "$issue_worktree_count" \
-    '{ok:true,operation:$operation,issue:$issue,manager_root:$manager_root,path:$path,branch:$branch,base_sha:$base_sha,assigned_tool:(if $tool == "" then null else $tool end),worktree_count:$worktree_count}'
+    '{operation:$operation,issue:$issue,manager_root:$manager_root,path:$path,branch:$branch,base_sha:$base_sha,assigned_tool:(if $tool == "" then null else $tool end),worktree_count:$worktree_count}')"
+  plan_token="$(git -C "$manager_root" hash-object --stdin <<<"$payload")"
+  jq -c --arg plan_token "$plan_token" '. + {ok:true,plan_token:$plan_token}' <<<"$payload"
 }
 
 resolve_registry_path() {
@@ -311,11 +314,24 @@ resolve_registry_path() {
   fi
 }
 
+observe_pr() {
+  local repo_json pr_json
+  repo_json="$(cd "$manager_root" && gh repo view --json nameWithOwner 2>/dev/null)" ||
+    die "failed to resolve GitHub repository"
+  repo_slug="$(jq -r '.nameWithOwner // empty' <<<"$repo_json")"
+  [ -n "$repo_slug" ] || die "invalid GitHub repository response"
+  pr_json="$(gh pr view "$pr_number" --repo "$repo_slug" --json state,headRefOid,headRefName 2>/dev/null)" ||
+    die "failed to resolve GitHub PR"
+  jq -e . >/dev/null 2>&1 <<<"$pr_json" || die "invalid GitHub PR response"
+  pr_state="$(jq -r '.state // empty' <<<"$pr_json")"
+  pr_head="$(jq -r '.headRefOid // empty' <<<"$pr_json")"
+  pr_head_branch="$(jq -r '.headRefName // empty' <<<"$pr_json")"
+}
+
 validate_cleanup_plan() {
   require_issue
   validate_registry
-  [ "$pr_state" = "MERGED" ] || die "PR is not merged"
-  [[ $pr_head =~ ^[0-9a-fA-F]{40}$ ]] || die "invalid PR head SHA"
+  [[ $pr_number =~ ^[1-9][0-9]*$ ]] || die "invalid PR number"
   local data stored_path current_branch upstream_sha
   data="$(registry_json)"
   [ "$(jq -r --arg key "$issue_key" '.worktrees | has($key)' <<<"$data")" = "true" ] || die "issue is not registered"
@@ -323,6 +339,10 @@ validate_cleanup_plan() {
   branch="$(jq -r --arg key "$issue_key" '.worktrees[$key].branch' <<<"$data")"
   resolve_registry_path "$stored_path"
   normalize_sibling_path
+  observe_pr
+  [ "$pr_state" = "MERGED" ] || die "PR is not merged"
+  [[ $pr_head =~ ^[0-9a-fA-F]{40}$ ]] || die "invalid PR head SHA"
+  [ "$pr_head_branch" = "$branch" ] || die "PR head branch mismatch"
   worktree_exists=false
   branch_exists=false
   force_branch=false
@@ -352,9 +372,14 @@ validate_cleanup_plan() {
 }
 
 emit_cleanup_plan() {
-  json_ok \
+  local payload plan_token
+  payload="$(json_ok \
     --arg operation cleanup \
     --argjson issue "$issue" \
+    --argjson pr "$pr_number" \
+    --arg pr_state "$pr_state" \
+    --arg repo "$repo_slug" \
+    --arg pr_head_branch "$pr_head_branch" \
     --arg manager_root "$manager_root" \
     --arg path "$worktree_path" \
     --arg branch "$branch" \
@@ -362,7 +387,9 @@ emit_cleanup_plan() {
     --argjson worktree_exists "$worktree_exists" \
     --argjson branch_exists "$branch_exists" \
     --argjson force_branch "$force_branch" \
-    '{ok:true,operation:$operation,issue:$issue,manager_root:$manager_root,path:$path,branch:$branch,head_sha:$head_sha,worktree_exists:$worktree_exists,branch_exists:$branch_exists,force_branch:$force_branch}'
+    '{operation:$operation,issue:$issue,repository:$repo,pr:$pr,pr_state:$pr_state,pr_head_branch:$pr_head_branch,manager_root:$manager_root,path:$path,branch:$branch,head_sha:$head_sha,worktree_exists:$worktree_exists,branch_exists:$branch_exists,force_branch:$force_branch}')"
+  plan_token="$(git -C "$manager_root" hash-object --stdin <<<"$payload")"
+  jq -c --arg plan_token "$plan_token" '. + {ok:true,plan_token:$plan_token}' <<<"$payload"
 }
 
 require_manager
@@ -374,10 +401,13 @@ plan-create)
   ;;
 apply-create)
   [ -n "$approved_base" ] || die "--approved-base is required"
+  [ -n "$approved_plan" ] || die "--approved-plan is required"
   acquire_lock apply-create
   validate_create_plan
   [ "$base_sha" = "$approved_base" ] || die "approved base changed"
-  git -C "$manager_root" worktree add "$worktree_path" -b "$branch" main >/dev/null 2>&1 || die "worktree creation failed"
+  create_plan="$(emit_create_plan)"
+  [ "$(jq -r '.plan_token' <<<"$create_plan")" = "$approved_plan" ] || die "approved create plan changed"
+  git -C "$manager_root" worktree add "$worktree_path" -b "$branch" "$approved_base" >/dev/null 2>&1 || die "worktree creation failed"
   mkdir -p "$worktree_path/tmp/issue-$issue"
   phase_tmp="$(mktemp "$worktree_path/tmp/issue-$issue/phase-state.json.XXXXXX")"
   printf '%s\n' '{"completed":[],"skipped":[],"skip_reasons":{},"current":null}' >"$phase_tmp"
@@ -396,18 +426,18 @@ plan-cleanup)
   ;;
 apply-cleanup)
   [ -n "$approved_head" ] || die "--approved-head is required"
+  [ -n "$approved_plan" ] || die "--approved-plan is required"
   acquire_lock apply-cleanup
   validate_cleanup_plan
+  cleanup_plan="$(emit_cleanup_plan)"
+  [ "$(jq -r '.plan_token' <<<"$cleanup_plan")" = "$approved_plan" ] || die "approved cleanup plan changed"
   [ "$local_head" = "$approved_head" ] || die "approved head changed"
   if [ "$worktree_exists" = true ]; then
     git -C "$manager_root" worktree remove -- "$worktree_path" >/dev/null 2>&1 || die "worktree removal failed"
   fi
   if [ "$branch_exists" = true ]; then
-    if [ "$force_branch" = true ]; then
-      git -C "$manager_root" branch -D "$branch" >/dev/null 2>&1 || die "branch deletion failed"
-    else
-      git -C "$manager_root" branch -d "$branch" >/dev/null 2>&1 || die "branch deletion failed"
-    fi
+    git -C "$manager_root" update-ref -d "refs/heads/$branch" "$approved_head" >/dev/null 2>&1 ||
+      die "branch changed before deletion"
   fi
   atomic_registry_filter 'del(.worktrees[$key])' --arg key "$issue_key"
   release_owned_lock

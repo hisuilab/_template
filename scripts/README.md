@@ -18,5 +18,5 @@
 
 - フォーマッタ・linter本体のロジック（treefmt / rumdl / gitleaks / convco が個別に持ちます）
 - gitフックの管理（`git-hooks.nix`のshellHookが担当します）
-- GitHub状態の取得とPM承認（呼び出し元のワークフローが担当します）
+- GitHub状態の変更とPM承認（`worktree-safety`はcleanup判定に必要なPR状態をreadだけします）
 - remote branchの作成・削除（`worktree-safety`はlocal Gitだけを操作します）
