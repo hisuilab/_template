@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 proposed_at: 2026-07-23
 approved_at: 2026-07-23
 approved_by: PM
@@ -75,7 +75,7 @@ PR #146 で `agent-workflow/commands/manage.md` が追加され、`/manage:statu
 管理責任: primary manager worktreeから並列Issue worktreeの状態を観測します。
 ...
 
-`../../../../agent-workflow/commands/manage.md`を読み、`2. manage:status`の指示に従ってください。
+`../../../agent-workflow/commands/manage.md`を読み、`2. manage:status`の指示に従ってください。
 ```
 
 ## 5. 失敗とロールバック

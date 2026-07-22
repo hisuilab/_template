@@ -8,6 +8,7 @@
 
 - `status.md`: 全worktreeまたは指定worktreeの状態を同期・表示する
 - `assign.md`: worktreeの担当ツール(claude/codex/human)を変更する
+- `triage.md`: Open Issueをグルーピングし、着手優先順位を提案する
 - `cleanup.md`: マージ済みworktreeの削除計画を作成し、承認後に適用する
 
 ## 3. 責任外

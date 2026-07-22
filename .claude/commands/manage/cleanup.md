@@ -6,4 +6,4 @@
 副作用: 承認済みworktree・local branchの削除、`tmp/worktrees.json`のregistry更新
 承認: 削除計画を提示し、apply実行直前に承認を得ます。
 
-`../../../agent-workflow/commands/manage.md`を読み、`4. manage:cleanup`の指示に従ってください。
+`../../../agent-workflow/commands/manage.md`を読み、`5. manage:cleanup`の指示に従ってください。
