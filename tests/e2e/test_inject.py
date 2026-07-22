@@ -120,3 +120,29 @@ class TestInjectSubcommand:
         r = _inject("features/logging-python", target)
         assert r.returncode != 0
         assert "required" in r.stderr.lower() or "requires" in r.stderr.lower()
+
+    def test_inject_all_skip_does_not_update_manifest(self, tmp_path: Path) -> None:
+        """全ファイルが既存でskipの場合、manifest に Part を記録しないことを確認します。"""
+        import tomllib
+
+        output = _generate("myapp", "starter-cli", tmp_path, lang="python")
+        # logging-python のファイルを手動で配置してすべてskipさせる
+        (output / "src" / "logger.py").write_text("# pre-existing\n")
+        r = _inject("features/logging-python", output)
+        assert r.returncode == 0, r.stderr
+        with (output / ".template-manifest.toml").open("rb") as f:
+            data = tomllib.load(f)
+        applied_ids = [entry["part_id"] for entry in data.get("applied", [])]
+        assert "features/logging-python" not in applied_ids, (
+            "manifest should NOT record part when all files were skipped"
+        )
+
+    def test_inject_all_skip_allows_retry(self, tmp_path: Path) -> None:
+        """全skipでmanifest未記録の場合、再実行が可能であることを確認します。"""
+        output = _generate("myapp", "starter-cli", tmp_path, lang="python")
+        (output / "src" / "logger.py").write_text("# pre-existing\n")
+        r1 = _inject("features/logging-python", output)
+        assert r1.returncode == 0, r1.stderr
+        # 再実行できる（already applied と弾かれない）
+        r2 = _inject("features/logging-python", output)
+        assert r2.returncode == 0, f"retry should succeed but got: {r2.stderr}"
