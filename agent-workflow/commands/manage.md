@@ -65,12 +65,15 @@ worker起動は行わず、PM承認後の次ステップとして`/plan:issue N`
 
 ### 4.1. 読み取り対象
 
-1. `gh issue list --state open --json number,title,labels,milestone,assignees,body,url`でOpen Issueを
-   読みます。GitHub参照に失敗した場合は、ローカル情報だけで順位を確定せず停止します
+1. `gh issue list --state open --limit 200 --json number,title,labels,milestone,assignees,body,url`で
+   Open Issueを読みます。GitHub参照に失敗した場合は、ローカル情報だけで順位を確定せず
+   停止します。Open Issue数が取得上限に達した場合は、候補漏れの可能性を「要確認」として
+   報告し、順位を確定しません
 2. 各Issueの本文から、`depends on`、`blocked by`、`requires`、`関連Issue`、`Follow-up of`、
    `#N`参照などの明示的な依存・関連記述を抽出します
-3. `gh pr list --state open --json number,title,headRefName,labels,url`で関連PRを読み、Issue番号を
-   branch名、PR本文、タイトルから推定します。推定は事実ではなく「推測」として扱います
+3. `gh pr list --state open --json number,title,headRefName,labels,url,body,closingIssuesReferences`で
+   関連PRを読み、Issue番号をbranch名、PR本文、タイトル、closing issue参照から推定します。
+   推定は事実ではなく「推測」として扱います
 4. `tmp/worktrees.json`、`git worktree list --porcelain`、各worktreeの
    `tmp/issue-{N}/phase-state.json`を読み、稼働中Issueと空き枠を確認します。空き枠は
    `3 - 稼働中Issue worktree数`です

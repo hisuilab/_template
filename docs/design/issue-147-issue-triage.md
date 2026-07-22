@@ -87,7 +87,7 @@ flowchart LR
 | `/plan:issue` | PMが選んだIssueのworktree作成と引き渡しを行います | 候補比較と優先順位判断 |
 | `tmp/worktrees.json` | Issue、worktree、担当ツールの関連付けを保持します | backlog全体の正本 |
 | GitHub Issue/PR | Open Issue、label、milestone、関連PR、本文上の依存記述の正本です | AI推測した依存関係の確定 |
-| `tests/unit/scripts/check-readme.bats`等 | コマンド一覧やREADME同期の構造検証を担います | GitHub APIを使う実データ順位付けの完全検証 |
+| `tests/unit/consistency/agent-workflow.bats` | `/manage:triage`のコマンド契約、権限表、README同期の構造検証を担います | GitHub APIを使う実データ順位付けの完全検証 |
 
 `/manage:triage`は、読み取った情報を次の2種類に分けて出力します。
 
