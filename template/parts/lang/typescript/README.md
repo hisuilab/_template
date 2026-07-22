@@ -10,6 +10,7 @@ TypeScript 言語環境（nodejs / biome）を提供する lang Part です。
 - `payload/flake.nix`: base packages + nodejs + biome を含む devShell
 - `payload/treefmt.nix`: `treefmt-base.nix`を`imports`+biome（.ts / .tsx）
 - `payload/justfile`: `common.just`を`import`+`type-check`（npx tsc）+`lint`（treefmt + biome lint）+`verify`（`github-*`等の共通レシピは`common.just`側にあり複製しない。issue #97）
+- `payload/package.json`: TypeScript 用途別 Part が共有する npm scripts と devDependencies
 - `payload/dot-gitignore`: base 共通内容 + `node_modules/`
 
 ## 3. 責任外

@@ -7,3 +7,11 @@ conflicts = []
 
 [placeholders]
 required = ["project_name"]
+
+[[files]]
+path = "pyproject.toml"
+strategy = "replace"
+
+[[files]]
+path = "src/app.py"
+strategy = "replace"

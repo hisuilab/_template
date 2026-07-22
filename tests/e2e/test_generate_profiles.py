@@ -10,6 +10,7 @@ the missing payload files (e.g. rumdl.toml).
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -196,6 +197,24 @@ class TestGenerateStarterWebApi:
         output = _generate("myapi", "starter-web-api", tmp_path)
         assert (output / "src" / "app.py").exists()
         assert (output / "src" / "routes" / "README.md").exists()
+
+    @pytest.mark.parametrize("dependency", ["fastapi", "httpx", "python-dotenv", "uvicorn"])
+    def test_lang_python_pyproject_has_web_api_deps(self, tmp_path: Path, dependency: str) -> None:
+        output = _generate("myapi", "starter-web-api", tmp_path, lang="python")
+        pyproject = (output / "pyproject.toml").read_text()
+        assert dependency in pyproject
+
+    def test_lang_python_app_defines_fastapi_health(self, tmp_path: Path) -> None:
+        output = _generate("myapi", "starter-web-api", tmp_path, lang="python")
+        app_py = (output / "src" / "app.py").read_text()
+        assert "FastAPI" in app_py
+        assert '"/health"' in app_py
+
+    def test_lang_python_app_loads_dotenv(self, tmp_path: Path) -> None:
+        output = _generate("myapi", "starter-web-api", tmp_path, lang="python")
+        app_py = (output / "src" / "app.py").read_text()
+        assert "from dotenv import load_dotenv" in app_py
+        assert "load_dotenv()" in app_py
 
     def test_rumdl_toml_present(self, tmp_path: Path) -> None:
         output = _generate("myapi", "starter-web-api", tmp_path)
@@ -457,6 +476,21 @@ class TestLangCli:
     def test_lang_typescript_biome_json_exists(self, tmp_path: Path) -> None:
         output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
         assert (output / "biome.json").exists()
+
+    def test_lang_typescript_package_json_exists(self, tmp_path: Path) -> None:
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        package_json = output / "package.json"
+        assert package_json.exists()
+        data = json.loads(package_json.read_text())
+        assert "typescript" in data["devDependencies"]
+        assert "@biomejs/biome" in data["devDependencies"]
+
+    def test_lang_typescript_package_json_scripts_match_justfile(self, tmp_path: Path) -> None:
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        data = json.loads((output / "package.json").read_text())
+        assert data["scripts"]["type-check"] == "just type-check"
+        assert data["scripts"]["lint"] == "just lint"
+        assert data["scripts"]["format"] == "just format"
 
     def test_lang_python_gitignore_contains_pycache(self, tmp_path: Path) -> None:
         output = _generate("pyapp", "starter-cli", tmp_path, lang="python")
