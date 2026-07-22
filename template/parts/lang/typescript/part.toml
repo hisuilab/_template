@@ -25,5 +25,9 @@ path = "biome.json"
 strategy = "replace"
 
 [[files]]
+path = "package.json"
+strategy = "replace"
+
+[[files]]
 path = ".gitignore"
 strategy = "replace"
