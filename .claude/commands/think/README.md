@@ -6,7 +6,7 @@
 
 ## 2. 責任
 
-- `clarify.md`・`risks.md`: `agent-workflow/commands/think/`の対応ファイルを読む薄いラッパー
+- `clarify.md`・`risks.md`・`investigate.md`: `agent-workflow/commands/think/`の対応ファイルを読む薄いラッパー
 
 ## 3. 責任外
 
