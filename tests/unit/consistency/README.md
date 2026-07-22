@@ -6,7 +6,8 @@
 
 ## 2. 責任
 
-- 保持するもの: 複数ファイル間の整合性を検証するbatsテスト(`devshell.bats`、`git-hooks.bats`)
+- 保持するもの: 複数ファイル間の整合性を検証するbatsテスト(`agent-workflow.bats`、
+  `devshell.bats`、`git-hooks.bats`)
 
 ## 3. 責任外
 

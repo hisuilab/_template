@@ -8,7 +8,7 @@
 
 - `status.md`: 進捗確認コマンドの実行契約
 - `verify.md`: 検証コマンドの実行契約
-- `manage.md`: primary manager worktreeから行う並列worktreeの状態同期とcleanup
+- `manage.md`: primary manager worktreeから行うIssue triage、並列worktreeの状態同期とcleanup
 - `think/`・`plan/`・`build/`・`review/`・`ship/`・`verify/`・`auto/`・`template/`: フェーズ別サブディレクトリ(詳細は各READMEを参照)
 
 ## 3. 責任外
