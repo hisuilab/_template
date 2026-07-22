@@ -8,4 +8,4 @@ commit
 承認: commit実行直前に差分とcommit messageを提示します。文書更新自体は不要です
 (対象範囲内で自走します)。
 
-`../../agent-workflow/commands/plan/architecture.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/plan/architecture.md`を読み、その指示に従ってください。

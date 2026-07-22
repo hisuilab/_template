@@ -6,4 +6,4 @@
 副作用: GitHub Issue作成、`type/issue-N-topic` ブランチの作成、`tmp/issue-{N}/phase-state.json` の初期化
 承認: Issue内容・ブランチ名を提示し、承認後に作成します
 
-`../../agent-workflow/commands/plan/issue.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/plan/issue.md`を読み、その指示に従ってください。

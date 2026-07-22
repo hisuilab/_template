@@ -6,4 +6,4 @@
 副作用: 画面出力のみ
 承認: 不要です。
 
-`../../agent-workflow/commands/think/risks.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/think/risks.md`を読み、その指示に従ってください。

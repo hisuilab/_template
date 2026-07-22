@@ -7,4 +7,4 @@
 副作用: 画面出力のみ
 承認: 質問が必要な場合は意思決定レポートで確認します。
 
-`../../agent-workflow/commands/think/clarify.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/think/clarify.md`を読み、その指示に従ってください。

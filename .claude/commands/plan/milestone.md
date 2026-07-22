@@ -6,4 +6,4 @@
 副作用: `m{N}-slug` ブランチの作成、`tmp/milestone-{N}/phase-state.json` の初期化
 承認: ブランチ名を提示し、承認後に作成します
 
-`../../agent-workflow/commands/plan/milestone.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/plan/milestone.md`を読み、その指示に従ってください。

@@ -6,4 +6,4 @@
 副作用: なし
 承認: 不要です。
 
-`../../agent-workflow/commands/template/generate.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/template/generate.md`を読み、その指示に従ってください。

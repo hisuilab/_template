@@ -7,4 +7,4 @@
 副作用: 検証実行と結果レポート(`tmp/`)
 承認: 不要です。
 
-`../agent-workflow/commands/verify.md`を読み、その指示に従ってください。
+`../../agent-workflow/commands/verify.md`を読み、その指示に従ってください。

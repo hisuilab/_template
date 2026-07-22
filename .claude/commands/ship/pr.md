@@ -10,4 +10,4 @@ Modeはcommit・push・PR作成です。
 承認: mergeまたはcommitの実行直前に対象commit一覧を提示します。push・PR作成
 (Production Mode)は実行直前に明示承認を得ます。
 
-`../../agent-workflow/commands/ship/pr.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/ship/pr.md`を読み、その指示に従ってください。

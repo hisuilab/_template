@@ -7,4 +7,4 @@
 副作用: `tmp/{work-dir}/ship-readiness.md`の作成・上書き
 承認: 不要です。
 
-`../../agent-workflow/commands/ship/readiness.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/ship/readiness.md`を読み、その指示に従ってください。

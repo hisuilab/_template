@@ -6,4 +6,4 @@
 副作用: 実装・文書の作成・更新
 承認: 不要です(マイルストーン/Issue・設計の範囲内で自走します)。
 
-`../../agent-workflow/commands/build/implement.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/build/implement.md`を読み、その指示に従ってください。

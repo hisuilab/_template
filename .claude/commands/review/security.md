@@ -6,4 +6,4 @@
 副作用: `tmp/{work-dir}/security-review.md`の作成・上書き
 承認: 不要です。
 
-`../../agent-workflow/commands/review/security.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/review/security.md`を読み、その指示に従ってください。

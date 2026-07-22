@@ -9,4 +9,4 @@
 `/build:docs`の複数commit一括提示直前、`/ship:pr`のmerge/push前)。加えて開始時に
 対象マイルストーンと開始位置を意思決定レポートで確認します。
 
-`../../agent-workflow/commands/auto/milestone.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/auto/milestone.md`を読み、その指示に従ってください。

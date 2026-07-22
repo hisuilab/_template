@@ -12,4 +12,4 @@
 承認: commit実行直前に、分割したcommit一覧(ファイル・message案)をまとめて1回提示します。
 文書更新自体は不要です(直前の実装差分の範囲内で自走します)。
 
-`../../agent-workflow/commands/build/docs.md`を読み、その指示に従ってください。
+`../../../agent-workflow/commands/build/docs.md`を読み、その指示に従ってください。
