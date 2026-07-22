@@ -229,6 +229,40 @@ class TestPlanner:
         assert len(readme_files) == 1
         assert readme_files[0].src_path.parent.parent.name == "part_b"
 
+    def test_plan_profile_variables_substituted_in_path(self, tmp_path: Path) -> None:
+        self._make_part_dir(tmp_path, "base", {"src/{{app_name}}/main.py": ""})
+        part = PartSchema(
+            id="base",
+            layer="base",
+            summary="base",
+            placeholders_required=("app_name",),
+        )
+        req = GenerateRequest(name="myproj", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(
+            req, [part], template_root=tmp_path, profile_variables={"app_name": "myapp"}
+        )
+        dest_paths = [f.dest_path for f in result.files]
+        assert "src/myapp/main.py" in dest_paths
+
+    def test_plan_profile_variables_cannot_override_project_name(self, tmp_path: Path) -> None:
+        self._make_part_dir(tmp_path, "base", {"{{project_name}}/README.md": ""})
+        part = PartSchema(
+            id="base",
+            layer="base",
+            summary="base",
+            placeholders_required=("project_name",),
+        )
+        req = GenerateRequest(name="myproj", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(
+            req,
+            [part],
+            template_root=tmp_path,
+            profile_variables={"project_name": "evil"},
+        )
+        dest_paths = [f.dest_path for f in result.files]
+        assert "myproj/README.md" in dest_paths
+        assert "evil/README.md" not in dest_paths
+
 
 # ---------------------------------------------------------------------------
 # Renderer
