@@ -8,6 +8,7 @@ AI エージェント向け設定ファイル（`AGENTS.md`・`CLAUDE.md`・`.cl
 
 - `part.toml` によるメタデータと依存宣言
 - `payload/` 配下の生成対象ファイル群（`AGENTS.md`・`CLAUDE.md`・`dot-claude/rules/dev-policy.md`）
+- `AGENTS.md` に生成プロジェクト向けの基本方針（リポジトリ探索・コミット規約）を提供する
 
 ## 3. 責任外
 

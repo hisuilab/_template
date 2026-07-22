@@ -722,6 +722,15 @@ class TestAiAgentPart:
             ".claude/rules/dev-policy.md not found in generated output for starter-cli profile"
         )
 
+    def test_agents_md_contains_repository_exploration_section(self, tmp_path: Path) -> None:
+        output = _generate("aiapp", "starter-cli", tmp_path)
+        agents_md = output / "AGENTS.md"
+        assert agents_md.exists(), "AGENTS.md not found in generated output"
+        content = agents_md.read_text()
+        assert "リポジトリ探索" in content, (
+            "AGENTS.md is missing the repository exploration section"
+        )
+
 
 # ---------------------------------------------------------------------------
 # features/github-rulesets: .github/rulesets/ + scripts/github-setup-rules

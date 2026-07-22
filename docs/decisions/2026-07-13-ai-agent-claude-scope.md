@@ -4,7 +4,7 @@ proposed_at: 2026-07-13
 approved_at: 2026-07-13
 approved_by: PM
 approval_ref: "prototype-mode-m9"
-implemented_at: null
+implemented_at: 2026-07-23
 related: null
 ---
 
