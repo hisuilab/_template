@@ -24,7 +24,7 @@ from tooling.generator.errors import (
     ResolveError,
 )
 from tooling.generator.loader import load_part, load_parts_for_profile, load_profile
-from tooling.generator.manifest import read_manifest, write_manifest
+from tooling.generator.manifest import read_manifest, update_manifest, write_manifest
 from tooling.generator.models import (
     GenerateRequest,
     GenerationPlan,
@@ -32,6 +32,7 @@ from tooling.generator.models import (
     InjectResult,
     LangSpec,
     ManifestData,
+    ManifestEntry,
     PlannedFile,
 )
 from tooling.generator.planner import plan as make_plan
@@ -671,18 +672,267 @@ class TestManifest:
         from tooling.generator.manifest import MANIFEST_FILENAME
 
         (tmp_path / MANIFEST_FILENAME).write_text(
-            '[manifest]\nschema_version = "1"\nproject_name = "x"\ngenerated_at = "2026-01-01"\n\n[[applied]]\napplied_at = "2026-01-01"\n'
+            '[manifest]\nschema_version = "2"\nproject_name = "x"\ngenerated_at = "2026-01-01"\n'
+            'template_revision = ""\ngenerator_version = ""\n\n'
+            '[[applied]]\napplied_at = "2026-01-01"\n'
         )
         with pytest.raises(ManifestError, match="malformed"):
             read_manifest(tmp_path)
 
     def test_update_manifest_rejects_unsafe_part_id(self, tmp_path: Path) -> None:
-        from tooling.generator.manifest import update_manifest
-
         parts = [PartSchema(id="base", layer="base", summary="base")]
         write_manifest(tmp_path, parts, project_name="proj")
         with pytest.raises(ManifestError):
             update_manifest(tmp_path, part_id='evil"injection')
+
+
+# ---------------------------------------------------------------------------
+# Manifest v2 — RED tests (will pass after implementation)
+# ---------------------------------------------------------------------------
+
+
+class TestManifestV2:
+    """Tests for manifest v2 schema: atomic write, new fields, validation."""
+
+    # 1. atomic write — write_manifest uses tmp→rename
+    def test_write_manifest_is_atomic(self, tmp_path: Path) -> None:
+        """write_manifest() must write via .tmp then rename (no partial manifest left on error)."""
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(
+            tmp_path,
+            parts,
+            project_name="myapp",
+            files_by_part={"base": ["README.md", "flake.nix"]},
+            template_revision="abc1234",
+            generator_version="0.1.0",
+        )
+        # .tmp file must NOT remain after a successful write
+        assert not (tmp_path / (MANIFEST_FILENAME + ".tmp")).exists()
+        assert (tmp_path / MANIFEST_FILENAME).exists()
+
+    # 2a. v2 schema — template_revision and generator_version in [manifest]
+    def test_write_manifest_v2_header_fields(self, tmp_path: Path) -> None:
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(
+            tmp_path,
+            parts,
+            project_name="myapp",
+            files_by_part={"base": []},
+            template_revision="abc1234",
+            generator_version="0.1.0",
+        )
+        manifest = read_manifest(tmp_path)
+        assert manifest.template_revision == "abc1234"
+        assert manifest.generator_version == "0.1.0"
+
+    # 2b. v2 schema — part_digest and files in [[applied]] entries
+    def test_write_manifest_v2_entry_fields(self, tmp_path: Path) -> None:
+        parts = [
+            PartSchema(id="base", layer="base", summary="base"),
+            PartSchema(id="starter/cli", layer="starter", summary="cli"),
+        ]
+        write_manifest(
+            tmp_path,
+            parts,
+            project_name="myapp",
+            files_by_part={
+                "base": ["README.md", "flake.nix"],
+                "starter/cli": ["justfile"],
+            },
+            template_revision="abc1234",
+            generator_version="0.1.0",
+        )
+        manifest = read_manifest(tmp_path)
+        assert len(manifest.applied_entries) == 2
+        base_entry = next(e for e in manifest.applied_entries if e.part_id == "base")
+        assert "README.md" in base_entry.files
+        assert "flake.nix" in base_entry.files
+        cli_entry = next(e for e in manifest.applied_entries if e.part_id == "starter/cli")
+        assert "justfile" in cli_entry.files
+
+    # 2c. v2 schema — part_digest field round-trips
+    def test_write_manifest_v2_part_digest(self, tmp_path: Path) -> None:
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(
+            tmp_path,
+            parts,
+            project_name="myapp",
+            files_by_part={"base": []},
+            template_revision="",
+            generator_version="",
+            part_digests={"base": "sha256:deadbeef"},
+        )
+        manifest = read_manifest(tmp_path)
+        base_entry = next(e for e in manifest.applied_entries if e.part_id == "base")
+        assert base_entry.part_digest == "sha256:deadbeef"
+
+    # 3. v1 reading raises ManifestError
+    def test_read_manifest_v1_raises_manifest_error(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        (tmp_path / MANIFEST_FILENAME).write_text(
+            '[manifest]\nschema_version = "1"\nproject_name = "old"\ngenerated_at = "2026-01-01"\n'
+        )
+        with pytest.raises(ManifestError, match="schema_version"):
+            read_manifest(tmp_path)
+
+    # 4a. broken TOML raises ManifestError
+    def test_read_manifest_broken_toml_raises(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        (tmp_path / MANIFEST_FILENAME).write_text("not valid toml ][")
+        with pytest.raises(ManifestError, match="corrupt"):
+            read_manifest(tmp_path)
+
+    # 4b. duplicate part IDs raise ManifestError
+    def test_read_manifest_duplicate_part_id_raises(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        content = (
+            '[manifest]\nschema_version = "2"\nproject_name = "x"\n'
+            'generated_at = "2026-01-01"\ntemplate_revision = ""\ngenerator_version = ""\n\n'
+            '[[applied]]\npart_id = "base"\napplied_at = "2026-01-01"\npart_digest = ""\nfiles = []\n\n'
+            '[[applied]]\npart_id = "base"\napplied_at = "2026-01-01"\npart_digest = ""\nfiles = []\n'
+        )
+        (tmp_path / MANIFEST_FILENAME).write_text(content)
+        with pytest.raises(ManifestError, match="duplicate"):
+            read_manifest(tmp_path)
+
+    # 4c. wrong type for files raises ManifestError
+    def test_read_manifest_wrong_type_files_raises(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        content = (
+            '[manifest]\nschema_version = "2"\nproject_name = "x"\n'
+            'generated_at = "2026-01-01"\ntemplate_revision = ""\ngenerator_version = ""\n\n'
+            '[[applied]]\npart_id = "base"\napplied_at = "2026-01-01"\npart_digest = ""\nfiles = "not-a-list"\n'
+        )
+        (tmp_path / MANIFEST_FILENAME).write_text(content)
+        with pytest.raises(ManifestError, match="files"):
+            read_manifest(tmp_path)
+
+    # update_manifest: atomic write (no append), preserves existing entries
+    def test_update_manifest_is_atomic(self, tmp_path: Path) -> None:
+        from tooling.generator.manifest import MANIFEST_FILENAME
+
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(
+            tmp_path,
+            parts,
+            project_name="proj",
+            files_by_part={"base": ["README.md"]},
+            template_revision="",
+            generator_version="",
+        )
+        update_manifest(
+            tmp_path,
+            part_id="features/logging-python",
+            files=["src/logging.py"],
+            part_digest="sha256:cafe",
+        )
+        # .tmp file must NOT remain after a successful update
+        assert not (tmp_path / (MANIFEST_FILENAME + ".tmp")).exists()
+        manifest = read_manifest(tmp_path)
+        assert "base" in manifest.applied_part_ids
+        assert "features/logging-python" in manifest.applied_part_ids
+
+    # update_manifest: files and part_digest are written to the new entry
+    def test_update_manifest_records_files_and_digest(self, tmp_path: Path) -> None:
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(
+            tmp_path,
+            parts,
+            project_name="proj",
+            files_by_part={"base": []},
+            template_revision="",
+            generator_version="",
+        )
+        update_manifest(
+            tmp_path,
+            part_id="features/logging-python",
+            files=["src/logging.py"],
+            part_digest="sha256:cafe",
+        )
+        manifest = read_manifest(tmp_path)
+        entry = next(e for e in manifest.applied_entries if e.part_id == "features/logging-python")
+        assert "src/logging.py" in entry.files
+        assert entry.part_digest == "sha256:cafe"
+
+    # ManifestEntry is importable from models
+    def test_manifest_entry_is_dataclass(self) -> None:
+        entry = ManifestEntry(part_id="base", applied_at="2026-01-01")
+        assert entry.part_id == "base"
+        assert entry.files == ()
+        assert entry.part_digest == ""
+
+
+class TestApplierManifestV2:
+    """Tests that applier passes files_written/files_added to manifest correctly via cli."""
+
+    def test_do_generate_passes_files_to_manifest(self, tmp_path: Path) -> None:
+        """After generate, the manifest entry for each part must have a non-empty files list."""
+        import tempfile
+
+        from tooling.generator.applier import apply
+        from tooling.generator.manifest import write_manifest
+
+        # Write a manifest with files_by_part populated
+        fake_part = PartSchema(id="base", layer="base", summary="base")
+        write_manifest(
+            tmp_path,
+            [fake_part],
+            project_name="proj",
+            files_by_part={"base": ["README.md", "flake.nix"]},
+            template_revision="abc",
+            generator_version="0.1.0",
+        )
+        manifest = read_manifest(tmp_path)
+        base_entry = next(e for e in manifest.applied_entries if e.part_id == "base")
+        assert len(base_entry.files) > 0
+
+    def test_cmd_inject_records_files_in_manifest(self, tmp_path: Path) -> None:
+        """update_manifest with files= kwarg stores file list in the manifest entry."""
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(
+            tmp_path,
+            parts,
+            project_name="proj",
+            files_by_part={"base": []},
+            template_revision="",
+            generator_version="",
+        )
+        update_manifest(
+            tmp_path,
+            part_id="starter/cli",
+            files=["justfile", "src/main.py"],
+            part_digest="",
+        )
+        manifest = read_manifest(tmp_path)
+        entry = next(e for e in manifest.applied_entries if e.part_id == "starter/cli")
+        assert "justfile" in entry.files
+        assert "src/main.py" in entry.files
+
+    def test_cmd_inject_records_template_revision_in_manifest(self, tmp_path: Path) -> None:
+        """write_manifest records template_revision; update_manifest preserves it."""
+        parts = [PartSchema(id="base", layer="base", summary="base")]
+        write_manifest(
+            tmp_path,
+            parts,
+            project_name="proj",
+            files_by_part={"base": []},
+            template_revision="rev123",
+            generator_version="0.1.0",
+        )
+        update_manifest(
+            tmp_path,
+            part_id="features/x",
+            files=[],
+            part_digest="",
+        )
+        manifest = read_manifest(tmp_path)
+        assert manifest.template_revision == "rev123"
 
 
 # ---------------------------------------------------------------------------
