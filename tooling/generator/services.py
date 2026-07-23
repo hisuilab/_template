@@ -49,6 +49,18 @@ def validate_profile(profile: str, available: list[str]) -> str | None:
     return None
 
 
+def _available_langs_from_root(template_root: Path) -> list[str]:
+    """Return sorted lang names from ``parts/lang/`` in *template_root*.
+
+    Mirrors the ``_available_langs`` helper in ``cli.py`` without creating a
+    services→cli dependency.
+    """
+    lang_dir = template_root / "parts" / "lang"
+    if not lang_dir.exists():
+        return []
+    return sorted(p.name for p in lang_dir.iterdir() if p.is_dir())
+
+
 def _starter_lang_parts(
     profile_parts: tuple[str, ...], lang: str, template_root: Path
 ) -> tuple[str, ...]:
@@ -82,6 +94,10 @@ def resolve_selection(
     extra_parts: tuple[str, ...] = ()
 
     if lang is not None:
+        available_langs = _available_langs_from_root(template_root)
+        _lang_spec, err = validate_lang(lang, available_langs)
+        if err:
+            raise LoadError(err)
         lang_spec = LangSpec(lang=lang, role=None)
         extra_parts = (f"lang/{lang}",) + _starter_lang_parts(
             loaded_profile.parts, lang, template_root
