@@ -793,7 +793,11 @@ class TestGeneratorIntegration:
             cwd=str(REPO_ROOT),
         )
         assert result.returncode != 0
-        assert "cobol" in result.stderr or "unknown" in result.stderr
+        # Must be the friendly validation error, not a raw LoadError from a missing part file.
+        # Before the fix, stderr contained "part 'lang/cobol' not found" (LoadError).
+        # After the fix, it must contain "unknown lang 'cobol'" (validate_lang message).
+        assert "unknown lang 'cobol'" in result.stderr
+        assert "part 'lang/cobol' not found" not in result.stderr
 
     def test_generate_cli_without_output_defaults_to_name_main(self, tmp_path: Path) -> None:
         """--output absent → {cwd}/{name}/{name}-main/"""
@@ -1119,6 +1123,8 @@ class TestServicesResolveSelection:
             '[part]\nid = "base"\nlayer = "base"\nsummary = "base"\n'
         )
         (parts_dir / "payload").mkdir()
+        # Add parts/lang/python so validate_lang passes; no starter companion exists.
+        (tmp_path / "parts" / "lang" / "python").mkdir(parents=True)
 
         result = resolve_selection("mini", lang="python", template_root=tmp_path)
         # lang/python part is added but no starter/base-python companion exists
@@ -1144,3 +1150,19 @@ class TestServicesResolveSelection:
         result_crt = resolve_selection("starter-cli", lang="python", template_root=TEMPLATE_ROOT)
         assert result_gen.extended_profile.parts == result_crt.extended_profile.parts
         assert result_gen.lang_spec == result_crt.lang_spec
+
+    def test_resolve_selection_unknown_lang_raises_load_error_with_friendly_message(self) -> None:
+        """resolve_selection must raise LoadError with a friendly 'unknown lang' message.
+
+        Before the fix (issue #166), passing an invalid lang bypassed validate_lang
+        and produced a raw LoadError("part 'lang/cobol' not found ...") later.
+        After the fix, it must raise LoadError immediately with the validate_lang message.
+        """
+        from tooling.generator.errors import LoadError
+        from tooling.generator.services import resolve_selection
+
+        with pytest.raises(LoadError) as exc_info:
+            resolve_selection("starter-cli", lang="cobol", template_root=TEMPLATE_ROOT)
+        error_msg = str(exc_info.value)
+        assert "unknown lang 'cobol'" in error_msg
+        assert "part 'lang/cobol' not found" not in error_msg
