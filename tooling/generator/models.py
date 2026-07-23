@@ -57,6 +57,18 @@ class InjectResult:
 
 
 @dataclass(frozen=True)
+class ManifestEntry:
+    part_id: str
+    applied_at: str
+    part_digest: str = ""
+    files: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ManifestData:
     project_name: str
     applied_part_ids: tuple[str, ...]
+    # v2 additions
+    template_revision: str = ""
+    generator_version: str = ""
+    applied_entries: tuple[ManifestEntry, ...] = ()

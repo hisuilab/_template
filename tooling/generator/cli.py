@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -80,6 +81,23 @@ def _validate_profile(profile: str, available: list[str]) -> str | None:
     return services.validate_profile(profile, available)
 
 
+_GENERATOR_VERSION = "0.1.0"
+
+
+def _get_template_revision(template_root: Path) -> str:
+    """Return git HEAD SHA of template_root, or '' if unavailable."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(template_root), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip()
+    except Exception:
+        return ""
+
+
 def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int:
     """Run the generation pipeline with a pre-resolved output path."""
     try:
@@ -111,8 +129,22 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
             staging.mkdir()
             render(gen_plan, staging)
             result = apply(staging, output)
+        # Build files_by_part: each part gets all files_written (single-part assignment)
+        # For multi-part generation, files are shared; we assign all to the first part
+        # and leave others empty. A more precise mapping requires planner changes (separate issue).
+        files_by_part: dict[str, list[str]] = {p.id: [] for p in parts}
+        if parts:
+            files_by_part[parts[0].id] = list(result.files_written)
+        template_revision = _get_template_revision(_TEMPLATE_ROOT)
         try:
-            write_manifest(output, parts, project_name=name)
+            write_manifest(
+                output,
+                parts,
+                project_name=name,
+                files_by_part=files_by_part,
+                template_revision=template_revision,
+                generator_version=_GENERATOR_VERSION,
+            )
         except ManifestError as e:
             print(
                 f"Warning: files were generated but manifest creation failed: {e}\n"
@@ -390,7 +422,12 @@ def _cmd_inject(args: argparse.Namespace) -> int:
             )
             return 0
         try:
-            update_manifest(target, part_id=part_id)
+            update_manifest(
+                target,
+                part_id=part_id,
+                files=list(result.files_added),
+                part_digest="",
+            )
         except ManifestError as e:
             print(
                 f"Warning: files were injected but manifest update failed: {e}\n"
