@@ -292,6 +292,91 @@ class TestPlanner:
         gitignore_files = [f for f in result.files if f.dest_path == ".gitignore"]
         assert len(gitignore_files) == 1
 
+    def test_plan_part_variables_injected_into_context(self, tmp_path: Path) -> None:
+        """Part variables must be merged into the plan context so templates can use them (issue #135)."""
+        self._make_part_dir(tmp_path, "base", {"flake.nix": "packages = [{{lang_packages}}]\n"})
+        base_part = PartSchema(
+            id="base",
+            layer="base",
+            summary="base",
+            variables={"lang_packages": ""},
+        )
+        req = GenerateRequest(name="x", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(req, [base_part], template_root=tmp_path)
+        assert "lang_packages" in result.variables
+
+    def test_plan_lang_part_variables_override_base_defaults(self, tmp_path: Path) -> None:
+        """Lang part's variables must override base part's default variables (issue #135)."""
+        self._make_part_dir(tmp_path, "base", {"flake.nix": "packages = [{{lang_packages}}]\n"})
+        self._make_part_dir(tmp_path, "lang/python", {"treefmt.nix": "# python\n"})
+        base_part = PartSchema(
+            id="base",
+            layer="base",
+            summary="base",
+            variables={"lang_packages": ""},
+        )
+        lang_part = PartSchema(
+            id="lang/python",
+            layer="lang",
+            summary="python",
+            requires=("base",),
+            variables={"lang_packages": "pkgs.python3\n              pkgs.ruff"},
+        )
+        req = GenerateRequest(name="x", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(req, [base_part, lang_part], template_root=tmp_path)
+        assert result.variables["lang_packages"] == "pkgs.python3\n              pkgs.ruff"
+
+    def test_plan_part_variables_cannot_override_reserved_keys(self, tmp_path: Path) -> None:
+        """Part variables must NOT override reserved keys like project_name (issue #135)."""
+        self._make_part_dir(tmp_path, "base", {"README.md": "# {{project_name}}\n"})
+        base_part = PartSchema(
+            id="base",
+            layer="base",
+            summary="base",
+            variables={"project_name": "evil-override"},
+        )
+        req = GenerateRequest(name="myproj", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(req, [base_part], template_root=tmp_path)
+        assert result.variables["project_name"] == "myproj"
+
+    def test_plan_profile_variables_override_part_variables(self, tmp_path: Path) -> None:
+        """Profile variables must override part variables (issue #135)."""
+        self._make_part_dir(tmp_path, "base", {"flake.nix": "packages = [{{lang_packages}}]\n"})
+        base_part = PartSchema(
+            id="base",
+            layer="base",
+            summary="base",
+            variables={"lang_packages": "pkgs.default"},
+        )
+        req = GenerateRequest(name="x", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(
+            req,
+            [base_part],
+            template_root=tmp_path,
+            profile_variables={"lang_packages": "pkgs.overridden"},
+        )
+        assert result.variables["lang_packages"] == "pkgs.overridden"
+
+    def test_plan_part_variables_render_into_file_content(self, tmp_path: Path) -> None:
+        """Part variables injected into context must be substituted in file content (issue #135)."""
+        payload = tmp_path / "parts" / "base" / "payload"
+        payload.mkdir(parents=True)
+        (payload / "flake.nix").write_text("packages = [\n{{lang_packages}}\n]\n")
+        base_part = PartSchema(
+            id="base",
+            layer="base",
+            summary="base",
+            variables={"lang_packages": "pkgs.gh"},
+        )
+        req = GenerateRequest(name="x", profile_id="test", output_path=tmp_path / "out")
+        gen_plan = make_plan(req, [base_part], template_root=tmp_path)
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        render(gen_plan, staging)
+        content = (staging / "flake.nix").read_text()
+        assert "pkgs.gh" in content
+        assert "{{lang_packages}}" not in content
+
     def test_plan_profile_variables_reach_render_stage(self, tmp_path: Path) -> None:
         payload = tmp_path / "parts" / "base" / "payload"
         payload.mkdir(parents=True)

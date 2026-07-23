@@ -8,9 +8,11 @@ conflicts = ["lang/typescript", "lang/rust", "lang/go"]
 [placeholders]
 required = ["project_name"]
 
-[[files]]
-path = "flake.nix"
-strategy = "replace"
+[variables]
+lang_packages = """pkgs.python3
+              pkgs.python3Packages.pytest
+              pkgs.ruff
+              pkgs.uv"""
 
 [[files]]
 path = "treefmt.nix"

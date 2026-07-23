@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 
 from template.schema._toml import optional_str_list, require_str, require_table
 from template.schema.errors import SchemaError
@@ -34,6 +35,7 @@ class PartSchema:
     conflicts: tuple[str, ...] = ()
     placeholders_required: tuple[str, ...] = ()
     files: tuple[FileRule, ...] = ()
+    variables: Mapping[str, str] = field(default_factory=dict)
 
 
 def validate_part(data: dict, *, source: str) -> PartSchema:
@@ -77,6 +79,18 @@ def validate_part(data: dict, *, source: str) -> PartSchema:
         _validate_file_rule(entry, source=source, index=i) for i, entry in enumerate(raw_files)
     )
 
+    raw_variables = data.get("variables", {})
+    if not isinstance(raw_variables, dict):
+        raise SchemaError("variables must be a table", source=source, field="variables")
+    for key, value in raw_variables.items():
+        if not isinstance(value, str):
+            raise SchemaError(
+                f"variables.{key} must be a string, got {type(value).__name__}",
+                source=source,
+                field=f"variables.{key}",
+            )
+    variables: dict[str, str] = dict(raw_variables)
+
     return PartSchema(
         id=part_id,
         layer=layer,
@@ -85,6 +99,7 @@ def validate_part(data: dict, *, source: str) -> PartSchema:
         conflicts=conflicts,
         placeholders_required=placeholders_required,
         files=files,
+        variables=variables,
     )
 
 

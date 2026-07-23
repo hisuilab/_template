@@ -101,6 +101,7 @@
               pkgs.shellcheck
               pkgs.shfmt
               treefmtEval.${system}.config.build.wrapper
+              {{lang_packages}}
             ];
 
             shellHook = hooks.shellHook;

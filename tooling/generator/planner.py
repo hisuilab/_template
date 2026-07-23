@@ -44,7 +44,14 @@ def plan(
     template_root: Path,
     profile_variables: Mapping[str, str] | None = None,
 ) -> GenerationPlan:
-    variables: dict[str, str] = dict(profile_variables or {})
+    # Merge order (later wins):
+    #   1. part variables (in part order — later parts override earlier)
+    #   2. profile_variables (profile overrides all parts)
+    #   3. reserved keys (always win — applied last)
+    variables: dict[str, str] = {}
+    for part in parts:
+        variables.update(part.variables)
+    variables.update(profile_variables or {})
     # Reserved keys always win; enforce via _RESERVED so adding a new reserved key here
     # is sufficient — no other site needs updating.
     _reserved_values: dict[str, str] = {"project_name": request.name}

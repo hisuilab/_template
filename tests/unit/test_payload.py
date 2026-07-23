@@ -52,7 +52,11 @@ def _declared_placeholders(part_dir: Path) -> set[str]:
     part_toml = part_dir / "part.toml"
     with part_toml.open("rb") as f:
         data = tomllib.load(f)
-    return set(data.get("placeholders", {}).get("required", []))
+    # placeholders.required declares required substitutions; [variables] declares
+    # part-provided defaults (issue #135). Both count as declared.
+    declared = set(data.get("placeholders", {}).get("required", []))
+    declared.update(data.get("variables", {}).keys())
+    return declared
 
 
 PARTS = _discover_parts()

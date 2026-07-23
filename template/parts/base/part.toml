@@ -5,3 +5,6 @@ summary = "全 Profile 共通の開発基盤（Nix flake・just・pre-commit・C
 
 [placeholders]
 required = ["project_name"]
+
+[variables]
+lang_packages = "" # lang パーツが上書きする
