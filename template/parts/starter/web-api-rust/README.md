@@ -9,8 +9,8 @@
 ## 2. 責任
 
 - `part.toml`によるメタデータと依存宣言(requires: base, starter/web-api, lang/rust)
-- `payload/Cargo.toml`: `lang/rust`の基盤依存(issue #100)を含む累積的なスーパーセット +
-  axum/tokio/reqwest
+- `payload/Cargo.toml`: web-api固有依存（axum/tokio/reqwest）の差分断片。`append`戦略で
+  `lang/rust`の基盤依存断片と結合され、生成物に全依存が含まれます（issue #129）
 - `payload/src/main.rs`: axum最小Webサーバー(`/health`エンドポイント)
 
 ## 3. 責任外

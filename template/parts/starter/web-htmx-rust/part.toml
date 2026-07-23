@@ -10,7 +10,7 @@ required = ["project_name"]
 
 [[files]]
 path = "Cargo.toml"
-strategy = "replace"
+strategy = "append"
 
 [[files]]
 path = "src/main.rs"

@@ -10,7 +10,7 @@ required = ["project_name"]
 
 [[files]]
 path = "go.mod"
-strategy = "replace"
+strategy = "append"
 
 [[files]]
 path = "main.go"
