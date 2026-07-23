@@ -121,6 +121,7 @@
               pkgs.gitleaks
               pkgs.jq
               pkgs.just
+              pkgs.nixd
               pkgs.python3
               pkgs.python3Packages.pytest
               pkgs.python3Packages.questionary

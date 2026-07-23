@@ -27,6 +27,11 @@ def test_flake_app_sets_template_root() -> None:
     assert 'TEMPLATE_ROOT="${self}/template"' in content
 
 
+def test_flake_devshell_includes_nixd() -> None:
+    content = (REPO_ROOT / "flake.nix").read_text()
+    assert "pkgs.nixd" in content
+
+
 def test_cli_exposes_init_workspace_subcommand() -> None:
     cli = (REPO_ROOT / "tooling" / "generator" / "cli.py").read_text()
     assert "init-workspace" in cli
