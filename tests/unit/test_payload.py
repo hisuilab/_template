@@ -19,6 +19,15 @@ import pytest
 TEMPLATE_ROOT = Path(__file__).resolve().parents[2] / "template"
 PARTS_ROOT = TEMPLATE_ROOT / "parts"
 PLACEHOLDER_RE = re.compile(r"\{\{(\w+)\}\}")
+_SYNC_COMMENT_RE = re.compile(r"\n*<!--.*?-->[ \t]*\n*$", re.DOTALL)
+
+
+def _strip_sync_comment(text: str) -> str:
+    """ファイル末尾の HTML コメントブロック（同期注記）を除去します。
+
+    末尾の改行は正規化して比較の差異を生じさせないようにします。
+    """
+    return _SYNC_COMMENT_RE.sub("", text).rstrip("\n") + "\n"
 
 
 def _discover_parts() -> list[tuple[str, Path]]:
@@ -276,3 +285,37 @@ def test_github_rulesets_json_are_valid() -> None:
         assert data.get("enforcement") == "active", (
             f"{json_file.name}: enforcement must be 'active'"
         )
+
+
+# ---------------------------------------------------------------------------
+# architecture/layered vs ddd README consistency (issue #136)
+# ---------------------------------------------------------------------------
+
+
+def test_mirrored_readmes() -> None:
+    """architecture/layered と ddd の src/ 配下 README が一致することを確認します。
+
+    両 Part は conflicts 関係にあり生成時は片方のみ適用されますが、
+    src/{application,domain,infrastructure,interface}/README.md は同一内容が正しい状態です。
+    """
+    layered_root = PARTS_ROOT / "architecture" / "layered" / "payload" / "src"
+    ddd_root = PARTS_ROOT / "architecture" / "ddd" / "payload" / "src"
+
+    mirrored_dirs = ["application", "domain", "infrastructure", "interface"]
+    mismatches: list[str] = []
+
+    for d in mirrored_dirs:
+        layered_file = layered_root / d / "README.md"
+        ddd_file = ddd_root / d / "README.md"
+        if not layered_file.exists() or not ddd_file.exists():
+            mismatches.append(f"{d}/README.md: one or both files missing")
+            continue
+        layered_text = _strip_sync_comment(layered_file.read_text(encoding="utf-8"))
+        ddd_text = _strip_sync_comment(ddd_file.read_text(encoding="utf-8"))
+        if layered_text != ddd_text:
+            mismatches.append(f"{d}/README.md: content differs")
+
+    assert not mismatches, (
+        "architecture/layered と ddd の src/ README が一致しません:\n"
+        + "\n".join(f"  {m}" for m in mismatches)
+    )
