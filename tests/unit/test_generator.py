@@ -263,6 +263,35 @@ class TestPlanner:
         assert "myproj/README.md" in dest_paths
         assert "evil/README.md" not in dest_paths
 
+    def test_plan_append_strategy_collects_both_parts(self, tmp_path: Path) -> None:
+        """append strategy must include PlannedFiles from both base and lang parts (issue #134)."""
+        from template.schema.part_schema import FileRule
+
+        self._make_part_dir(tmp_path, "base", {"dot-gitignore": "# base\n.DS_Store\n"})
+        self._make_part_dir(tmp_path, "lang/python", {"dot-gitignore": "# python\n__pycache__/\n"})
+        base_part = PartSchema(id="base", layer="base", summary="base")
+        lang_part = PartSchema(
+            id="lang/python",
+            layer="lang",
+            summary="python",
+            files=(FileRule(path=".gitignore", strategy="append"),),
+        )
+        req = GenerateRequest(name="x", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(req, [base_part, lang_part], template_root=tmp_path)
+        gitignore_files = [f for f in result.files if f.dest_path == ".gitignore"]
+        assert len(gitignore_files) == 2, (
+            f"Expected 2 PlannedFiles for .gitignore (base + lang), got {len(gitignore_files)}"
+        )
+
+    def test_plan_append_strategy_base_only_when_no_lang(self, tmp_path: Path) -> None:
+        """When only base is present (--lang omitted), only one PlannedFile is collected (issue #134)."""
+        self._make_part_dir(tmp_path, "base", {"dot-gitignore": "# base\n.DS_Store\n"})
+        base_part = PartSchema(id="base", layer="base", summary="base")
+        req = GenerateRequest(name="x", profile_id="test", output_path=tmp_path / "out")
+        result = make_plan(req, [base_part], template_root=tmp_path)
+        gitignore_files = [f for f in result.files if f.dest_path == ".gitignore"]
+        assert len(gitignore_files) == 1
+
     def test_plan_profile_variables_reach_render_stage(self, tmp_path: Path) -> None:
         payload = tmp_path / "parts" / "base" / "payload"
         payload.mkdir(parents=True)
@@ -316,6 +345,48 @@ class TestRenderer:
         )
         render(gen_plan, staging)
         assert (staging / "info.txt").read_text() == "project: myproj\n"
+
+    def test_render_append_strategy_combines_two_fragments(self, tmp_path: Path) -> None:
+        """render() with two PlannedFiles for the same dest_path must concatenate them (issue #134)."""
+        base_src = tmp_path / "base.txt"
+        base_src.write_text("# base\n.DS_Store\n")
+        lang_src = tmp_path / "lang.txt"
+        lang_src.write_text("# python\n__pycache__/\n")
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        pfile_base = PlannedFile(src_path=base_src, dest_path=".gitignore", strategy="error")
+        pfile_lang = PlannedFile(src_path=lang_src, dest_path=".gitignore", strategy="append")
+        gen_plan = GenerationPlan(
+            request=GenerateRequest(name="p", profile_id="t", output_path=tmp_path / "out"),
+            variables={},
+            files=(pfile_base, pfile_lang),
+        )
+        render(gen_plan, staging)
+        content = (staging / ".gitignore").read_text()
+        assert "# base" in content
+        assert ".DS_Store" in content
+        assert "# python" in content
+        assert "__pycache__/" in content
+
+    def test_render_append_strategy_no_duplicate_lines(self, tmp_path: Path) -> None:
+        """render() combining base and lang fragments must not produce duplicate lines (issue #134)."""
+        base_src = tmp_path / "base.txt"
+        base_src.write_text("# base\n.DS_Store\n")
+        lang_src = tmp_path / "lang.txt"
+        lang_src.write_text("# python\n__pycache__/\n")
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        pfile_base = PlannedFile(src_path=base_src, dest_path=".gitignore", strategy="error")
+        pfile_lang = PlannedFile(src_path=lang_src, dest_path=".gitignore", strategy="append")
+        gen_plan = GenerationPlan(
+            request=GenerateRequest(name="p", profile_id="t", output_path=tmp_path / "out"),
+            variables={},
+            files=(pfile_base, pfile_lang),
+        )
+        render(gen_plan, staging)
+        content = (staging / ".gitignore").read_text()
+        lines = [ln for ln in content.splitlines() if ln.strip()]
+        assert len(lines) == len(set(lines)), f"duplicate lines found:\n{content}"
 
     def test_render_unresolved_variable_raises_render_error(self, tmp_path: Path) -> None:
         src = tmp_path / "src.txt"
