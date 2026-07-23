@@ -1,9 +1,9 @@
 ---
-status: proposed
+status: implemented
 proposed_at: 2026-07-23
-approved_at:
-approved_by:
-implemented_at:
+approved_at: 2026-07-23
+approved_by: hisuilab
+implemented_at: 2026-07-23
 related: "#166, #132"
 ---
 
