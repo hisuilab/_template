@@ -8,7 +8,8 @@
 ## 2. 責任
 
 - `part.toml`によるメタデータと依存宣言(requires: base, starter/web-api, lang/go)
-- `payload/go.mod`: `lang/go`の基盤依存(issue #105)を含む累積的なスーパーセット + chi
+- `payload/go.mod`: web-api固有依存（chi）の差分断片（追加`require`ブロック）。`append`戦略で
+  `lang/go`の基盤断片と結合され、生成物に全依存が含まれます（issue #129）
 - `payload/main.go`: chi最小Webサーバー(`/health`エンドポイント)
 - `payload/main_test.go`: `/health`ハンドラーの`httptest`ベースのテスト
 

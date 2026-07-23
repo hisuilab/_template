@@ -9,8 +9,9 @@
 ## 2. 責任
 
 - `part.toml`によるメタデータと依存宣言(requires: base, starter/web-htmx, lang/rust)
-- `payload/Cargo.toml`: `lang/rust`の基盤依存(issue #100)を含む累積的なスーパーセット +
-  askama/askama_axum/axum/tower-http
+- `payload/Cargo.toml`: htmx固有依存（askama/askama_axum/axum/reqwest/tokio/tower-http）の
+  差分断片。`append`戦略で`lang/rust`の基盤依存断片と結合され、生成物に全依存が含まれます
+  （issue #129）
 - `payload/src/main.rs`: axum最小サーバー(`/`・`/message`エンドポイント、HTMXの部分
   レンダリングを実演)
 - `payload/templates/layout.html`: HTMX・Pico CSSをCDN経由で読み込む共通レイアウト
