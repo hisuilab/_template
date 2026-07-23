@@ -2,11 +2,11 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 # requires: treefmt
 format:
-    treefmt
+    treefmt --excludes "template/parts/**/payload/*.nix"
 
 # requires: treefmt
 check-format:
-    treefmt --fail-on-change
+    treefmt --fail-on-change --excludes "template/parts/**/payload/*.nix"
 
 # requires: rumdl
 check-docs:

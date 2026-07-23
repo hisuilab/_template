@@ -8,9 +8,9 @@ conflicts = ["lang/python", "lang/rust", "lang/go"]
 [placeholders]
 required = ["project_name"]
 
-[[files]]
-path = "flake.nix"
-strategy = "replace"
+[variables]
+lang_packages = """pkgs.biome
+              pkgs.nodejs"""
 
 [[files]]
 path = "treefmt.nix"

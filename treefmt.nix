@@ -2,7 +2,12 @@
 {
   projectRootFile = "flake.nix";
 
-  programs.nixfmt.enable = true;
+  programs.nixfmt = {
+    enable = true;
+    # template/parts/payload/ 配下の *.nix ファイルはジェネレータのテンプレートであり、
+    # {{lang_packages}} のようなプレースホルダを含むため nixfmt の対象から除外します。
+    excludes = [ "template/parts/**/payload/*.nix" ];
+  };
   programs.taplo.enable = true;
   programs.prettier = {
     enable = true;
