@@ -319,3 +319,73 @@ def test_mirrored_readmes() -> None:
         "architecture/layered と ddd の src/ README が一致しません:\n"
         + "\n".join(f"  {m}" for m in mismatches)
     )
+
+
+# ---------------------------------------------------------------------------
+# issue-129: package manifest composition via append strategy
+# ---------------------------------------------------------------------------
+
+
+def test_web_api_rust_cargo_toml_fragment_has_no_package_header() -> None:
+    """starter/web-api-rust の Cargo.toml 差分断片に [package] ヘッダが含まれないことを確認します。
+
+    append 戦略では lang/rust が [package] を提供するため、starter 側に再掲してはなりません。
+    この検証が RED になるのは、payload/Cargo.toml がまだ累積スーパーセット形式だからです。
+    """
+    cargo_toml = PARTS_ROOT / "starter" / "web-api-rust" / "payload" / "Cargo.toml"
+    assert cargo_toml.exists(), f"payload/Cargo.toml not found: {cargo_toml}"
+    content = cargo_toml.read_text(encoding="utf-8")
+    assert "[package]" not in content, (
+        "starter/web-api-rust/payload/Cargo.toml は差分断片であるべきです。"
+        "[package] ヘッダを削除し、web-api 固有依存のみにしてください。"
+    )
+    assert "[dependencies]" not in content, (
+        "starter/web-api-rust/payload/Cargo.toml は差分断片であるべきです。"
+        "[dependencies] ヘッダを削除し、key=value のみにしてください。"
+    )
+
+
+def test_web_htmx_rust_cargo_toml_fragment_has_no_package_header() -> None:
+    """starter/web-htmx-rust の Cargo.toml 差分断片に [package] ヘッダが含まれないことを確認します。
+
+    append 戦略では lang/rust が [package] を提供するため、starter 側に再掲してはなりません。
+    この検証が RED になるのは、payload/Cargo.toml がまだ累積スーパーセット形式だからです。
+    """
+    cargo_toml = PARTS_ROOT / "starter" / "web-htmx-rust" / "payload" / "Cargo.toml"
+    assert cargo_toml.exists(), f"payload/Cargo.toml not found: {cargo_toml}"
+    content = cargo_toml.read_text(encoding="utf-8")
+    assert "[package]" not in content, (
+        "starter/web-htmx-rust/payload/Cargo.toml は差分断片であるべきです。"
+        "[package] ヘッダを削除し、htmx 固有依存のみにしてください。"
+    )
+    assert "[dependencies]" not in content, (
+        "starter/web-htmx-rust/payload/Cargo.toml は差分断片であるべきです。"
+        "[dependencies] ヘッダを削除し、key=value のみにしてください。"
+    )
+
+
+def test_web_api_go_mod_fragment_has_no_module_declaration() -> None:
+    """starter/web-api-go の go.mod 差分断片に module/go 宣言が含まれないことを確認します。
+
+    append 戦略では lang/go が module 宣言と go バージョンを提供するため、
+    starter 側に再掲してはなりません。
+    この検証が RED になるのは、payload/go.mod がまだ累積スーパーセット形式だからです。
+    """
+    go_mod = PARTS_ROOT / "starter" / "web-api-go" / "payload" / "go.mod"
+    assert go_mod.exists(), f"payload/go.mod not found: {go_mod}"
+    content = go_mod.read_text(encoding="utf-8")
+    lines = content.splitlines()
+    for line in lines:
+        stripped = line.strip()
+        assert not stripped.startswith("module "), (
+            f"starter/web-api-go/payload/go.mod は差分断片であるべきです。"
+            f"'module' 宣言を削除し、追加 require ブロックのみにしてください。\n"
+            f"該当行: {line!r}"
+        )
+        assert not (
+            stripped.startswith("go ") and stripped[3:].strip().replace(".", "").isdigit()
+        ), (
+            f"starter/web-api-go/payload/go.mod は差分断片であるべきです。"
+            f"'go' バージョン宣言を削除し、追加 require ブロックのみにしてください。\n"
+            f"該当行: {line!r}"
+        )
