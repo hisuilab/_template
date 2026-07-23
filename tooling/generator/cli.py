@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from template.schema.profile_schema import ProfileSchema
+from tooling.generator import services
 from tooling.generator.applier import apply, inject
 from tooling.generator.errors import (
     ApplyError,
@@ -71,48 +71,25 @@ def _resolve_output_path(name: str, output_parent: str | None) -> Path:
 
 
 def _validate_lang(lang_value: str, available: list[str]) -> tuple[LangSpec | None, str | None]:
-    """Return (LangSpec, None) on success or (None, error_message) on failure."""
-    if "," in lang_value:
-        return None, "error: multiple --lang values not supported in M5 (planned for M6+)"
-    if "=" in lang_value:
-        return None, "error: role=lang syntax not supported in M5 (planned for M6+)"
-    if lang_value not in available:
-        avail_str = ", ".join(available) if available else "(none)"
-        return None, f"error: unknown lang '{lang_value}'. Available: {avail_str}"
-    return LangSpec(lang=lang_value, role=None), None
+    """Delegate to services.validate_lang."""
+    return services.validate_lang(lang_value, available)
 
 
 def _validate_profile(profile: str, available: list[str]) -> str | None:
-    """Return an error message if profile is invalid, else None."""
-    if profile not in available:
-        avail_str = ", ".join(available) if available else "(none)"
-        return f"error: unknown profile '{profile}'. Available: {avail_str}"
-    return None
-
-
-def _starter_lang_parts(
-    profile_parts: tuple[str, ...], lang: str, template_root: Path
-) -> tuple[str, ...]:
-    """Return companion '<starter-id>-<lang>' part ids that exist on disk."""
-    candidates = []
-    for part_id in profile_parts:
-        if part_id.startswith("starter/"):
-            candidate = f"{part_id}-{lang}"
-            if (template_root / "parts" / candidate / "part.toml").exists():
-                candidates.append(candidate)
-    return tuple(candidates)
+    """Delegate to services.validate_profile."""
+    return services.validate_profile(profile, available)
 
 
 def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int:
     """Run the generation pipeline with a pre-resolved output path."""
-    available = _available_langs(_TEMPLATE_ROOT)
+    try:
+        selection = services.resolve_selection(profile, lang, _TEMPLATE_ROOT)
+    except LoadError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
 
-    lang_spec: LangSpec | None = None
-    if lang is not None:
-        lang_spec, err = _validate_lang(lang, available)
-        if err:
-            print(err, file=sys.stderr)
-            return 1
+    lang_spec = selection.lang_spec
+    extended_profile = selection.extended_profile
 
     request = GenerateRequest(
         name=name,
@@ -121,19 +98,6 @@ def _do_generate(name: str, profile: str, lang: str | None, output: Path) -> int
         lang=(lang_spec,) if lang_spec else (),
     )
     try:
-        loaded_profile = load_profile(profile, _TEMPLATE_ROOT)
-        extra_parts: tuple[str, ...] = ()
-        if lang_spec:
-            extra_parts = (f"lang/{lang_spec.lang}",) + _starter_lang_parts(
-                loaded_profile.parts, lang_spec.lang, _TEMPLATE_ROOT
-            )
-        extended_profile = ProfileSchema(
-            name=loaded_profile.name,
-            summary=loaded_profile.summary,
-            category=loaded_profile.category,
-            parts=loaded_profile.parts + extra_parts,
-            variables=loaded_profile.variables,
-        )
         parts = load_parts_for_profile(extended_profile, _TEMPLATE_ROOT)
         parts = resolve(parts)
         gen_plan = plan(
