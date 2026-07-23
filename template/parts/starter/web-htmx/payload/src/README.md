@@ -6,10 +6,10 @@
 
 ## 2. 責任
 
-- lang非依存の骨格(このディレクトリ自体)
+- lang 非依存の骨格（このディレクトリ自体）
 
 ## 3. 責任外
 
-- テストコード(`tests/`が担当)
-- 言語別のサーバー実装(`main.rs`等。`--lang rust`選択時は`starter/web-htmx-rust`が提供。
-  `--lang`省略時や対応する複合Partが無い言語では生成されない)
+- テストコード（`tests/` が担当）
+- 言語別のサーバー実装（`main.rs` 等。`--lang rust` 選択時は `starter/web-htmx-rust` が提供。
+  `--lang` 省略時や対応する複合 Part が無い言語では生成されない）
