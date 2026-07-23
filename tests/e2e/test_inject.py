@@ -115,7 +115,8 @@ class TestInjectSubcommand:
         target = tmp_path / "partial-project"
         target.mkdir()
         (target / ".template-manifest.toml").write_text(
-            '[manifest]\nschema_version = "1"\nproject_name = "partial"\ngenerated_at = "2026-01-01"\n'
+            '[manifest]\nschema_version = "2"\nproject_name = "partial"\ngenerated_at = "2026-01-01"\n'
+            'template_revision = ""\ngenerator_version = ""\n'
         )
         r = _inject("features/logging-python", target)
         assert r.returncode != 0
