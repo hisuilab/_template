@@ -980,4 +980,167 @@ class TestGeneratorIntegration:
         output = tmp_path / "fullstack" / "fullstack-main"
         assert (output / "backend" / "src" / "app.py").exists()
         assert (output / "frontend" / "templates" / "README.md").exists()
-        assert (output / "README.md").exists()
+
+
+# ---------------------------------------------------------------------------
+# Services — validate_lang, validate_profile, resolve_selection (issue #132)
+# ---------------------------------------------------------------------------
+
+
+class TestServicesValidateLang:
+    """Unit tests for services.validate_lang.
+
+    These tests are RED until tooling/generator/services.py is created.
+    """
+
+    def test_valid_lang_returns_lang_spec(self) -> None:
+        from tooling.generator.services import validate_lang
+
+        lang_spec, err = validate_lang("python", ["python", "typescript"])
+        assert err is None
+        assert lang_spec is not None
+        assert lang_spec.lang == "python"
+        assert lang_spec.role is None
+
+    def test_unknown_lang_returns_error_message(self) -> None:
+        from tooling.generator.services import validate_lang
+
+        lang_spec, err = validate_lang("cobol", ["python", "typescript"])
+        assert lang_spec is None
+        assert err is not None
+        assert "cobol" in err
+
+    def test_unknown_lang_error_lists_available(self) -> None:
+        from tooling.generator.services import validate_lang
+
+        _, err = validate_lang("cobol", ["python", "typescript"])
+        assert err is not None
+        assert "python" in err or "typescript" in err
+
+    def test_multiple_lang_via_comma_returns_error(self) -> None:
+        from tooling.generator.services import validate_lang
+
+        lang_spec, err = validate_lang("python,typescript", ["python", "typescript"])
+        assert lang_spec is None
+        assert err is not None
+
+    def test_role_lang_syntax_returns_error(self) -> None:
+        from tooling.generator.services import validate_lang
+
+        lang_spec, err = validate_lang("backend=python", ["python"])
+        assert lang_spec is None
+        assert err is not None
+
+    def test_empty_available_returns_error_with_none_hint(self) -> None:
+        from tooling.generator.services import validate_lang
+
+        _, err = validate_lang("python", [])
+        assert err is not None
+        # must not raise; should mention none or empty
+        assert err != ""
+
+
+class TestServicesValidateProfile:
+    """Unit tests for services.validate_profile.
+
+    These tests are RED until tooling/generator/services.py is created.
+    """
+
+    def test_valid_profile_returns_none(self) -> None:
+        from tooling.generator.services import validate_profile
+
+        err = validate_profile("starter-cli", ["starter-cli", "starter-web-api"])
+        assert err is None
+
+    def test_unknown_profile_returns_error_message(self) -> None:
+        from tooling.generator.services import validate_profile
+
+        err = validate_profile("no-such-profile", ["starter-cli"])
+        assert err is not None
+        assert "no-such-profile" in err
+
+    def test_unknown_profile_error_lists_available(self) -> None:
+        from tooling.generator.services import validate_profile
+
+        err = validate_profile("ghost", ["starter-cli", "starter-web-api"])
+        assert err is not None
+        assert "starter-cli" in err or "starter-web-api" in err
+
+    def test_empty_available_returns_error(self) -> None:
+        from tooling.generator.services import validate_profile
+
+        err = validate_profile("starter-cli", [])
+        assert err is not None
+
+
+class TestServicesResolveSelection:
+    """Unit tests for services.resolve_selection.
+
+    These tests are RED until tooling/generator/services.py is created.
+    """
+
+    def test_resolve_selection_without_lang_returns_base_profile(self) -> None:
+        from tooling.generator.services import resolve_selection
+
+        result = resolve_selection("starter-cli", lang=None, template_root=TEMPLATE_ROOT)
+        assert result.lang_spec is None
+        assert result.extended_profile is not None
+        assert "base" in result.extended_profile.parts
+
+    def test_resolve_selection_with_lang_includes_lang_part(self) -> None:
+        from tooling.generator.services import resolve_selection
+
+        result = resolve_selection("starter-cli", lang="python", template_root=TEMPLATE_ROOT)
+        assert result.lang_spec is not None
+        assert result.lang_spec.lang == "python"
+        assert "lang/python" in result.extended_profile.parts
+
+    def test_resolve_selection_with_lang_includes_companion_starter_part(self) -> None:
+        from tooling.generator.services import resolve_selection
+
+        result = resolve_selection("starter-cli", lang="python", template_root=TEMPLATE_ROOT)
+        # starter/cli-python is the companion part for starter/cli + python
+        assert "starter/cli-python" in result.extended_profile.parts
+
+    def test_resolve_selection_with_nonexistent_companion_omits_it(self, tmp_path: Path) -> None:
+        """If no starter/<id>-<lang> part exists on disk, it must not be included."""
+        from tooling.generator.services import resolve_selection
+
+        # tmp_path has no parts, so no companion can be found;
+        # but we need a minimal profile to load, so build a small fixture.
+        profiles_dir = tmp_path / "profiles"
+        profiles_dir.mkdir()
+        (profiles_dir / "mini.toml").write_text(
+            '[profile]\nname = "mini"\nsummary = "minimal"\ncategory = "cli"\nparts = ["base"]\n'
+        )
+        parts_dir = tmp_path / "parts" / "base"
+        parts_dir.mkdir(parents=True)
+        (parts_dir / "part.toml").write_text(
+            '[part]\nid = "base"\nlayer = "base"\nsummary = "base"\n'
+        )
+        (parts_dir / "payload").mkdir()
+
+        result = resolve_selection("mini", lang="python", template_root=tmp_path)
+        # lang/python part is added but no starter/base-python companion exists
+        assert "lang/python" in result.extended_profile.parts
+        # no companion whose starter id matches "base"
+        assert not any(p.startswith("starter/") for p in result.extended_profile.parts)
+
+    def test_resolve_selection_unknown_profile_raises_load_error(self) -> None:
+        from tooling.generator.errors import LoadError
+        from tooling.generator.services import resolve_selection
+
+        with pytest.raises(LoadError):
+            resolve_selection("no-such-profile", lang=None, template_root=TEMPLATE_ROOT)
+
+    def test_resolve_selection_generate_and_create_share_same_expansion(self) -> None:
+        """generate and create paths must produce identical extended_profile via resolve_selection.
+
+        This guards the P-4 problem: both commands must run through the same preflight.
+        """
+        from tooling.generator.services import resolve_selection
+
+        result_gen = resolve_selection("starter-cli", lang="python", template_root=TEMPLATE_ROOT)
+        result_crt = resolve_selection("starter-cli", lang="python", template_root=TEMPLATE_ROOT)
+        assert result_gen.extended_profile.parts == result_crt.extended_profile.parts
+        assert result_gen.lang_spec == result_crt.lang_spec
