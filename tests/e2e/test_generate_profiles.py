@@ -683,6 +683,60 @@ class TestLangCli:
         treefmt = (output / "treefmt.nix").read_text()
         assert "treefmt-base.nix" in treefmt
 
+    @pytest.mark.parametrize("lang", ["python", "typescript", "rust", "go"])
+    def test_lang_gitignore_contains_base_common_lines(self, tmp_path: Path, lang: str) -> None:
+        """Generated .gitignore must include base common entries for all langs (issue #134)."""
+        output = _generate("app", "starter-cli", tmp_path, lang=lang)
+        gitignore = (output / ".gitignore").read_text()
+        for line in [
+            ".DS_Store",
+            "tmp/",
+            ".direnv/",
+            "result",
+            ".pre-commit-config.yaml",
+            ".claude/",
+            ".vscode/",
+        ]:
+            assert line in gitignore, (
+                f"base common line {line!r} missing from .gitignore for lang={lang}"
+            )
+
+    @pytest.mark.parametrize("lang", ["python", "typescript", "rust", "go"])
+    def test_lang_gitignore_has_no_duplicate_lines(self, tmp_path: Path, lang: str) -> None:
+        """Generated .gitignore must not contain duplicate non-empty lines (issue #134)."""
+        output = _generate("app", "starter-cli", tmp_path, lang=lang)
+        content = (output / ".gitignore").read_text()
+        lines = [ln for ln in content.splitlines() if ln.strip()]
+        assert len(lines) == len(set(lines)), (
+            f"duplicate lines in .gitignore for lang={lang}:\n{content}"
+        )
+
+    def test_lang_omitted_gitignore_contains_only_base_lines(self, tmp_path: Path) -> None:
+        """When --lang is omitted, .gitignore must contain base common lines only (issue #134)."""
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "nolang",
+                "--profile",
+                "starter-cli",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 0, r.stderr
+        gitignore = (tmp_path / "nolang" / ".gitignore").read_text()
+        for lang_specific in ["__pycache__/", "node_modules/", "target/", "*.exe"]:
+            assert lang_specific not in gitignore, (
+                f"lang-specific line {lang_specific!r} should not appear in base-only .gitignore"
+            )
+
 
 # ---------------------------------------------------------------------------
 # features/ai-agent: .claude/rules/dev-policy.md

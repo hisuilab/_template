@@ -11,7 +11,7 @@ from template.schema.errors import SchemaError
 _VALID_ID_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]*(/[a-zA-Z0-9][a-zA-Z0-9_-]*)*$")
 
 LAYERS = ("base", "scale", "architecture", "starter", "style", "lang", "languages", "features")
-STRATEGIES = ("error", "replace", "add")
+STRATEGIES = ("error", "replace", "add", "append")
 DEFAULT_STRATEGY = "error"
 
 

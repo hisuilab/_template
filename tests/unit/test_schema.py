@@ -238,6 +238,16 @@ def test_add_strategy_is_accepted() -> None:
     assert schema.files[0].strategy == "add"
 
 
+def test_append_strategy_is_accepted() -> None:
+    """'append' must be a valid strategy (issue #134)."""
+    data = {
+        "part": {"id": "lang/python", "layer": "lang", "summary": "python"},
+        "files": [{"path": ".gitignore", "strategy": "append"}],
+    }
+    schema = validate_part(data, source="<test>")
+    assert schema.files[0].strategy == "append"
+
+
 def test_empty_parts_is_rejected() -> None:
     with pytest.raises(SchemaError, match="profile.parts"):
         validate_profile(

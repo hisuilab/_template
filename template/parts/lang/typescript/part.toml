@@ -30,4 +30,4 @@ strategy = "replace"
 
 [[files]]
 path = ".gitignore"
-strategy = "replace"
+strategy = "append"
