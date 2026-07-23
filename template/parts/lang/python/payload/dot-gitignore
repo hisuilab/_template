@@ -1,20 +1,3 @@
-# === 一時ファイル ===
-.DS_Store
-tmp/
-
-# === Nix / direnv ===
-.direnv/
-result
-
-# === git-hooks.nix が生成するシンボリックリンク ===
-.pre-commit-config.yaml
-
-# === AI エージェント設定 ===
-.claude/
-
-# === エディタ設定 ===
-.vscode/
-
 # === Python ===
 __pycache__/
 *.pyc

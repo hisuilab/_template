@@ -60,7 +60,12 @@ def plan(
                     f"but it was not provided (available: {sorted(variables.keys())})"
                 )
 
+    # planned holds the single authoritative PlannedFile for each dest_path
+    # (strategies: "error", "replace", "add").
     planned: dict[str, PlannedFile] = {}
+    # planned_append collects all fragments for dest_paths using "append" strategy.
+    # Each fragment is appended to the dest in part order.
+    planned_append: dict[str, list[PlannedFile]] = {}
 
     for part in parts:
         payload_dir = template_root / "parts" / part.id / "payload"
@@ -71,11 +76,16 @@ def plan(
             dest = _transform_path(rel, variables)
             strategy = _file_strategy(part, dest)
 
-            if dest in planned:
+            if strategy == "append":
+                # Accumulate all fragments; renderer will concatenate them in order.
+                planned_append.setdefault(dest, []).append(
+                    PlannedFile(src_path=src, dest_path=dest, strategy=strategy)
+                )
+            elif dest in planned:
                 if strategy == "replace":
                     planned[dest] = PlannedFile(src_path=src, dest_path=dest, strategy=strategy)
                 elif strategy == "add":
-                    pass  # keep first part's version
+                    pass  # keep first part's version ("add" ≠ "append": add silently keeps first)
                 else:
                     raise PlanError(
                         f"file '{dest}' is provided by multiple parts "
@@ -84,4 +94,9 @@ def plan(
             else:
                 planned[dest] = PlannedFile(src_path=src, dest_path=dest, strategy=strategy)
 
-    return GenerationPlan(request=request, variables=variables, files=tuple(planned.values()))
+    # Merge: non-append files first, then append groups (each group as ordered fragments).
+    files: list[PlannedFile] = list(planned.values())
+    for fragments in planned_append.values():
+        files.extend(fragments)
+
+    return GenerationPlan(request=request, variables=variables, files=tuple(files))
