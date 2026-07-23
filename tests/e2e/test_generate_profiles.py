@@ -769,6 +769,109 @@ class TestGenerateManifest:
         assert "starter/cli" in applied_ids
 
 
+# ---------------------------------------------------------------------------
+# flake.nix lang packages via part variables (issue #135)
+# ---------------------------------------------------------------------------
+
+
+class TestFlakeLangPackages:
+    """Generated flake.nix must contain lang-specific packages via part variables (issue #135)."""
+
+    def test_lang_python_flake_contains_python3(self, tmp_path: Path) -> None:
+        output = _generate("pyapp", "starter-cli", tmp_path, lang="python")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.python3" in flake, "pkgs.python3 missing from python flake.nix"
+
+    def test_lang_python_flake_contains_ruff(self, tmp_path: Path) -> None:
+        output = _generate("pyapp", "starter-cli", tmp_path, lang="python")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.ruff" in flake, "pkgs.ruff missing from python flake.nix"
+
+    def test_lang_python_flake_contains_uv(self, tmp_path: Path) -> None:
+        output = _generate("pyapp", "starter-cli", tmp_path, lang="python")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.uv" in flake, "pkgs.uv missing from python flake.nix"
+
+    def test_lang_go_flake_contains_go(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.go" in flake, "pkgs.go missing from go flake.nix"
+
+    def test_lang_go_flake_contains_golangci_lint(self, tmp_path: Path) -> None:
+        output = _generate("goapp", "starter-cli", tmp_path, lang="go")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.golangci-lint" in flake, "pkgs.golangci-lint missing from go flake.nix"
+
+    def test_lang_rust_flake_contains_cargo(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.cargo" in flake, "pkgs.cargo missing from rust flake.nix"
+
+    def test_lang_rust_flake_contains_clippy(self, tmp_path: Path) -> None:
+        output = _generate("rsapp", "starter-cli", tmp_path, lang="rust")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.clippy" in flake, "pkgs.clippy missing from rust flake.nix"
+
+    def test_lang_typescript_flake_contains_nodejs(self, tmp_path: Path) -> None:
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.nodejs" in flake, "pkgs.nodejs missing from typescript flake.nix"
+
+    def test_lang_typescript_flake_contains_biome(self, tmp_path: Path) -> None:
+        output = _generate("tsapp", "starter-cli", tmp_path, lang="typescript")
+        flake = (output / "flake.nix").read_text()
+        assert "pkgs.biome" in flake, "pkgs.biome missing from typescript flake.nix"
+
+    def test_lang_omitted_flake_has_no_unresolved_placeholder(self, tmp_path: Path) -> None:
+        """When no lang is specified, {{lang_packages}} must not appear in flake.nix (issue #135)."""
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "nolang",
+                "--profile",
+                "starter-cli",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 0, f"generate failed:\n{r.stderr}"
+        flake = (tmp_path / "nolang" / "flake.nix").read_text()
+        assert "{{lang_packages}}" not in flake, (
+            "{{lang_packages}} placeholder was not resolved in base-only flake.nix"
+        )
+
+    def test_lang_omitted_flake_is_syntactically_complete(self, tmp_path: Path) -> None:
+        """Base-only flake.nix (no lang) must still contain the packages list (issue #135)."""
+        r = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tooling.generator",
+                "generate",
+                "--name",
+                "nolang",
+                "--profile",
+                "starter-cli",
+                "--output",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert r.returncode == 0, f"generate failed:\n{r.stderr}"
+        flake = (tmp_path / "nolang" / "flake.nix").read_text()
+        assert "pkgs.bats" in flake, "base packages missing from base-only flake.nix"
+        assert "pkgs.gh" in flake, "pkgs.gh missing from base-only flake.nix"
+
+
 class TestAiAgentPart:
     def test_claude_dev_policy_generated(self, tmp_path: Path) -> None:
         output = _generate("aiapp", "starter-cli", tmp_path)

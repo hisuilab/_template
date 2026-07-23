@@ -292,3 +292,55 @@ def test_all_part_tomls_validate() -> None:
     assert len(part_files) >= 1, "no part.toml files found under template/parts/"
     for path in part_files:
         validate_part(_load_toml(path), source=str(path))
+
+
+# ---------------------------------------------------------------------------
+# PartSchema.variables — unit tests (issue #135)
+# ---------------------------------------------------------------------------
+
+
+def test_part_variables_parses_string_values() -> None:
+    """[variables] table with string values must be accepted and returned in PartSchema.variables."""
+    data = {
+        "part": {"id": "lang/python", "layer": "lang", "summary": "python"},
+        "variables": {"lang_packages": "pkgs.python3\n              pkgs.ruff"},
+    }
+    schema = validate_part(data, source="<test>")
+    assert schema.variables == {"lang_packages": "pkgs.python3\n              pkgs.ruff"}
+
+
+def test_part_variables_empty_table_is_accepted() -> None:
+    """An empty [variables] table is valid."""
+    data = {
+        "part": {"id": "base", "layer": "base", "summary": "base"},
+        "variables": {},
+    }
+    schema = validate_part(data, source="<test>")
+    assert schema.variables == {}
+
+
+def test_part_variables_absent_defaults_to_empty() -> None:
+    """When [variables] is absent, PartSchema.variables defaults to {}."""
+    data = {"part": {"id": "base", "layer": "base", "summary": "base"}}
+    schema = validate_part(data, source="<test>")
+    assert schema.variables == {}
+
+
+def test_part_variables_non_string_value_is_rejected() -> None:
+    """Non-string variable values must raise SchemaError."""
+    data = {
+        "part": {"id": "base", "layer": "base", "summary": "base"},
+        "variables": {"lang_packages": 42},
+    }
+    with pytest.raises(SchemaError, match="variables"):
+        validate_part(data, source="<test>")
+
+
+def test_part_variables_non_table_is_rejected() -> None:
+    """[variables] must be a table (dict), not a list or string."""
+    data = {
+        "part": {"id": "base", "layer": "base", "summary": "base"},
+        "variables": ["not", "a", "table"],
+    }
+    with pytest.raises(SchemaError, match="variables"):
+        validate_part(data, source="<test>")
